@@ -87,9 +87,9 @@ Collecting pillow>=8 (from matplotlib!=3.6.1,>=3.4->seaborn->vnstock->-r require
 Collecting pyparsing>=3 (from matplotlib!=3.6.1,>=3.4->seaborn->vnstock->-r requirements.txt (line 3))
   Downloading pyparsing-3.3.2-py3-none-any.whl.metadata (5.8 kB)
 Downloading pandas-3.0.2-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (11.3 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 11.3/11.3 MB 42.7 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 11.3/11.3 MB 31.8 MB/s  0:00:00
 Downloading numpy-2.4.4-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (16.9 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.9/16.9 MB 138.4 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.9/16.9 MB 108.5 MB/s  0:00:00
 Downloading vnstock-3.5.0-py3-none-any.whl (264 kB)
 Downloading python_dotenv-1.2.2-py3-none-any.whl (22 kB)
 Downloading importlib_metadata-9.0.0-py3-none-any.whl (27 kB)
@@ -114,30 +114,30 @@ Downloading et_xmlfile-2.0.0-py3-none-any.whl (18 kB)
 Downloading pycparser-3.0-py3-none-any.whl (48 kB)
 Downloading pydantic-2.12.5-py3-none-any.whl (463 kB)
 Downloading pydantic_core-2.41.5-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.1 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 169.7 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 133.8 MB/s  0:00:00
 Downloading annotated_types-0.7.0-py3-none-any.whl (13 kB)
 Downloading typing_inspection-0.4.2-py3-none-any.whl (14 kB)
 Downloading pytz-2026.1.post1-py2.py3-none-any.whl (510 kB)
 Downloading seaborn-0.13.2-py3-none-any.whl (294 kB)
 Downloading matplotlib-3.10.8-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (8.7 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.7/8.7 MB 172.3 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.7/8.7 MB 173.7 MB/s  0:00:00
 Downloading contourpy-1.3.3-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (355 kB)
 Downloading cycler-0.12.1-py3-none-any.whl (8.3 kB)
 Downloading fonttools-4.62.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (5.1 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.1/5.1 MB 242.0 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.1/5.1 MB 150.5 MB/s  0:00:00
 Downloading kiwisolver-1.5.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (1.4 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.4/1.4 MB 223.6 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.4/1.4 MB 120.9 MB/s  0:00:00
 Downloading pillow-12.2.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (7.1 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.1/7.1 MB 251.8 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.1/7.1 MB 206.6 MB/s  0:00:00
 Downloading pyparsing-3.3.2-py3-none-any.whl (122 kB)
 Downloading squarify-0.4.4-py3-none-any.whl (4.1 kB)
 Downloading tenacity-9.1.4-py3-none-any.whl (28 kB)
 Downloading wordcloud-1.9.6-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (551 kB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 551.3/551.3 kB 106.0 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 551.3/551.3 kB 70.1 MB/s  0:00:00
 Building wheels for collected packages: ta
   Building wheel for ta (pyproject.toml): started
   Building wheel for ta (pyproject.toml): finished with status 'done'
-  Created wheel for ta: filename=ta-0.11.0-py3-none-any.whl size=29481 sha256=bc8e4e22615130c7ea6cee2851274c86f181e70b07ee32c7eba19a1ff3ddca83
+  Created wheel for ta: filename=ta-0.11.0-py3-none-any.whl size=29481 sha256=48ca0f28c8907df4673f47b6cf07791825d2886a2e3d2bc9e139f9a72445f28f
   Stored in directory: /home/runner/.cache/pip/wheels/a1/d7/29/7781cc5eb9a3659d032d7d15bdd0f49d07d2b24fec29f44bc4
 Successfully built ta
 Installing collected packages: squarify, pytz, zipp, urllib3, typing-extensions, tenacity, soupsieve, six, python-dotenv, pyparsing, pycparser, psutil, pillow, packaging, numpy, kiwisolver, idna, fonttools, et-xmlfile, cycler, charset_normalizer, certifi, annotated-types, typing-inspection, requests, python-dateutil, pydantic-core, openpyxl, importlib-metadata, contourpy, cffi, beautifulsoup4, vnai, pydantic, pandas, matplotlib, wordcloud, ta, seaborn, vnstock_ezchart, vnstock

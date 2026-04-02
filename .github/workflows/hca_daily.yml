@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 jobs:
   run-hca:
@@ -36,9 +36,10 @@ jobs:
           python main.py --mode hybrid --primary HHV --watchlist "TOS,NKG,AAS" --cap 50000000 --min_score 3.8
           
       - name: Commit and Push Logs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --global user.name "HCA System Bot"
           git config --global user.email "bot@hca.dev"
-          git add execution_log.json history.csv portfolio.json
-          git commit -m "chore: update daily execution logs [skip ci]" || exit 0
-          git push
+          git add execution_log.json history.csv portfolio.json || true
+          git diff --quiet && git diff --staged --quiet || (git commit -m "chore: update daily execution logs [skip ci]" && git pull --rebase origin main && git push "https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:main)

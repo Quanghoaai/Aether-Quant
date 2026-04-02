@@ -18,10 +18,10 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
       
-      - name: Set up Python 3.12
+      - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.11'
           
       - name: Install dependencies
         run: pip install -r requirements.txt
@@ -41,7 +41,6 @@ jobs:
         run: |
           git config --global user.name "HCA System Bot"
           git config --global user.email "bot@hca.dev"
-          git add -A || true
-          git commit -m "chore: update daily execution logs [skip ci]" || echo "No changes to commit"
-          git pull --rebase origin main || true
-          git push origin HEAD:main || echo "Nothing to push"
+          git add -A
+          git diff-index --quiet HEAD || git commit -m "chore: update daily execution logs [skip ci]"
+          git push origin main || echo "Nothing to push"

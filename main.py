@@ -7,7 +7,7 @@ from data_pipeline import fetch_data
 from scoring import calculate_multi_factor_score
 from ranking import rank_stocks
 from execution import execute_logic
-from reporting import save_signals_to_json, log_scores_to_csv, send_daily_summary
+from reporting import save_signals_to_json, log_scores_to_csv, send_daily_summary, send_telegram_summary
 
 def main():
     parser = argparse.ArgumentParser(description="HCA System Main")
@@ -64,6 +64,7 @@ def main():
     save_signals_to_json(actions)
     log_scores_to_csv(scored_data, classification)
     send_daily_summary(actions, portfolio)
+    send_telegram_summary(actions, portfolio)
     
     print("Done!")
 

@@ -52,3 +52,5 @@ To make this run reliably every morning at 07:00 AM (ICT):
   - `EMAIL_USER`: Email sending the daily digest.
   - `EMAIL_PASS`: App password of the transmitting email.
   - `EMAIL_RECEIVER`: Recipient's destination email.
+  - `TELEGRAM_BOT_TOKEN`: The token of your Telegram bot.
+  - `TELEGRAM_CHAT_ID`: Your personal Telegram ID/Group ID to receive signals.

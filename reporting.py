@@ -68,3 +68,42 @@ def send_daily_summary(actions, portfolio):
             print("No email password provided, skipping email sending.")
     except Exception as e:
         print(f"Error sending email: {e}")
+
+def send_telegram_summary(actions, portfolio):
+    import requests
+    bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
+    
+    if not bot_token or not chat_id:
+        print("Telegram credentials not set. Skipping Telegram notification.")
+        return
+        
+    text = "🚀 *HCA System Update*\n\n"
+    text += f"*Portfolio Cash:* {portfolio['cash']:,.0f} VND\n"
+    text += "*Positions:*\n"
+    for sym, pos in portfolio['positions'].items():
+        text += f"⁃ {sym}: {pos['qty']} @ {pos['avg_price']:,.0f}\n"
+        
+    text += "\n*Actions for Today:*\n"
+    if not actions:
+        text += "No recommended actions today.\n"
+    else:
+        for a in actions:
+            text += f"⚡ *{a['action']}* {a['symbol']} - {a.get('reason','')}\n"
+            
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    payload = {
+        "chat_id": chat_id,
+        "text": text,
+        "parse_mode": "Markdown"
+    }
+    
+    try:
+        response = requests.post(url, json=payload)
+        if response.status_code == 200:
+            print("Telegram message sent successfully.")
+        else:
+            print(f"Error sending Telegram message: {response.text}")
+    except Exception as e:
+        print(f"Error sending Telegram message: {e}")
+

@@ -32,6 +32,8 @@ jobs:
           EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
           EMAIL_RECEIVER: ${{ secrets.EMAIL_RECEIVER }}
           VNSTOCK_API_KEY: ${{ secrets.VNSTOCK_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           python main.py --mode hybrid --primary HHV --watchlist "TOS,NKG,AAS" --cap 50000000 --min_score 3.8
           

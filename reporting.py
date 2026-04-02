@@ -69,7 +69,7 @@ def send_daily_summary(actions, portfolio):
     except Exception as e:
         print(f"Error sending email: {e}")
 
-def send_telegram_summary(actions, portfolio):
+def send_telegram_summary(actions, portfolio, scored_data, classification, current_prices):
     import requests
     bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
     chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
@@ -87,9 +87,38 @@ def send_telegram_summary(actions, portfolio):
     text += "\n*Actions for Today:*\n"
     if not actions:
         text += "No recommended actions today.\n"
+        text += "\n⚠️ _Lưu ý: Bản báo cáo này được trích xuất từ hệ thống HCA và API data của Vnstock._"
     else:
-        for a in actions:
-            text += f"⚡ *{a['action']}* {a['symbol']} - {a.get('reason','')}\n"
+        for idx, a in enumerate(actions, 1):
+            sym = a['symbol']
+            action_type = a['action']
+            reason = a.get('reason', '')
+            c_price = current_prices.get(sym, 0)
+            score_inf = scored_data.get(sym, {})
+            class_name = classification.get(sym, "SECONDARY")
+            
+            text += f"*{idx}. {sym}* - *[{class_name}]*\n"
+            text += f"⚡ *Tín hiệu ({action_type}):* {reason}\n"
+            text += f"⁃ Sức mạnh RS: {score_inf.get('RS_score',0)}/5.0 | Dòng tiền: {score_inf.get('Volume_Profile_score',0)}/5.0\n"
+            text += f"⁃ Form giá (Price Action): {score_inf.get('Price_Action_score',0)}/5.0\n"
+            text += f"⁃ P/E dự phóng & DCF: [Đang cập nhật từ hệ thống Cơ bản]\n\n"
+            
+            if action_type == "BUY":
+                amount = a.get('amount', 0)
+                qty = a.get('qty', 0)
+                text += "*Chiến lược:*\n"
+                text += f"⁃ Giá hiện tại: {c_price:,.0f} VND\n"
+                text += f"⁃ Vùng mua: Quanh mức {c_price:,.0f} VND\n"
+                text += f"⁃ Mục tiêu (Take Profit): {(c_price * 1.15):,.0f} VND (+15%)\n"
+                text += f"⁃ Cắt lỗ (Hard Stop): {(c_price * 0.93):,.0f} VND (-7%)\n"
+                text += f"⁃ Đề xuất Phân bổ: Mua {qty:,} cổ phiếu (Tổng {amount:,.0f} VND)\n\n"
+            
+            text += "*Lưu ý Quan trọng & Quản trị Rủi ro:*\n"
+            text += "⁃ Ưu tiên mốc cắt lỗ kỷ luật cứng -7% hoặc khi mất mốc MA50.\n"
+            text += "⁃ Tuân thủ kiểm soát rủi ro danh mục tối đa 3 vị thế.\n"
+            text += "-------------------------------\n"
+            
+        text += "\n⚠️ _Lưu ý: Bản báo cáo này được trích xuất từ hệ thống AI và API data của Vnstock._\n"
             
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     payload = {

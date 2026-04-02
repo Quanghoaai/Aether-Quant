@@ -5,6 +5,12 @@ on:
     - cron: '0 0 * * 1-5' # 00:00 UTC -> 07:00 AM ICT, Mon-Fri
   workflow_dispatch:
 
+permissions:
+  contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   run-hca:
     runs-on: ubuntu-latest

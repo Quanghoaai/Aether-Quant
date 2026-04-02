@@ -25,7 +25,7 @@ def fetch_data(tickers, start_date=None, end_date=None, period="6mo"):
 
     api_key = os.getenv('VNSTOCK_API_KEY')
     if api_key and api_key != "YOUR_API_KEY_HERE":
-        stock = Vnstock().stock(symbol='VN30', source='KBS', api_key=api_key)
+        stock = Vnstock().stock(symbol='VN30', source='KBS')
         delay = 1
     else:
         stock = Vnstock().stock(symbol='VN30', source='KBS')

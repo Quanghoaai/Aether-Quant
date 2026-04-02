@@ -1,9 +1,8 @@
 [
     {
-        "symbol": "NKG",
-        "action": "BUY",
-        "amount": 16666666.666666666,
-        "reason": "New Position",
-        "qty": 1207729
+        "symbol": "TCB",
+        "action": "ROTATE_TO_ALPHA",
+        "target": "TOS",
+        "reason": "Alpha Swap: TOS score 3.3 > TCB score 2.2"
     }
 ]

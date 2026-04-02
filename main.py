@@ -29,13 +29,13 @@ def main():
     
     watchlist = [t.strip() for t in args.watchlist.split(",")]
     primary = args.primary
-    tickers = [primary, "VNINDEX"] + watchlist
+    tickers = list(set([primary, "VNINDEX"] + watchlist))
     
     print(f"Starting HCA System in {args.mode} mode...")
+    print(f"Primary: {primary} | Watchlist: {watchlist} | Capital: {args.cap:,}")
     
     # AGENT 1: Data Pipeline
     print("Fetching data...")
-    # Fetch data (Using 6mo period to ensure enough data for 50MA)
     data_dict = fetch_data(tickers, period="6mo")
     
     benchmark_df = data_dict.get("VNINDEX")
@@ -53,19 +53,15 @@ def main():
             scored_data[sym] = calculate_multi_factor_score(df, benchmark_df)
             current_prices[sym] = df['Close'].iloc[-1]
             
-    # AGENT 3: Ranking & Alpha Detection
+    # AGENT 3: Ranking & Alpha Detection (Dynamic)
     print("Ranking stocks...")
-    scored_data, classification = rank_stocks(scored_data)
+    scored_data, classification = rank_stocks(scored_data, primary=primary, watchlist=watchlist)
     
-    # Filter by min_score rule where applicable
-    for sym, score_info in list(scored_data.items()):
-        pass # The rule keep if score >= 3.8 is handled in execution logic
-        
     print(f"Classification: {classification}")
     
-    # AGENT 4: Execution Logic
+    # AGENT 4: Execution Logic (Dynamic primary + capital)
     print("Evaluating execution logic...")
-    actions, portfolio = execute_logic(scored_data, classification, current_prices)
+    actions, portfolio = execute_logic(scored_data, classification, current_prices, primary=primary, capital=args.cap)
     
     # AGENT 5: Output & Reporting
     print("Saving reporting outputs...")

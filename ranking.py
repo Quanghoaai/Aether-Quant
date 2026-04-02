@@ -1,10 +1,12 @@
-def rank_stocks(scored_data):
+def rank_stocks(scored_data, primary="HHV", watchlist=None):
     """
     scored_data: dict of symbol -> score_dict
     Formula: rank_score = (score * 0.45) + (rs_rank * 0.35) + (liquidity_score * 0.20)
     """
+    if watchlist is None:
+        watchlist = []
+    
     results = {}
-    watchlist = ["TOS", "NKG", "AAS"]
     
     for symbol, s_data in scored_data.items():
         if symbol == "VNINDEX":
@@ -20,11 +22,10 @@ def rank_stocks(scored_data):
     
     # Classify
     classification = {}
-    hhv_sym = "HHV"
-    hhv_rank = results.get(hhv_sym, {}).get('rank_score', 0)
+    primary_rank = results.get(primary, {}).get('rank_score', 0)
     
-    if hhv_sym in results:
-        classification[hhv_sym] = "PRIMARY"
+    if primary in results:
+        classification[primary] = "PRIMARY"
         
     alpha_candidate = None
     max_alpha_rank = 0
@@ -38,7 +39,7 @@ def rank_stocks(scored_data):
                 
     for w_sym in watchlist:
         if w_sym in results:
-            if w_sym == alpha_candidate and max_alpha_rank > hhv_rank:
+            if w_sym == alpha_candidate and max_alpha_rank > primary_rank:
                 classification[w_sym] = "ALPHA"
             else:
                 classification[w_sym] = "SECONDARY"

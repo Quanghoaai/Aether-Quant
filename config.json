@@ -1,6 +1,10 @@
 {
-    "primary": "HHV",
-    "watchlist": ["TOS", "NKG", "AAS"],
+    "primary": "TCB",
+    "watchlist": [
+        "TOS",
+        "NKG",
+        "AAS"
+    ],
     "capital": 50000000,
     "min_score": 3.8
 }

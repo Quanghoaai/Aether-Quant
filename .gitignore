@@ -1,0 +1,10 @@
+# Môi trường và API keys
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Local data (có thể giữ lại portfolio nếu bạn muốn track state cục bộ, nhưng logs có thể bỏ)
+# history.csv
+# execution_log.json

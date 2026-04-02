@@ -3,3 +3,4 @@ numpy
 vnstock
 ta
 python-dotenv
+requests

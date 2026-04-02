@@ -1,4 +1,6 @@
 import argparse
+import json
+import os
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -10,12 +12,18 @@ from execution import execute_logic
 from reporting import save_signals_to_json, log_scores_to_csv, send_daily_summary, send_telegram_summary
 
 def main():
+    # Load defaults from config.json if exists
+    cfg_defaults = {}
+    if os.path.exists("config.json"):
+        with open("config.json", "r") as f:
+            cfg_defaults = json.load(f)
+    
     parser = argparse.ArgumentParser(description="HCA System Main")
     parser.add_argument("--mode", type=str, default="hybrid")
-    parser.add_argument("--primary", type=str, default="HHV")
-    parser.add_argument("--watchlist", type=str, default="TOS,NKG,AAS")
-    parser.add_argument("--cap", type=int, default=50000000)
-    parser.add_argument("--min_score", type=float, default=3.8)
+    parser.add_argument("--primary", type=str, default=cfg_defaults.get("primary", "HHV"))
+    parser.add_argument("--watchlist", type=str, default=",".join(cfg_defaults.get("watchlist", ["TOS","NKG","AAS"])))
+    parser.add_argument("--cap", type=int, default=cfg_defaults.get("capital", 50000000))
+    parser.add_argument("--min_score", type=float, default=cfg_defaults.get("min_score", 3.8))
     
     args = parser.parse_args()
     

@@ -14,10 +14,10 @@ Collecting ta (from -r requirements.txt (line 4))
   Preparing metadata (pyproject.toml): finished with status 'done'
 Collecting python-dotenv (from -r requirements.txt (line 5))
   Downloading python_dotenv-1.2.2-py3-none-any.whl.metadata (27 kB)
+Collecting requests (from -r requirements.txt (line 6))
+  Downloading requests-2.33.1-py3-none-any.whl.metadata (4.8 kB)
 Collecting python-dateutil>=2.8.2 (from pandas->-r requirements.txt (line 1))
   Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl.metadata (8.4 kB)
-Collecting requests (from vnstock->-r requirements.txt (line 3))
-  Downloading requests-2.33.1-py3-none-any.whl.metadata (4.8 kB)
 Collecting beautifulsoup4 (from vnstock->-r requirements.txt (line 3))
   Downloading beautifulsoup4-4.14.3-py3-none-any.whl.metadata (3.8 kB)
 Collecting seaborn (from vnstock->-r requirements.txt (line 3))
@@ -40,6 +40,14 @@ Collecting vnai>=2.3.9 (from vnstock->-r requirements.txt (line 3))
   Downloading vnai-2.4.0-py3-none-any.whl.metadata (691 bytes)
 Collecting vnstock_ezchart>=0.0.3 (from vnstock->-r requirements.txt (line 3))
   Downloading vnstock_ezchart-0.0.3-py3-none-any.whl.metadata (9.3 kB)
+Collecting charset_normalizer<4,>=2 (from requests->-r requirements.txt (line 6))
+  Downloading charset_normalizer-3.4.7-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (40 kB)
+Collecting idna<4,>=2.5 (from requests->-r requirements.txt (line 6))
+  Downloading idna-3.11-py3-none-any.whl.metadata (8.4 kB)
+Collecting urllib3<3,>=1.26 (from requests->-r requirements.txt (line 6))
+  Downloading urllib3-2.6.3-py3-none-any.whl.metadata (6.9 kB)
+Collecting certifi>=2023.5.7 (from requests->-r requirements.txt (line 6))
+  Downloading certifi-2026.2.25-py3-none-any.whl.metadata (2.5 kB)
 Collecting zipp>=3.20 (from importlib-metadata>=1.0->vnstock->-r requirements.txt (line 3))
   Downloading zipp-3.23.0-py3-none-any.whl.metadata (3.6 kB)
 Collecting six>=1.5 (from python-dateutil>=2.8.2->pandas->-r requirements.txt (line 1))
@@ -48,14 +56,6 @@ Collecting cffi>=1.17.1 (from vnai>=2.3.9->vnstock->-r requirements.txt (line 3)
   Downloading cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.6 kB)
 Collecting pycparser (from cffi>=1.17.1->vnai>=2.3.9->vnstock->-r requirements.txt (line 3))
   Downloading pycparser-3.0-py3-none-any.whl.metadata (8.2 kB)
-Collecting charset_normalizer<4,>=2 (from requests->vnstock->-r requirements.txt (line 3))
-  Downloading charset_normalizer-3.4.7-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (40 kB)
-Collecting idna<4,>=2.5 (from requests->vnstock->-r requirements.txt (line 3))
-  Downloading idna-3.11-py3-none-any.whl.metadata (8.4 kB)
-Collecting urllib3<3,>=1.26 (from requests->vnstock->-r requirements.txt (line 3))
-  Downloading urllib3-2.6.3-py3-none-any.whl.metadata (6.9 kB)
-Collecting certifi>=2023.5.7 (from requests->vnstock->-r requirements.txt (line 3))
-  Downloading certifi-2026.2.25-py3-none-any.whl.metadata (2.5 kB)
 Collecting squarify (from vnstock_ezchart>=0.0.3->vnstock->-r requirements.txt (line 3))
   Downloading squarify-0.4.4-py3-none-any.whl.metadata (600 bytes)
 Collecting wordcloud (from vnstock_ezchart>=0.0.3->vnstock->-r requirements.txt (line 3))
@@ -87,11 +87,16 @@ Collecting pillow>=8 (from matplotlib!=3.6.1,>=3.4->seaborn->vnstock->-r require
 Collecting pyparsing>=3 (from matplotlib!=3.6.1,>=3.4->seaborn->vnstock->-r requirements.txt (line 3))
   Downloading pyparsing-3.3.2-py3-none-any.whl.metadata (5.8 kB)
 Downloading pandas-3.0.2-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (11.3 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 11.3/11.3 MB 254.3 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 11.3/11.3 MB 16.8 MB/s  0:00:00
 Downloading numpy-2.4.4-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (16.9 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.9/16.9 MB 272.2 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.9/16.9 MB 54.6 MB/s  0:00:00
 Downloading vnstock-3.5.0-py3-none-any.whl (264 kB)
 Downloading python_dotenv-1.2.2-py3-none-any.whl (22 kB)
+Downloading requests-2.33.1-py3-none-any.whl (64 kB)
+Downloading charset_normalizer-3.4.7-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (214 kB)
+Downloading idna-3.11-py3-none-any.whl (71 kB)
+Downloading urllib3-2.6.3-py3-none-any.whl (131 kB)
+Downloading certifi-2026.2.25-py3-none-any.whl (153 kB)
 Downloading importlib_metadata-9.0.0-py3-none-any.whl (27 kB)
 Downloading packaging-26.0-py3-none-any.whl (74 kB)
 Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
@@ -99,11 +104,6 @@ Downloading six-1.17.0-py2.py3-none-any.whl (11 kB)
 Downloading vnai-2.4.0-py3-none-any.whl (44 kB)
 Downloading cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (215 kB)
 Downloading psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl (155 kB)
-Downloading requests-2.33.1-py3-none-any.whl (64 kB)
-Downloading charset_normalizer-3.4.7-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (214 kB)
-Downloading idna-3.11-py3-none-any.whl (71 kB)
-Downloading urllib3-2.6.3-py3-none-any.whl (131 kB)
-Downloading certifi-2026.2.25-py3-none-any.whl (153 kB)
 Downloading vnstock_ezchart-0.0.3-py3-none-any.whl (15 kB)
 Downloading zipp-3.23.0-py3-none-any.whl (10 kB)
 Downloading beautifulsoup4-4.14.3-py3-none-any.whl (107 kB)
@@ -114,30 +114,30 @@ Downloading et_xmlfile-2.0.0-py3-none-any.whl (18 kB)
 Downloading pycparser-3.0-py3-none-any.whl (48 kB)
 Downloading pydantic-2.12.5-py3-none-any.whl (463 kB)
 Downloading pydantic_core-2.41.5-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.1 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 252.8 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 73.5 MB/s  0:00:00
 Downloading annotated_types-0.7.0-py3-none-any.whl (13 kB)
 Downloading typing_inspection-0.4.2-py3-none-any.whl (14 kB)
 Downloading pytz-2026.1.post1-py2.py3-none-any.whl (510 kB)
 Downloading seaborn-0.13.2-py3-none-any.whl (294 kB)
 Downloading matplotlib-3.10.8-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (8.7 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.7/8.7 MB 332.3 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.7/8.7 MB 92.7 MB/s  0:00:00
 Downloading contourpy-1.3.3-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (355 kB)
 Downloading cycler-0.12.1-py3-none-any.whl (8.3 kB)
 Downloading fonttools-4.62.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (5.1 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.1/5.1 MB 345.6 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.1/5.1 MB 108.1 MB/s  0:00:00
 Downloading kiwisolver-1.5.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (1.4 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.4/1.4 MB 241.7 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.4/1.4 MB 117.3 MB/s  0:00:00
 Downloading pillow-12.2.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (7.1 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.1/7.1 MB 340.9 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.1/7.1 MB 124.1 MB/s  0:00:00
 Downloading pyparsing-3.3.2-py3-none-any.whl (122 kB)
 Downloading squarify-0.4.4-py3-none-any.whl (4.1 kB)
 Downloading tenacity-9.1.4-py3-none-any.whl (28 kB)
 Downloading wordcloud-1.9.6-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (551 kB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 551.3/551.3 kB 103.1 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 551.3/551.3 kB 93.8 MB/s  0:00:00
 Building wheels for collected packages: ta
   Building wheel for ta (pyproject.toml): started
   Building wheel for ta (pyproject.toml): finished with status 'done'
-  Created wheel for ta: filename=ta-0.11.0-py3-none-any.whl size=29481 sha256=db38a74468f5a303ec69745983114172f3c36a9c961b6d867c053d3204c953c3
+  Created wheel for ta: filename=ta-0.11.0-py3-none-any.whl size=29481 sha256=7b471f3d04137d0677e5eb0615b39509a1f3820846e8b136c699375dbcd642b4
   Stored in directory: /home/runner/.cache/pip/wheels/a1/d7/29/7781cc5eb9a3659d032d7d15bdd0f49d07d2b24fec29f44bc4
 Successfully built ta
 Installing collected packages: squarify, pytz, zipp, urllib3, typing-extensions, tenacity, soupsieve, six, python-dotenv, pyparsing, pycparser, psutil, pillow, packaging, numpy, kiwisolver, idna, fonttools, et-xmlfile, cycler, charset_normalizer, certifi, annotated-types, typing-inspection, requests, python-dateutil, pydantic-core, openpyxl, importlib-metadata, contourpy, cffi, beautifulsoup4, vnai, pydantic, pandas, matplotlib, wordcloud, ta, seaborn, vnstock_ezchart, vnstock

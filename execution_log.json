@@ -1,8 +1,8 @@
 [
     {
-        "symbol": "TCB",
+        "symbol": "HHV",
         "action": "ROTATE_TO_ALPHA",
         "target": "TOS",
-        "reason": "Alpha Swap: TOS score 3.3 > TCB score 2.2"
+        "reason": "Alpha Swap: TOS score 3.3 > HHV score 2.4"
     }
 ]

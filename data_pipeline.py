@@ -4,86 +4,98 @@ import numpy as np
 import time
 import ta
 import socket
+import requests
 import requests.packages.urllib3.util.connection as urllib3_cn
 from vnstock import Vnstock
 from datetime import datetime, timedelta
 
-# Force IPv4
+# Force IPv4 STRICTLY to avoid ConnectionResetError on Linux/WSL
 def allowed_gai_family():
     return socket.AF_INET
 urllib3_cn.allowed_gai_family = allowed_gai_family
 
 def fetch_data(tickers, start_date=None, end_date=None, period="6mo"):
     """
-    Fetch EOD data for a list of tickers using VNStock.
+    Fetch EOD data for a list of tickers using VNStock with high reliability.
     """
     if not start_date or not end_date:
         today = datetime.today()
-        if period == "6mo":
-            lookback_days = 180
-        elif period == "1y":
-            lookback_days = 365
-        else:
-            lookback_days = 120
-            
+        # Ensure 6 months of data (approx 180 days)
+        lookback_days = 180 if period == "6mo" else 365 if period == "1y" else 120
         start_date = (today - timedelta(days=lookback_days)).strftime("%Y-%m-%d")
         end_date = today.strftime("%Y-%m-%d")
 
-    # Initialize stock object
-    stock = Vnstock().stock(symbol='VN30', source='KBS')
-    delay = 1
-
-    data_dict = {}
+    # Use VCI source - more stable for EOD history
+    stock_engine = Vnstock().stock(symbol='VN30', source='VCI')
     
+    data_dict = {}
+    max_retries = 2 # Reduced retries to save time, but keeps it robust
+
     for symbol in tickers:
-        try:
-            print(f"Fetching data for {symbol}...")
-            time.sleep(delay)
-            df = stock.quote.history(symbol=symbol, start=start_date, end=end_date)
-            
-            if df is None or df.empty:
-                print(f"Warning: No data fetched for {symbol}")
-                continue
+        if symbol == "VNINDEX": continue # Handle separately
+        
+        success = False
+        for attempt in range(max_retries):
+            try:
+                print(f"Fetching data for {symbol} (Attempt {attempt + 1})...")
+                # Increase timeout via requests if possible (vnstock uses requests)
+                df = stock_engine.quote.history(symbol=symbol, start=start_date, end=end_date)
                 
-            # Rename columns to standard format
-            rename_map = {
-                "time": "Date",
-                "open": "Open",
-                "high": "High",
-                "low": "Low",
-                "close": "Close",
-                "volume": "Volume"
-            }
-            
-            df = df.rename(columns={k: v for k, v in rename_map.items() if k in df.columns})
-            
-            for col in ['Date', 'Open', 'High', 'Low', 'Close', 'Volume']:
-                if col not in df.columns:
-                    lower_match = [c for c in df.columns if c.lower() == col.lower()]
-                    if lower_match:
-                        df = df.rename(columns={lower_match[0]: col})
-            
-            df = calculate_indicators(df)
-            data_dict[symbol] = df
-            
-        except Exception as e:
-            print(f"Error fetching data for {symbol}: {e}")
-            
+                if df is not None and not df.empty:
+                    # Column standardization
+                    rename_map = {
+                        "time": "Date", "open": "Open", "high": "High", 
+                        "low": "Low", "close": "Close", "volume": "Volume"
+                    }
+                    df = df.rename(columns={k: v for k, v in rename_map.items() if k in df.columns})
+                    
+                    required_cols = ['Open', 'High', 'Low', 'Close', 'Volume']
+                    if all(col in df.columns for col in required_cols):
+                        # Ensure numeric
+                        for col in required_cols:
+                            df[col] = pd.to_numeric(df[col], errors='coerce')
+                        df = df.dropna(subset=required_cols)
+                        
+                        # AGENT 1.5: Calculate Indicators (Essential for Scoring)
+                        df = calculate_indicators(df)
+                        
+                        data_dict[symbol] = df
+                        print(f"✅ Successful: {symbol} ({len(df)} days)")
+                        success = True
+                        break
+                
+                print(f"⚠️ No data for {symbol}, retrying...")
+                time.sleep(1)
+                
+            except Exception as e:
+                print(f"❌ Error {symbol}: {e}")
+                time.sleep(2)
+        
+        if not success:
+            print(f"🛑 Failed to fetch {symbol}")
+
+    # Always fetch VNINDEX for Market Regime analysis
+    try:
+        print("Fetching data for VNINDEX...")
+        df_vni = stock_engine.quote.history(symbol='VNINDEX', start=start_date, end=end_date)
+        if df_vni is not None and not df_vni.empty:
+            df_vni = df_vni.rename(columns={"time": "Date", "open": "Open", "high": "High", "low": "Low", "close": "Close", "volume": "Volume"})
+            for col in ['Open', 'High', 'Low', 'Close', 'Volume']:
+                df_vni[col] = pd.to_numeric(df_vni[col], errors='coerce')
+            df_vni = calculate_indicators(df_vni)
+            data_dict['VNINDEX'] = df_vni
+            print("✅ VNINDEX fetched.")
+    except Exception as e:
+        print(f"⚠️ Warning: Could not fetch VNINDEX: {e}")
+
     return data_dict
 
 def calculate_indicators(df):
     """
-    Calculate technical indicators:
-    - MA20, MA50, MA10
-    - 20-day Volume Average
-    - ATR(14)
-    - RSI(14)
-    - MACD Histogram
-    - N-day High (20-day breakout)
-    - Bollinger Bands Width
+    Calculate technical indicators needed for scoring.
     """
-    if isinstance(df.columns, pd.MultiIndex):
-        df.columns = df.columns.get_level_values(0)
+    if df is None or df.empty:
+        return df
         
     if "Date" in df.columns:
         df = df.sort_values("Date")
@@ -94,7 +106,7 @@ def calculate_indicators(df):
     df['MA50'] = df['Close'].rolling(window=50).mean()
     df['Vol_SMA20'] = df['Volume'].rolling(window=20).mean()
     
-    # Daily returns
+    # Returns
     df['Return'] = df['Close'].pct_change()
     
     # ATR(14)
@@ -122,11 +134,11 @@ def calculate_indicators(df):
         df['MACD_Signal'] = np.nan
         df['MACD_Hist'] = np.nan
     
-    # N-day High (for breakout detection)
+    # Breakout & Range
     df['High_20D'] = df['High'].rolling(window=20).max()
     df['Low_20D'] = df['Low'].rolling(window=20).min()
     
-    # Bollinger Bands Width (for squeeze detection)
+    # BB Width
     try:
         bb = ta.volatility.BollingerBands(close=df['Close'], window=20, window_dev=2)
         df['BB_Width'] = (bb.bollinger_hband() - bb.bollinger_lband()) / df['MA20']
@@ -136,8 +148,8 @@ def calculate_indicators(df):
     return df
 
 if __name__ == "__main__":
-    tickers = ["HHV", "TOS", "NKG", "AAS", "VNINDEX"]
-    data = fetch_data(tickers, period="3mo")
+    tickers = ["HHV", "TCB", "VNINDEX"]
+    data = fetch_data(tickers, period="6mo")
     for symbol, df in data.items():
         print(f"--- {symbol} ---")
-        print(df[['Close', 'MA20', 'RSI', 'MACD_Hist', 'ATR']].tail(3))
+        print(df.tail(3))

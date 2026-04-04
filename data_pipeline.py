@@ -3,8 +3,15 @@ import pandas as pd
 import numpy as np
 import time
 import ta
+import socket
+import requests.packages.urllib3.util.connection as urllib3_cn
 from vnstock import Vnstock
 from datetime import datetime, timedelta
+
+# Force IPv4
+def allowed_gai_family():
+    return socket.AF_INET
+urllib3_cn.allowed_gai_family = allowed_gai_family
 
 def fetch_data(tickers, start_date=None, end_date=None, period="6mo"):
     """

@@ -3,7 +3,14 @@ import json
 import subprocess
 import sys
 import time
+import socket
+import requests.packages.urllib3.util.connection as urllib3_cn
 from dotenv import load_dotenv
+
+# Force IPv4 to prevent ConnectionResetError on some Linux environments
+def allowed_gai_family():
+    return socket.AF_INET
+urllib3_cn.allowed_gai_family = allowed_gai_family
 
 load_dotenv()
 
@@ -42,8 +49,10 @@ def run_analysis(cfg):
         "--min_score", str(cfg["min_score"])
     ]
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
         return result.stdout + result.stderr
+    except subprocess.TimeoutExpired:
+        return "Error: Phân tích quá lâu (Timeout > 300s). Vui lòng thử lại sau hoặc kiểm tra kết nối mạng trên Host."
     except Exception as e:
         return f"Error: {e}"
 

@@ -12,38 +12,38 @@ SUBSCRIPTIONS_FILE = "subscriptions.json"
 PLANS = {
     "daily": {
         "id": "daily",
-        "name": "Gói Ngày",
+        "name": "Goi Ngay",
         "price": 10000,  # VND
         "duration_days": 1,
-        "features": ["Phân tích hàng ngày", "Tín realtime"]
+        "features": ["Phan tich hang ngay", "Tin realtime"]
     },
     "weekly": {
         "id": "weekly",
-        "name": "Gói Tuàn",
+        "name": "Goi Tuan",
         "price": 50000,  # VND
         "duration_days": 7,
-        "features": ["Phân tích hàng ngày", "Tín realtime", "Báo cáo tuàn"]
+        "features": ["Phan tich hang ngay", "Tin realtime", "Bao cao tuan"]
     },
     "monthly": {
         "id": "monthly",
-        "name": "Gói Tháng",
+        "name": "Goi Thang",
         "price": 150000,  # VND
         "duration_days": 30,
-        "features": ["Phân tích hàng ngày", "Tín realtime", "Báo cáo tuàn", "Hottline support"]
+        "features": ["Phan tich hang ngay", "Tin realtime", "Bao cao tuan", "Hotline support"]
     },
     "quarterly": {
         "id": "quarterly",
-        "name": "Gói Quý",
+        "name": "Goi Quy",
         "price": 400000,  # VND
         "duration_days": 90,
-        "features": ["Tât cã tính nang Monthly", "Priority support", "Custom watchlist"]
+        "features": ["Tat ca tinh nang Monthly", "Priority support", "Custom watchlist"]
     },
     "yearly": {
         "id": "yearly",
-        "name": "Gói Nàm",
+        "name": "Goi Nam",
         "price": 1200000,  # VND
         "duration_days": 365,
-        "features": ["Tât cã tính nang", "VIP support", "Alpha signals", "Unlimited watchlist"]
+        "features": ["Tat ca tinh nang", "VIP support", "Alpha signals", "Unlimited watchlist"]
     }
 }
 
@@ -110,27 +110,27 @@ def verify_coupon(code: str) -> Dict[str, Any]:
     coupons = data.get("coupons", get_coupons())
     
     if code not in coupons:
-        return {"success": False, "error": "Mã không tôn tti"}
+        return {"success": False, "error": "Ma khong ton tai"}
     
     coupon = coupons[code]
     
     # Check active
     if not coupon.get("active", True):
-        return {"success": False, "error": "Mã dã vô hiu hóa"}
+        return {"success": False, "error": "Ma da vo hieu hoa"}
     
     # Check expiration
     if coupon.get("expires_at"):
         try:
             expires = datetime.strptime(coupon["expires_at"], "%Y-%m-%d")
             if datetime.now() > expires:
-                return {"success": False, "error": "Mã dã ht hn"}
+                return {"success": False, "error": "Ma da het han"}
         except ValueError:
             pass
     
     # Check max uses
     if coupon.get("max_uses"):
         if coupon.get("current_uses", 0) >= coupon["max_uses"]:
-            return {"success": False, "error": "Mã dã ht lût s dng"}
+            return {"success": False, "error": "Ma da het luot su dung"}
     
     return {"success": True, "data": {"code": code, "discount": coupon["discount"]}}
 
@@ -188,7 +188,7 @@ def subscribe_user(chat_id: int, plan_id: str, coupon_code: Optional[str] = None
     Returns: {"success": bool, "message": str, "data": {...}}
     """
     if plan_id not in PLANS:
-        return {"success": False, "message": "Gói không h p l"}
+        return {"success": False, "message": "Goi khong hop le"}
     
     plan = PLANS[plan_id]
     price = plan["price"]
@@ -260,7 +260,7 @@ def subscribe_user(chat_id: int, plan_id: str, coupon_code: Optional[str] = None
     
     return {
         "success": True,
-        "message": f"Ðng ký thành công gói {plan['name']}!",
+        "message": f"Dang ky thanh cong goi {plan['name']}!",
         "data": {
             "plan": plan["name"],
             "price": price,
@@ -279,14 +279,14 @@ def get_subscription_status(chat_id: int) -> Dict[str, Any]:
     if not user:
         return {
             "has_subscription": False,
-            "message": "Ban chua dng ký goi nào."
+            "message": "Ban chua dang ky goi nao."
         }
     
     sub = user.get("subscription")
     if not sub:
         return {
             "has_subscription": False,
-            "message": "Ban chua có goi active."
+            "message": "Ban chua co goi active."
         }
     
     # Check expiration
@@ -311,21 +311,21 @@ def get_subscription_status(chat_id: int) -> Dict[str, Any]:
 
 def format_plans_message() -> str:
     """Format plans list for Telegram message."""
-    msg = " *CÁC GÓI SUBSCRIPTION*\n"
-    msg += "âââââââââââââââââââ\n\n"
+    msg = "*CÁC GÓI SUBSCRIPTION*\n"
+    msg += "-------------------\n\n"
     
     for plan_id, plan in PLANS.items():
-        msg += f" *{plan['name']}*\n"
-        msg += f"  â Giá: *{plan['price']:,}* VND\n"
-        msg += f"  â Thoi han: {plan['duration_days']} ngày\n"
-        msg += f"  â Tính nang:\n"
+        msg += f"*{plan['name']}*\n"
+        msg += f"  - Gia: *{plan['price']:,}* VND\n"
+        msg += f"  - Thoi han: {plan['duration_days']} ngay\n"
+        msg += f"  - Tinh nang:\n"
         for feat in plan["features"]:
-            msg += f"    â {feat}\n"
+            msg += f"    + {feat}\n"
         msg += "\n"
     
-    msg += " *Luu ý:* Coupon không áp dng cho gói Ngày và Tuàn.\n"
-    msg += " Dùng `/subscribe <goi> [ma_coupon]` d dng ký.\n"
-    msg += " VD: `/subscribe monthly NEWUSER`"
+    msg += "*Luu y:* Coupon khong ap dung cho goi Ngay va Tuan.\n"
+    msg += "Dung `/subscribe <goi> [ma_coupon]` de dang ky.\n"
+    msg += "VD: `/subscribe monthly NEWUSER`"
     
     return msg
 
@@ -335,18 +335,18 @@ def format_subscription_status(chat_id: int) -> str:
     status = get_subscription_status(chat_id)
     
     if not status["has_subscription"]:
-        return " *TRNG THÁI SUBSCRIPTION*\n\n" + status["message"] + "\n\nDùng `/plans` d xem các gói."
+        return "*TRANG THAI SUBSCRIPTION*\n\n" + status["message"] + "\n\nDung `/plans` de xem cac goi."
     
-    msg = " *TRNG THÁI SUBSCRIPTION*\n"
-    msg += "âââââââââââââââââââ\n\n"
-    msg += f" Gói: *{status['plan_name']}*\n"
-    msg += f" Trng thái: {'â Active' if status['active'] else 'â Expired'}\n"
-    msg += f" Ht hn: {status['expires_at']}\n"
-    msg += f" Còn {status['days_left']} ngày\n\n"
+    msg = "*TRANG THAI SUBSCRIPTION*\n"
+    msg += "-------------------\n\n"
+    msg += f"Goi: *{status['plan_name']}*\n"
+    msg += f"Trang thai: {'Active' if status['active'] else 'Expired'}\n"
+    msg += f"Het han: {status['expires_at']}\n"
+    msg += f"Con {status['days_left']} ngay\n\n"
     
     if status.get("features"):
-        msg += "Tính nang:\n"
+        msg += "Tinh nang:\n"
         for feat in status["features"]:
-            msg += f"  â {feat}\n"
+            msg += f"  + {feat}\n"
     
     return msg

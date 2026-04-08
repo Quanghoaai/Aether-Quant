@@ -154,24 +154,9 @@ def run_analysis(cfg, capital, chat_id):
     ]
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
-        # Filter out vnstock/vnai warning lines
-        output = result.stdout + result.stderr
-        lines = output.split('\n')
-        filtered_lines = []
-        for line in lines:
-            # Skip vnstock/vnai update warnings
-            if 'Vnai' in line or 'vnstock' in line or 'vnai' in line:
-                continue
-            if 'is available' in line and 'Update:' in line:
-                continue
-            if 'pip install' in line and 'upgrade' in line:
-                continue
-            if 'pypi.org' in line:
-                continue
-            filtered_lines.append(line)
-        return '\n'.join(filtered_lines)
+        return result.stdout + result.stderr
     except subprocess.TimeoutExpired:
-        return "Error: Phan tich qua lau (Timeout > 300s). Vui long thu lai sau hoac kiem tra ket noi mang tren Host."
+        return "Error: Phân tích quá lâu (Timeout > 300s). Vui lòng thử lại sau hoặc kiểm tra kết nối mạng trên Host."
     except Exception as e:
         return f"Error: {e}"
 
@@ -849,13 +834,13 @@ def handle_command(text, chat_id, bot_token):
             logger.info(f"User {chat_id} starting analysis with capital {capital}")
             send_msg(bot_token, chat_id, "Đang chạy phân tích... Chờ 30-60 giây.")
 
-            output = run_analysis(cfg, capital, chat_id)
+            _ = run_analysis(cfg, capital, chat_id)
 
-            # The analysis itself sends the full report via Telegram
-            lines = output.strip().split('\n')
-            summary = '\n'.join(lines[-5:]) if len(lines) > 5 else output
+            # The analysis itself sends the full report via Telegram.
+            # Do not echo stdout/stderr back to user to avoid noisy third-party prints.
             logger.info(f"User {chat_id} analysis complete")
-            return f"Phân tích hoàn tất!\n\n```\n{summary}\n```"
+            send_msg(bot_token, chat_id, "Phân tích hoàn tất!")
+            return None
         except Exception as e:
             logger.error(f"Error in /run for user {chat_id}: {e}")
             return f" *LOI:* Phân tích thất bại. Vui lòng thử lại sau.\n\nError: `{str(e)}`"

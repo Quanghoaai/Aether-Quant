@@ -2,8 +2,15 @@ import argparse
 import json
 import os
 import socket
+import logging
+import warnings
 import requests.packages.urllib3.util.connection as urllib3_cn
 from dotenv import load_dotenv
+
+# Suppress vnstock/vnai info messages and warnings
+logging.getLogger("vnstock").setLevel(logging.ERROR)
+logging.getLogger("vnstock.common.data").setLevel(logging.ERROR)
+warnings.filterwarnings("ignore", message=".*Vnai.*")
 
 # Force IPv4
 def allowed_gai_family():

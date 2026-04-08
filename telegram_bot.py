@@ -192,6 +192,7 @@ def main():
         {"command": "run", "description": "Chạy phân tích ngay lập tức"},
         {"command": "portfolio", "description": "Xem danh mục đầu tư"},
         {"command": "set_primary", "description": "Đổi mã chính (VD: /set_primary HHV)"},
+        {"command": "watchlist", "description": "Xem watchlist hien tai"},
         {"command": "set_watchlist", "description": "Đổi watchlist (VD: /set_watchlist TOS,NKG,AAS)"},
         {"command": "add", "description": "Thêm mã vào watchlist (VD: /add FPT)"},
         {"command": "remove", "description": "Xóa mã khỏi watchlist (VD: /remove NKG)"},
@@ -516,47 +517,110 @@ def handle_command(text, chat_id, bot_token):
     # /set_watchlist
     elif cmd == "/set_watchlist":
         if len(parts) < 2:
-            return " Thiếu danh sách. VD: `/set_watchlist TOS,NKG,AAS`"
+            return "Thieu danh sach. VD: `/set_watchlist TOS,NKG,AAS`"
         wl = [s.strip().upper() for s in parts[1].split(",") if s.strip()]
         cfg["watchlist"] = wl
         save_user_config(chat_id, cfg)
-        return f" Đã đổi Watchlist → *{', '.join(wl)}*"
-    
-    # /add
+        return f"Da doi Watchlist -> *{', '.join(wl)}*"
+
+    # /watchlist - View current watchlist
+    elif cmd == "/watchlist":
+        if not cfg["watchlist"]:
+            return "Watchlist dang trong.\n\nDung `/add MA1,MA2,MA3` de them ma."
+
+        msg = "*WATCHLIST HIEN TAI*\n"
+        msg += "-------------------\n\n"
+        msg += f"Ma chinh: *{cfg['primary']}*\n"
+        msg += f"Watchlist: *{', '.join(cfg['watchlist'])}*\n\n"
+        msg += "Lenh:\n"
+        msg += "- `/add MA1,MA2` - Them nhieu ma\n"
+        msg += "- `/remove MA1,MA2` - Xoa nhieu ma\n"
+        msg += "- `/set_watchlist MA1,MA2,MA3` - Thay the toan bo"
+        return msg
+
+    # /add - Add one or multiple symbols
     elif cmd == "/add":
         if len(parts) < 2:
-            return " Thiếu mã. VD: `/add VNM`"
-        sym = parts[1].upper()
-        if sym not in cfg["watchlist"]:
-            cfg["watchlist"].append(sym)
+            return "Cu phap: `/add MA1,MA2,MA3`\n\nVD: `/add VNM,TCB,FPT`"
+
+        # Parse multiple symbols (comma or space separated)
+        symbols_input = " ".join(parts[1:])
+        new_symbols = [s.strip().upper() for s in symbols_input.replace(",", " ").split() if s.strip()]
+
+        if not new_symbols:
+            return "Khong tim thay ma nao hop le."
+
+        added = []
+        existed = []
+
+        for sym in new_symbols:
+            # Validate: must be 2-5 letters, alphanumeric
+            if not sym.isalnum() or len(sym) < 2 or len(sym) > 5:
+                continue
+
+            if sym not in cfg["watchlist"]:
+                cfg["watchlist"].append(sym)
+                added.append(sym)
+            else:
+                existed.append(sym)
+
+        if added:
             save_user_config(chat_id, cfg)
-            return f" Đã thêm *{sym}* → Watchlist: *{', '.join(cfg['watchlist'])}*"
-        return f" *{sym}* đã có trong Watchlist rồi."
-    
-    # /remove
+            msg = f"Da them *{len(added)}* ma: *{', '.join(added)}*\n"
+            msg += f"Watchlist: *{', '.join(cfg['watchlist'])}*\n"
+            if existed:
+                msg += f"\nDa co san: *{', '.join(existed)}*"
+            return msg
+        elif existed:
+            return f"Tat ca da co trong Watchlist: *{', '.join(existed)}*"
+        else:
+            return "Khong co ma hop le de them."
+
+    # /remove - Remove one or multiple symbols
     elif cmd == "/remove":
         if len(parts) < 2:
-            return " Thiếu mã. VD: `/remove NKG`"
-        sym = parts[1].upper()
-        if sym in cfg["watchlist"]:
-            cfg["watchlist"].remove(sym)
+            return "Cu phap: `/remove MA1,MA2,MA3`\n\nVD: `/remove NKG,VNM`"
+
+        # Parse multiple symbols (comma or space separated)
+        symbols_input = " ".join(parts[1:])
+        remove_symbols = [s.strip().upper() for s in symbols_input.replace(",", " ").split() if s.strip()]
+
+        if not remove_symbols:
+            return "Khong tim thay ma nao hop le."
+
+        removed = []
+        not_found = []
+
+        for sym in remove_symbols:
+            if sym in cfg["watchlist"]:
+                cfg["watchlist"].remove(sym)
+                removed.append(sym)
+            else:
+                not_found.append(sym)
+
+        if removed:
             save_user_config(chat_id, cfg)
-            return f" Đã xóa *{sym}* → Watchlist: *{', '.join(cfg['watchlist'])}*"
-        return f" *{sym}* không có trong Watchlist."
-    
+            msg = f"Da xoa *{len(removed)}* ma: *{', '.join(removed)}*\n"
+            msg += f"Watchlist: *{', '.join(cfg['watchlist']) if cfg['watchlist'] else '(trong)'}*\n"
+            if not_found:
+                msg += f"\nKhong co trong list: *{', '.join(not_found)}*"
+            return msg
+        else:
+            return f"Khong tim thay ma nao trong Watchlist: *{', '.join(not_found)}*"
+
     # /set_capital - Set user's own capital
     elif cmd == "/set_capital":
         if len(parts) < 2:
-            return " Thiếu số vốn. VD: `/set_capital 100000000`"
+            return "Thieu so von. VD: `/set_capital 100000000`"
         try:
             cap = int(parts[1])
             pf = get_user_portfolio(chat_id)
             pf["capital"] = cap
             save_user_portfolio(chat_id, pf)
-            return f" Đã đổi vốn của bạn  *{cap:,.0f}* VND"
+            return f"Da doi von cua ban -> *{cap:,.0f}* VND"
         except ValueError:
-            return " Số vốn không hợp lệ."
-    
+            return "So von khong hop le."
+
     # /set_minscore
     elif cmd == "/set_minscore":
         if len(parts) < 2:

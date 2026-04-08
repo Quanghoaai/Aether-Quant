@@ -189,6 +189,7 @@ def main():
         {"command": "confirm_sell", "description": "Xác nhận bán (VD: /confirm_sell TCB 500)"},
         {"command": "set_capital", "description": "Đổi vốn (VD: /set_capital 100000000)"},
         {"command": "set_minscore", "description": "Đổi điểm (VD: /set_minscore 3.5)"},
+        {"command": "update", "description": "Admin: Cập nhật bot từ GitHub"},
         {"command": "help", "description": "Xem hướng dẫn sử dụng"}
     ]
     resp = requests.post(f"{base_url}/setMyCommands", json={"commands": commands})
@@ -727,8 +728,59 @@ def handle_command(text, chat_id, bot_token):
         summary = '\n'.join(lines[-5:]) if len(lines) > 5 else output
         return f"Phân tích hoàn tất!\n\n```\n{summary}\n```"
     
+    # /update - Admin only: auto-update from GitHub
+    elif cmd == "/update":
+        admin_chat_id = os.environ.get("ADMIN_CHAT_ID", "")
+        if str(chat_id) != str(admin_chat_id):
+            return "Ban khong co quyen su dung lenh nay."
+        
+        send_msg(bot_token, chat_id, " *DANG CAP NHAT...*\n\nVui long doi, bot se khoi dong lai sau khi hoan tat.")
+        
+        try:
+            # Git fetch and reset
+            fetch_result = subprocess.run(
+                ["git", "fetch", "origin"],
+                capture_output=True, text=True, timeout=30,
+                cwd=os.path.dirname(os.path.abspath(__file__))
+            )
+            
+            reset_result = subprocess.run(
+                ["git", "reset", "--hard", "origin/main"],
+                capture_output=True, text=True, timeout=30,
+                cwd=os.path.dirname(os.path.abspath(__file__))
+            )
+            
+            # Get current commit info
+            log_result = subprocess.run(
+                ["git", "log", "-1", "--oneline"],
+                capture_output=True, text=True, timeout=10,
+                cwd=os.path.dirname(os.path.abspath(__file__))
+            )
+            
+            msg = " *CAP NHAT THANH CONG!*\n\n"
+            msg += f"Commit: `{log_result.stdout.strip()}`\n\n"
+            msg += "Bot dang khoi dong lai...\n"
+            msg += "Neu bot khong phan hoi sau 30 giay, vui long kiem tra log."
+            
+            # Send message before restart
+            send_msg(bot_token, chat_id, msg)
+            
+            # Restart service (will kill current process)
+            subprocess.Popen(
+                ["sudo", "systemctl", "restart", "hca-bot"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+            
+            return None  # Don't send another message
+            
+        except subprocess.TimeoutExpired:
+            return " *LOI:* Git operation timeout."
+        except Exception as e:
+            return f" *LOI:* `{str(e)}`"
+    
     else:
-        return "Lệnh không nhận dạng. Gõ */help* để xem menu."
+        return "Lenh khong nhan dang. Go */help* de xem menu."
 
 def send_msg(bot_token, chat_id, text):
     import requests

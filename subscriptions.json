@@ -1,0 +1,12 @@
+{
+  "users": {},
+  "coupons": {
+    "NEWUSER": {"code": "NEWUSER", "discount": 20000, "active": true, "max_uses": 100, "current_uses": 0},
+    "LAUNCH": {"code": "LAUNCH", "discount": 20000, "active": true, "max_uses": 50, "current_uses": 0},
+    "DOUUSER": {"code": "DOUUSER", "discount": 50000, "active": true, "max_uses": 10, "current_uses": 0},
+    "SUMMER": {"code": "SUMMER", "discount": 15000, "active": true, "expires_at": "2025-08-31", "max_uses": 200, "current_uses": 0},
+    "FLASH": {"code": "FLASH", "discount": 10000, "active": true, "expires_at": "2025-04-30", "max_uses": 500, "current_uses": 0},
+    "VIP50": {"code": "VIP50", "discount": 50000, "active": true, "max_uses": 20, "current_uses": 0}
+  },
+  "transactions": []
+}

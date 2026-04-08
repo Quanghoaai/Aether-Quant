@@ -297,28 +297,30 @@ def build_full_report(scored_data, classification, actions, portfolio, benchmark
     
     return report
 
-def send_telegram_summary(scored_data, classification, actions, portfolio, benchmark_df, current_prices, capital=50000000):
+def send_telegram_summary(scored_data, classification, actions, portfolio, benchmark_df, current_prices, capital=50000000, chat_id=None):
     import requests
     bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
-    chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
-    
-    if not bot_token or not chat_id:
+
+    # Use provided chat_id or fallback to env variable
+    target_chat_id = chat_id or os.environ.get("TELEGRAM_CHAT_ID", "")
+
+    if not bot_token or not target_chat_id:
         print("Telegram credentials not set. Skipping Telegram notification.")
         return
-        
+
     report = build_full_report(scored_data, classification, actions, portfolio, benchmark_df, current_prices, capital)
-    
+
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     payload = {
-        "chat_id": chat_id,
+        "chat_id": target_chat_id,
         "text": report,
         "parse_mode": "Markdown"
     }
-    
+
     try:
         response = requests.post(url, json=payload)
         if response.status_code == 200:
-            print("Telegram message sent successfully.")
+            print(f"Telegram message sent successfully to chat_id={target_chat_id}.")
         else:
             print(f"Error sending Telegram message: {response.text}")
     except Exception as e:

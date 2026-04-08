@@ -76,8 +76,8 @@ def main():
     save_signals_to_json(actions)
     log_scores_to_csv(scored_data, classification)
     send_daily_summary(actions, portfolio)
-    send_telegram_summary(scored_data, classification, actions, portfolio, benchmark_df, current_prices, args.cap)
-    
+    send_telegram_summary(scored_data, classification, actions, portfolio, benchmark_df, current_prices, args.cap, chat_id=args.chat_id)
+
     print("Done!")
 
 if __name__ == "__main__":

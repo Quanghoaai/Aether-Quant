@@ -154,9 +154,24 @@ def run_analysis(cfg, capital, chat_id):
     ]
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
-        return result.stdout + result.stderr
+        # Filter out vnstock/vnai warning lines
+        output = result.stdout + result.stderr
+        lines = output.split('\n')
+        filtered_lines = []
+        for line in lines:
+            # Skip vnstock/vnai update warnings
+            if 'Vnai' in line or 'vnstock' in line or 'vnai' in line:
+                continue
+            if 'is available' in line and 'Update:' in line:
+                continue
+            if 'pip install' in line and 'upgrade' in line:
+                continue
+            if 'pypi.org' in line:
+                continue
+            filtered_lines.append(line)
+        return '\n'.join(filtered_lines)
     except subprocess.TimeoutExpired:
-        return "Error: Phân tích quá lâu (Timeout > 300s). Vui lòng thử lại sau hoặc kiểm tra kết nối mạng trên Host."
+        return "Error: Phan tich qua lau (Timeout > 300s). Vui long thu lai sau hoac kiem tra ket noi mang tren Host."
     except Exception as e:
         return f"Error: {e}"
 

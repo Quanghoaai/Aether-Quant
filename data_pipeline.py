@@ -1,4 +1,5 @@
 import os
+import sys
 import logging
 import warnings
 import pandas as pd
@@ -8,14 +9,33 @@ import ta
 import socket
 import requests
 import requests.packages.urllib3.util.connection as urllib3_cn
+from contextlib import redirect_stdout, redirect_stderr
 
 # Suppress all vnstock/vnai warnings BEFORE importing vnstock
 logging.getLogger("vnstock").setLevel(logging.CRITICAL)
 logging.getLogger("vnstock.common.data").setLevel(logging.CRITICAL)
 logging.getLogger("vnai").setLevel(logging.CRITICAL)
+logging.getLogger("pip").setLevel(logging.CRITICAL)
 warnings.filterwarnings("ignore")
+os.environ["VNai_DISABLE_UPDATE_CHECK"] = "1"
 
-from vnstock import Vnstock
+# Suppress stdout/stderr during vnstock import (hides update messages)
+class SuppressOutput:
+    def __enter__(self):
+        self._original_stdout = sys.stdout
+        self._original_stderr = sys.stderr
+        sys.stdout = open(os.devnull, 'w')
+        sys.stderr = open(os.devnull, 'w')
+        return self
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        sys.stdout.close()
+        sys.stderr.close()
+        sys.stdout = self._original_stdout
+        sys.stderr = self._original_stderr
+
+with SuppressOutput():
+    from vnstock import Vnstock
+
 from datetime import datetime, timedelta
 
 # Force IPv4 STRICTLY to avoid ConnectionResetError on Linux/WSL

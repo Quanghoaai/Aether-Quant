@@ -311,7 +311,7 @@ def create_pending_payment(chat_id: int, plan_id: str, coupon_code: str = None) 
             "original_price": price,
             "discount": discount,
             "final_price": final_price,
-            "bank_info": "Ngan hang: Vietcombank\nSo TK: 1234567890\nChu TK: NGUYEN VAN A\nNoi dung: AQ_{payment_id}"
+            "bank_info": f"Ngan hang: {os.environ.get('BANK_NAME', 'Vietcombank')}\nSo TK: {os.environ.get('BANK_ACCOUNT', '1234567890')}\nChu TK: {os.environ.get('BANK_OWNER', 'NGUYEN VAN A')}\nNoi dung: AQ_{payment_id}"
         }
     }
 

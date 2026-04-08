@@ -488,6 +488,12 @@ def grant_subscription(chat_id: int, plan_id: str, days: Optional[int] = None) -
     
     user = data["users"][chat_str]
     
+    # Ensure subscriptions_history exists for existing users
+    if "subscriptions_history" not in user:
+        user["subscriptions_history"] = []
+    if "applied_coupons" not in user:
+        user["applied_coupons"] = []
+    
     # Calculate expiration
     start_date = datetime.now()
     expires_at = start_date + timedelta(days=duration)
@@ -569,6 +575,12 @@ def subscribe_user(chat_id: int, plan_id: str, coupon_code: Optional[str] = None
         }
     
     user = data["users"][chat_str]
+    
+    # Ensure subscriptions_history exists for existing users
+    if "subscriptions_history" not in user:
+        user["subscriptions_history"] = []
+    if "applied_coupons" not in user:
+        user["applied_coupons"] = []
     
     # Calculate expiration
     start_date = datetime.now()

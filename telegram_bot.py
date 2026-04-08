@@ -332,7 +332,7 @@ def handle_command(text, chat_id, bot_token):
             if result["success"]:
                 trial_msg = f"\n\n *QUA TANG: {FREE_TRIAL_DAYS} NGAY DUNG THU MIEN PHI!*\n"
                 trial_msg += f"Het han: {result['data']['expires_at']}\n"
-        
+
         return (
             " *Aether-Quant HCA Bot*\n\n"
             f" *Chat ID cua ban:* `{chat_id}`\n"
@@ -352,7 +352,9 @@ def handle_command(text, chat_id, bot_token):
             " */confirm\\_buy MA SO\\_CP GIA* - Xac nhan mua\n"
             " */confirm\\_sell MA SO\\_CP* - Xac nhan ban\n"
             " */set\\_capital SO* - Doi von\n"
-            " */set\\_minscore SO* - Doi diem\n"
+            " */set\\_minscore SO* - Doi diem\n\n"
+            " *TUYEN BO TRACH NHIEM:*\n"
+            " Phan tich tu du an AI Trading ca nhan. Su dung Python + VNStock API. *Khong phai loi khuyen dau tu.*\n"
         )
     
     # /myid - Show user's chat ID

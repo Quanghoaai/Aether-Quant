@@ -618,37 +618,53 @@ def handle_command(text, chat_id, bot_token):
         admin_chat_id = os.environ.get("ADMIN_CHAT_ID", "")
         if str(chat_id) != str(admin_chat_id):
             return "Ban khong co quyen su dung lenh nay."
-        
+
         # Load all data
         user_configs = load_all_user_configs()
         user_portfolios = load_all_portfolios()
         sub_data = load_subscriptions()
-        
+
         msg = "*DANH SACH USERS*\n"
         msg += "-----------------\n\n"
-        
+
         all_chat_ids = set(user_configs.get("users", {}).keys())
         all_chat_ids.update(user_portfolios.get("users", {}).keys())
         all_chat_ids.update(sub_data.get("users", {}).keys())
-        
+
         if not all_chat_ids:
             msg += "Chua co user nao."
         else:
             for cid in sorted(all_chat_ids):
-                # Get subscription status
+                # Get subscription status - check if actually active
                 sub_status = "Chua dang ky"
                 sub = sub_data.get("users", {}).get(cid, {}).get("subscription")
-                if sub and sub.get("active"):
-                    sub_status = f"Active ({sub.get('plan_name', 'N/A')})"
-                
+                if sub:
+                    # Check if expired
+                    expires_at = sub.get("expires_at")
+                    is_expired = False
+                    if expires_at:
+                        try:
+                            from datetime import datetime
+                            exp_date = datetime.strptime(expires_at, "%Y-%m-%d %H:%M:%S")
+                            is_expired = datetime.now() > exp_date
+                        except:
+                            pass
+
+                    if is_expired:
+                        sub_status = f"EXPIRED ({sub.get('plan_name', 'N/A')})"
+                    elif sub.get("active"):
+                        sub_status = f"Active ({sub.get('plan_name', 'N/A')})"
+                    else:
+                        sub_status = f"Inactive ({sub.get('plan_name', 'N/A')})"
+
                 # Get portfolio info
                 pf = user_portfolios.get("users", {}).get(cid, {})
                 capital = pf.get("capital", DEFAULT_CAPITAL)
-                
+
                 msg += f"Chat ID: `{cid}`\n"
                 msg += f"  Von: {capital:,.0f} VND\n"
                 msg += f"  Sub: {sub_status}\n\n"
-        
+
         return msg
     
     # /grant - Admin only: grant subscription to user
@@ -734,17 +750,26 @@ def handle_command(text, chat_id, bot_token):
     elif cmd == "/run":
         # Check subscription
         if not has_active_subscription(chat_id):
+            logger.info(f"User {chat_id} tried /run but no active subscription")
             return "*Cần subscription để sử dụng tính năng này.*\n\nDùng `/plans` để xem các gói và `/subscribe` để đăng ký."
-        
-        pf = get_user_portfolio(chat_id)
-        capital = pf.get("capital", DEFAULT_CAPITAL)
-        
-        send_msg(bot_token, chat_id, "Đang chạy phân tích... Chờ 30-60 giây.")
-        output = run_analysis(cfg, capital, chat_id)
-        # The analysis itself sends the full report via Telegram
-        lines = output.strip().split('\n')
-        summary = '\n'.join(lines[-5:]) if len(lines) > 5 else output
-        return f"Phân tích hoàn tất!\n\n```\n{summary}\n```"
+
+        try:
+            pf = get_user_portfolio(chat_id)
+            capital = pf.get("capital", DEFAULT_CAPITAL)
+
+            logger.info(f"User {chat_id} starting analysis with capital {capital}")
+            send_msg(bot_token, chat_id, "Đang chạy phân tích... Chờ 30-60 giây.")
+
+            output = run_analysis(cfg, capital, chat_id)
+
+            # The analysis itself sends the full report via Telegram
+            lines = output.strip().split('\n')
+            summary = '\n'.join(lines[-5:]) if len(lines) > 5 else output
+            logger.info(f"User {chat_id} analysis complete")
+            return f"Phân tích hoàn tất!\n\n```\n{summary}\n```"
+        except Exception as e:
+            logger.error(f"Error in /run for user {chat_id}: {e}")
+            return f" *LOI:* Phân tích thất bại. Vui lòng thử lại sau.\n\nError: `{str(e)}`"
     
     # /update - Admin only: auto-update from GitHub
     elif cmd == "/update":

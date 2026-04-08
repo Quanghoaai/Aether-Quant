@@ -2,22 +2,80 @@ import json
 import os
 
 PORTFOLIO_FILE = "portfolio.json"
+DEFAULT_CAPITAL = 50000000
 
-def load_portfolio(capital=50000000):
+def load_all_portfolios():
+    """Load all portfolios from file."""
     if os.path.exists(PORTFOLIO_FILE):
         with open(PORTFOLIO_FILE, "r") as f:
-            return json.load(f)
-    return {
-        "cash": capital,
-        "positions": {}
-    }
+            data = json.load(f)
+        # Handle old format (single portfolio) vs new format (per-user)
+        if "users" not in data:
+            # Old format - convert to new format
+            if "cash" in data or "positions" in data:
+                return {"users": {"default": data}}
+            return {"users": {}}
+        return data
+    return {"users": {}}
 
-def save_portfolio(portfolio):
+def save_all_portfolios(data):
+    """Save all portfolios to file."""
     with open(PORTFOLIO_FILE, "w") as f:
-        json.dump(portfolio, f, indent=4)
+        json.dump(data, f, indent=4, ensure_ascii=False)
 
-def execute_logic(scored_data, classification, current_prices, primary="HHV", capital=50000000):
-    portfolio = load_portfolio(capital)
+def load_portfolio(capital=DEFAULT_CAPITAL, chat_id=None):
+    """Load portfolio for a specific user or legacy format."""
+    data = load_all_portfolios()
+    
+    if chat_id:
+        chat_str = str(chat_id)
+        if chat_str in data["users"]:
+            return data["users"][chat_str]
+        else:
+            # Create new portfolio for user
+            return {
+                "cash": capital,
+                "positions": {},
+                "capital": capital
+            }
+    else:
+        # Legacy mode: use first user or default
+        if data["users"]:
+            first_user = list(data["users"].keys())[0]
+            return data["users"][first_user]
+        return {
+            "cash": capital,
+            "positions": {},
+            "capital": capital
+        }
+
+def save_portfolio(portfolio, chat_id=None):
+    """Save portfolio for a specific user."""
+    data = load_all_portfolios()
+    
+    if chat_id:
+        data["users"][str(chat_id)] = portfolio
+    else:
+        # Legacy mode: update first user or default
+        if data["users"]:
+            first_user = list(data["users"].keys())[0]
+            data["users"][first_user] = portfolio
+        else:
+            data["users"]["default"] = portfolio
+    
+    save_all_portfolios(data)
+
+def execute_logic(scored_data, classification, current_prices, primary="HHV", capital=DEFAULT_CAPITAL, chat_id=None):
+    portfolio = load_portfolio(capital, chat_id)
+    
+    # Ensure portfolio has required fields
+    if "positions" not in portfolio:
+        portfolio["positions"] = {}
+    if "cash" not in portfolio:
+        portfolio["cash"] = capital
+    if "capital" not in portfolio:
+        portfolio["capital"] = capital
+    
     actions = []
     
     # ===== RISK CONTROLS on existing positions =====
@@ -132,6 +190,6 @@ def execute_logic(scored_data, classification, current_prices, primary="HHV", ca
                 available_slots -= 1
     
     # ===== SAVE portfolio after all actions =====
-    save_portfolio(portfolio)
+    save_portfolio(portfolio, chat_id)
     
     return actions, portfolio

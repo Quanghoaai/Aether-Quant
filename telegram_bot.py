@@ -140,7 +140,7 @@ def save_user_portfolio(chat_id: int, portfolio: dict):
     data["users"][str(chat_id)] = portfolio
     save_all_portfolios(data)
 
-def run_analysis(cfg, capital):
+def run_analysis(cfg, capital, chat_id):
     """Run main.py with current config and return output."""
     wl = ",".join(cfg["watchlist"])
     cmd = [
@@ -149,7 +149,8 @@ def run_analysis(cfg, capital):
         "--primary", cfg["primary"],
         "--watchlist", wl,
         "--cap", str(capital),
-        "--min_score", str(cfg["min_score"])
+        "--min_score", str(cfg["min_score"]),
+        "--chat_id", str(chat_id)
     ]
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
@@ -720,7 +721,7 @@ def handle_command(text, chat_id, bot_token):
         capital = pf.get("capital", DEFAULT_CAPITAL)
         
         send_msg(bot_token, chat_id, "Đang chạy phân tích... Chờ 30-60 giây.")
-        output = run_analysis(cfg, capital)
+        output = run_analysis(cfg, capital, chat_id)
         # The analysis itself sends the full report via Telegram
         lines = output.strip().split('\n')
         summary = '\n'.join(lines[-5:]) if len(lines) > 5 else output

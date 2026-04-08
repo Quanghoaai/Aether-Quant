@@ -31,6 +31,7 @@ def main():
     parser.add_argument("--watchlist", type=str, default=",".join(cfg_defaults.get("watchlist", ["TOS","NKG","AAS"])))
     parser.add_argument("--cap", type=int, default=cfg_defaults.get("capital", 50000000))
     parser.add_argument("--min_score", type=float, default=cfg_defaults.get("min_score", 3.8))
+    parser.add_argument("--chat_id", type=str, default=None, help="User chat_id for per-user portfolio")
     
     args = parser.parse_args()
     
@@ -68,7 +69,7 @@ def main():
     
     # AGENT 4: Execution Logic (Dynamic primary + capital)
     print("Evaluating execution logic...")
-    actions, portfolio = execute_logic(scored_data, classification, current_prices, primary=primary, capital=args.cap)
+    actions, portfolio = execute_logic(scored_data, classification, current_prices, primary=primary, capital=args.cap, chat_id=args.chat_id)
     
     # AGENT 5: Output & Reporting
     print("Saving reporting outputs...")

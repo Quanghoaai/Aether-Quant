@@ -1,4 +1,6 @@
 import os
+import logging
+import warnings
 import pandas as pd
 import numpy as np
 import time
@@ -6,6 +8,13 @@ import ta
 import socket
 import requests
 import requests.packages.urllib3.util.connection as urllib3_cn
+
+# Suppress all vnstock/vnai warnings BEFORE importing vnstock
+logging.getLogger("vnstock").setLevel(logging.CRITICAL)
+logging.getLogger("vnstock.common.data").setLevel(logging.CRITICAL)
+logging.getLogger("vnai").setLevel(logging.CRITICAL)
+warnings.filterwarnings("ignore")
+
 from vnstock import Vnstock
 from datetime import datetime, timedelta
 

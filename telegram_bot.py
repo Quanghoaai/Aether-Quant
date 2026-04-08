@@ -55,7 +55,10 @@ def load_all_user_configs():
     """Load all user configs from file."""
     if os.path.exists(USER_CONFIG_FILE):
         with open(USER_CONFIG_FILE, "r") as f:
-            return json.load(f)
+            data = json.load(f)
+        if "users" not in data:
+            return {"users": {}}
+        return data
     return {"users": {}}
 
 def save_all_user_configs(data):
@@ -85,7 +88,17 @@ def load_all_portfolios():
     """Load all portfolios from file."""
     if os.path.exists(PORTFOLIO_FILE):
         with open(PORTFOLIO_FILE, "r") as f:
-            return json.load(f)
+            data = json.load(f)
+        # Handle old format (single portfolio) vs new format (per-user)
+        if "users" not in data:
+            # Old format - convert to new format
+            # Check if it has old portfolio keys
+            if "cash" in data or "positions" in data:
+                # Migrate old portfolio to admin's portfolio
+                admin_chat_id = os.environ.get("ADMIN_CHAT_ID", "default")
+                return {"users": {admin_chat_id: data}}
+            return {"users": {}}
+        return data
     return {"users": {}}
 
 def save_all_portfolios(data):

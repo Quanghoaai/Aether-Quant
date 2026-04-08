@@ -62,7 +62,15 @@ def load_subscriptions() -> Dict[str, Any]:
     """Load subscriptions data from file."""
     if os.path.exists(SUBSCRIPTIONS_FILE):
         with open(SUBSCRIPTIONS_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+            data = json.load(f)
+        # Ensure users key exists
+        if "users" not in data:
+            data["users"] = {}
+        if "coupons" not in data:
+            data["coupons"] = DEFAULT_COUPONS.copy()
+        if "transactions" not in data:
+            data["transactions"] = []
+        return data
     return {
         "users": {},  # chat_id -> user data
         "coupons": DEFAULT_COUPONS.copy(),

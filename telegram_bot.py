@@ -4,8 +4,17 @@ import subprocess
 import sys
 import time
 import socket
+import logging
 import requests.packages.urllib3.util.connection as urllib3_cn
 from dotenv import load_dotenv
+
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(message)s',
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
+logger = logging.getLogger(__name__)
 
 # Subscription system
 from subscription import (
@@ -100,10 +109,10 @@ def main():
     ]
     resp = requests.post(f"{base_url}/setMyCommands", json={"commands": commands})
     if resp.status_code == 200:
-        print("Commands menu registered on Telegram!")
+        logger.info("Commands menu registered on Telegram!")
     
-    print(f"Bot started! Config: primary={cfg['primary']}, watchlist={cfg['watchlist']}")
-    print("Waiting for Telegram commands...")
+    logger.info(f"Bot started! Config: primary={cfg['primary']}, watchlist={cfg['watchlist']}")
+    logger.info("Waiting for Telegram commands...")
     
     while True:
         try:
@@ -119,12 +128,15 @@ def main():
                 if not chat_id or not text:
                     continue
                 
+                # Log incoming command with chat_id
+                logger.info(f"Received from chat_id={chat_id}: {text}")
+                
                 reply = handle_command(text, cfg, chat_id, bot_token)
                 if reply:
                     send_msg(bot_token, chat_id, reply)
                     
         except Exception as e:
-            print(f"Polling error: {e}")
+            logger.error(f"Polling error: {e}")
             time.sleep(5)
 
 def handle_command(text, cfg, chat_id, bot_token):

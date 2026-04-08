@@ -349,7 +349,7 @@ def handle_command(text, cfg, chat_id, bot_token):
     # /subscribe - Subscribe to a plan
     elif cmd == "/subscribe":
         if len(parts) < 2:
-            return "Cú pháp: `/subscribe <gói> [mã giảm giá]`\nVD: `/subscribe monthly NEWUSER`\n\nDùng `/plans` để xem các gói."
+            return "Cú pháp: `/subscribe <plan_id> [ma_giam_gia]`\n\nPlan ID: `daily`, `weekly`, `monthly`, `quarterly`, `yearly`\nVD: `/subscribe monthly NEWUSER`\n\nDùng `/plans` để xem các gói."
         plan_id = parts[1].lower()
         coupon_code = parts[2].upper() if len(parts) >= 3 else None
         

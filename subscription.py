@@ -311,11 +311,11 @@ def get_subscription_status(chat_id: int) -> Dict[str, Any]:
 
 def format_plans_message() -> str:
     """Format plans list for Telegram message."""
-    msg = "*CÁC GÓI SUBSCRIPTION*\n"
+    msg = "*CAC GOI SUBSCRIPTION*\n"
     msg += "-------------------\n\n"
     
     for plan_id, plan in PLANS.items():
-        msg += f"*{plan['name']}*\n"
+        msg += f"*{plan['name']}* (`{plan_id}`)\n"
         msg += f"  - Gia: *{plan['price']:,}* VND\n"
         msg += f"  - Thoi han: {plan['duration_days']} ngay\n"
         msg += f"  - Tinh nang:\n"
@@ -324,7 +324,7 @@ def format_plans_message() -> str:
         msg += "\n"
     
     msg += "*Luu y:* Coupon khong ap dung cho goi Ngay va Tuan.\n"
-    msg += "Dung `/subscribe <goi> [ma_coupon]` de dang ky.\n"
+    msg += "Dung `/subscribe <plan_id> [ma_coupon]` de dang ky.\n"
     msg += "VD: `/subscribe monthly NEWUSER`"
     
     return msg

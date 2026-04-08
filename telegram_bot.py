@@ -13,7 +13,8 @@ from subscription import (
     subscribe_user,
     verify_coupon,
     format_plans_message,
-    format_subscription_status
+    format_subscription_status,
+    grant_subscription
 )
 
 # Force IPv4 to prevent ConnectionResetError on some Linux environments
@@ -384,6 +385,36 @@ def handle_command(text, cfg, chat_id, bot_token):
     # /subscription - View subscription status
     elif cmd == "/subscription":
         return format_subscription_status(chat_id)
+    
+    # /grant - Admin only: grant subscription to user
+    elif cmd == "/grant":
+        admin_chat_id = os.environ.get("ADMIN_CHAT_ID", "")
+        if str(chat_id) != str(admin_chat_id):
+            return "Ban khong co quyen su dung lenh nay."
+        
+        if len(parts) < 3:
+            return "Cu phap: `/grant <chat_id> <plan_id> [days]`\n\nVD: `/grant 123456789 monthly`\nVD: `/grant 123456789 monthly 60` (60 days)"
+        
+        try:
+            target_chat_id = int(parts[1])
+        except ValueError:
+            return "Chat ID khong hop le."
+        
+        plan_id = parts[2].lower()
+        days = int(parts[3]) if len(parts) >= 4 else None
+        
+        result = grant_subscription(target_chat_id, plan_id, days)
+        
+        if result["success"]:
+            data = result["data"]
+            msg = f"*{result['message']}*\n\n"
+            msg += f"Chat ID: `{target_chat_id}`\n"
+            msg += f"Goi: {data['plan']}\n"
+            msg += f"So ngay: {data['days']}\n"
+            msg += f"Het han: {data['expires_at']}"
+            return msg
+        else:
+            return result["message"]
     
     # /run
     elif cmd == "/run":

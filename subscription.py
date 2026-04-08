@@ -182,6 +182,80 @@ def has_active_subscription(chat_id: int) -> bool:
     return sub is not None and sub.get("active", False)
 
 
+def grant_subscription(chat_id: int, plan_id: str, days: Optional[int] = None) -> Dict[str, Any]:
+    """
+    Admin grant subscription to a user (free, no coupon needed).
+    Args:
+        chat_id: User's Telegram chat_id
+        plan_id: Plan ID (daily, weekly, monthly, quarterly, yearly)
+        days: Optional custom days (overrides plan duration)
+    Returns: {"success": bool, "message": str, "data": {...}}
+    """
+    if plan_id not in PLANS:
+        return {"success": False, "message": "Goi khong hop le"}
+    
+    plan = PLANS[plan_id]
+    duration = days if days else plan["duration_days"]
+    
+    data = load_subscriptions()
+    chat_str = str(chat_id)
+    
+    # Initialize user if not exists
+    if chat_str not in data["users"]:
+        data["users"][chat_str] = {
+            "chat_id": chat_id,
+            "subscriptions_history": [],
+            "applied_coupons": []
+        }
+    
+    user = data["users"][chat_str]
+    
+    # Calculate expiration
+    start_date = datetime.now()
+    expires_at = start_date + timedelta(days=duration)
+    
+    # Create subscription
+    subscription = {
+        "plan_id": plan_id,
+        "plan_name": plan["name"],
+        "active": True,
+        "start_date": start_date.strftime("%Y-%m-%d %H:%M:%S"),
+        "expires_at": expires_at.strftime("%Y-%m-%d %H:%M:%S"),
+        "price_paid": 0,
+        "discount_applied": 0,
+        "coupon_used": None,
+        "granted_by_admin": True
+    }
+    
+    # Update user
+    user["subscription"] = subscription
+    user["subscriptions_history"].append(subscription)
+    
+    # Record transaction
+    data["transactions"].append({
+        "chat_id": chat_id,
+        "type": "admin_grant",
+        "plan_id": plan_id,
+        "price": 0,
+        "discount": 0,
+        "final_price": 0,
+        "coupon": None,
+        "timestamp": start_date.strftime("%Y-%m-%d %H:%M:%S")
+    })
+    
+    save_subscriptions(data)
+    
+    return {
+        "success": True,
+        "message": f"Cap goi {plan['name']} thanh cong!",
+        "data": {
+            "plan": plan["name"],
+            "expires_at": expires_at.strftime("%Y-%m-%d %H:%M:%S"),
+            "days": duration
+        }
+    }
+
+
 def subscribe_user(chat_id: int, plan_id: str, coupon_code: Optional[str] = None) -> Dict[str, Any]:
     """
     Subscribe a user to a plan.

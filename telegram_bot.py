@@ -35,6 +35,7 @@ load_dotenv()
 
 CONFIG_FILE = "config.json"
 PORTFOLIO_FILE = "portfolio.json"
+DEFAULT_CAPITAL = 50000000  # 50 million VND default for new users
 
 def load_config():
     if os.path.exists(CONFIG_FILE):
@@ -46,15 +47,39 @@ def save_config(cfg):
     with open(CONFIG_FILE, "w") as f:
         json.dump(cfg, f, indent=4)
 
-def load_portfolio():
+def load_all_portfolios():
+    """Load all portfolios from file."""
     if os.path.exists(PORTFOLIO_FILE):
         with open(PORTFOLIO_FILE, "r") as f:
             return json.load(f)
-    return {"cash": 50000000, "positions": {}}
+    return {"users": {}}
 
-def save_portfolio(portfolio):
+def save_all_portfolios(data):
+    """Save all portfolios to file."""
     with open(PORTFOLIO_FILE, "w") as f:
-        json.dump(portfolio, f, indent=4)
+        json.dump(data, f, indent=4, ensure_ascii=False)
+
+def get_user_portfolio(chat_id: int) -> dict:
+    """Get portfolio for a specific user, create if not exists."""
+    data = load_all_portfolios()
+    chat_str = str(chat_id)
+
+    if chat_str not in data["users"]:
+        # Create new portfolio for user
+        data["users"][chat_str] = {
+            "cash": DEFAULT_CAPITAL,
+            "positions": {},
+            "capital": DEFAULT_CAPITAL
+        }
+        save_all_portfolios(data)
+
+    return data["users"][chat_str]
+
+def save_user_portfolio(chat_id: int, portfolio: dict):
+    """Save portfolio for a specific user."""
+    data = load_all_portfolios()
+    data["users"][str(chat_id)] = portfolio
+    save_all_portfolios(data)
 
 def run_analysis(cfg):
     """Run main.py with current config and return output."""
@@ -180,8 +205,8 @@ def handle_command(text, cfg, chat_id, bot_token):
     
     # /portfolio
     elif cmd == "/portfolio":
-        pf = load_portfolio()
-        capital = cfg.get("capital", 50000000)
+        pf = get_user_portfolio(chat_id)
+        capital = pf.get("capital", DEFAULT_CAPITAL)
         cash_pct = (pf['cash'] / capital) * 100 if capital > 0 else 0
         
         text = "💼 *DANH MỤC ĐẦU TƯ*\n"
@@ -213,24 +238,25 @@ def handle_command(text, cfg, chat_id, bot_token):
     # /confirm_buy SYMBOL QTY PRICE
     elif cmd == "/confirm_buy":
         if len(parts) < 4:
-            return "⚠️ Cú pháp: `/confirm_buy MÃ SỐ_CP GIÁ`\nVD: `/confirm_buy TCB 1000 25500`"
+            return " Cu phap: `/confirm_buy MA SO_CP GIA`\nVD: `/confirm_buy TCB 1000 25500`"
         sym = parts[1].upper()
         try:
             qty = int(parts[2])
             price = float(parts[3])
         except ValueError:
-            return "⚠️ Số lượng hoặc giá không hợp lệ."
+            return " So luong hoac gia khong hop le."
         
-        pf = load_portfolio()
+        pf = get_user_portfolio(chat_id)
+        capital = pf.get("capital", DEFAULT_CAPITAL)
         cost = qty * price
         
         if cost > pf['cash']:
-            return f"⚠️ Không đủ tiền mặt! Cần {cost:,.0f} nhưng chỉ có {pf['cash']:,.0f}"
+            return f" Khong du tien mat! Can {cost:,.0f} nhung chi co {pf['cash']:,.0f}"
         
-        # Check cash reserve
-        min_reserve = cfg.get("capital", 50000000) * 0.20
+        # Check cash reserve (20% of capital)
+        min_reserve = capital * 0.20
         if pf['cash'] - cost < min_reserve:
-            return f"⚠️ Vi phạm quy tắc giữ 20% tiền mặt! Sau khi mua chỉ còn {pf['cash']-cost:,.0f} < {min_reserve:,.0f}"
+            return f" Vi pham quy tac giu 20% tien mat! Sau khi mua chi con {pf['cash']-cost:,.0f} < {min_reserve:,.0f}"
         
         if sym in pf['positions']:
             old = pf['positions'][sym]
@@ -241,33 +267,33 @@ def handle_command(text, cfg, chat_id, bot_token):
             pf['positions'][sym] = {"qty": qty, "avg_price": price, "highest_price": price}
         
         pf['cash'] -= cost
-        save_portfolio(pf)
+        save_user_portfolio(chat_id, pf)
         
         return (
-            f"✅ *ĐÃ MUA {sym}*\n"
+            f" DA MUA {sym}\n"
             f"KL: {qty:,} cp @ {price:,.0f}\n"
-            f"Chi phí: {cost:,.0f} VND\n"
-            f"Tiền mặt còn: {pf['cash']:,.0f} VND"
+            f"Chi phi: {cost:,.0f} VND\n"
+            f"Tien mat con: {pf['cash']:,.0f} VND"
         )
     
     # /confirm_sell SYMBOL QTY
     elif cmd == "/confirm_sell":
         if len(parts) < 3:
-            return "⚠️ Cú pháp: `/confirm_sell MÃ SỐ_CP`\nVD: `/confirm_sell TCB 500`"
+            return " Cu phap: `/confirm_sell MA SO_CP`\nVD: `/confirm_sell TCB 500`"
         sym = parts[1].upper()
         try:
             qty = int(parts[2])
         except ValueError:
-            return "⚠️ Số lượng không hợp lệ."
+            return " So luong khong hop le."
         
-        pf = load_portfolio()
+        pf = get_user_portfolio(chat_id)
         
         if sym not in pf['positions']:
-            return f"⚠️ Không có vị thế *{sym}* trong danh mục."
+            return f" Khong co vi the *{sym}* trong danh muc."
         
         pos = pf['positions'][sym]
         if qty > pos['qty']:
-            return f"⚠️ Chỉ có {pos['qty']:,} cp {sym}, không thể bán {qty:,} cp."
+            return f" Chi co {pos['qty']:,} cp {sym}, khong the ban {qty:,} cp."
         
         # Use avg_price as estimated sell price (user can input 4th param for actual price)
         sell_price = float(parts[3]) if len(parts) >= 4 else pos['avg_price']
@@ -281,72 +307,73 @@ def handle_command(text, cfg, chat_id, bot_token):
             pf['positions'][sym] = pos
         
         pf['cash'] += revenue
-        save_portfolio(pf)
+        save_user_portfolio(chat_id, pf)
         
         return (
-            f"🔴 *ĐÃ BÁN {sym}*\n"
+            f" DA BAN {sym}\n"
             f"KL: {qty:,} cp @ {sell_price:,.0f}\n"
-            f"Thu về: {revenue:,.0f} VND\n"
+            f"Thu ve: {revenue:,.0f} VND\n"
             f"PnL: {pnl:+,.0f} VND\n"
-            f"Tiền mặt: {pf['cash']:,.0f} VND"
+            f"Tien mat: {pf['cash']:,.0f} VND"
         )
     
     # /set_primary
     elif cmd == "/set_primary":
         if len(parts) < 2:
-            return "⚠️ Thiếu mã. VD: `/set_primary HHV`"
+            return " Thiếu mã. VD: `/set_primary HHV`"
         new_primary = parts[1].upper()
         cfg["primary"] = new_primary
         save_config(cfg)
-        return f"✅ Đã đổi mã chính → *{new_primary}*"
+        return f" Đã đổi mã chính → *{new_primary}*"
     
     # /set_watchlist
     elif cmd == "/set_watchlist":
         if len(parts) < 2:
-            return "⚠️ Thiếu danh sách. VD: `/set_watchlist TOS,NKG,AAS`"
+            return " Thiếu danh sách. VD: `/set_watchlist TOS,NKG,AAS`"
         wl = [s.strip().upper() for s in parts[1].split(",") if s.strip()]
         cfg["watchlist"] = wl
         save_config(cfg)
-        return f"✅ Đã đổi Watchlist → *{', '.join(wl)}*"
+        return f" Đã đổi Watchlist → *{', '.join(wl)}*"
     
     # /add
     elif cmd == "/add":
         if len(parts) < 2:
-            return "⚠️ Thiếu mã. VD: `/add VNM`"
+            return " Thiếu mã. VD: `/add VNM`"
         sym = parts[1].upper()
         if sym not in cfg["watchlist"]:
             cfg["watchlist"].append(sym)
             save_config(cfg)
-            return f"✅ Đã thêm *{sym}* → Watchlist: *{', '.join(cfg['watchlist'])}*"
-        return f"⚠️ *{sym}* đã có trong Watchlist rồi."
+            return f" Đã thêm *{sym}* → Watchlist: *{', '.join(cfg['watchlist'])}*"
+        return f" *{sym}* đã có trong Watchlist rồi."
     
     # /remove
     elif cmd == "/remove":
         if len(parts) < 2:
-            return "⚠️ Thiếu mã. VD: `/remove NKG`"
+            return " Thiếu mã. VD: `/remove NKG`"
         sym = parts[1].upper()
         if sym in cfg["watchlist"]:
             cfg["watchlist"].remove(sym)
             save_config(cfg)
-            return f"✅ Đã xóa *{sym}* → Watchlist: *{', '.join(cfg['watchlist'])}*"
-        return f"⚠️ *{sym}* không có trong Watchlist."
+            return f" Đã xóa *{sym}* → Watchlist: *{', '.join(cfg['watchlist'])}*"
+        return f" *{sym}* không có trong Watchlist."
     
-    # /set_capital
+    # /set_capital - Set user's own capital
     elif cmd == "/set_capital":
         if len(parts) < 2:
-            return "⚠️ Thiếu số vốn. VD: `/set_capital 100000000`"
+            return " Thiếu số vốn. VD: `/set_capital 100000000`"
         try:
             cap = int(parts[1])
-            cfg["capital"] = cap
-            save_config(cfg)
-            return f"✅ Đã đổi vốn → *{cap:,.0f}* VND"
+            pf = get_user_portfolio(chat_id)
+            pf["capital"] = cap
+            save_user_portfolio(chat_id, pf)
+            return f" Đã đổi vốn của bạn  *{cap:,.0f}* VND"
         except ValueError:
-            return "⚠️ Số vốn không hợp lệ."
+            return " Số vốn không hợp lệ."
     
     # /set_minscore
     elif cmd == "/set_minscore":
         if len(parts) < 2:
-            return "⚠️ Thiếu điểm. VD: `/set_minscore 3.5`"
+            return " Thiếu điểm. VD: `/set_minscore 3.5`"
         try:
             ms = float(parts[1])
             cfg["min_score"] = ms

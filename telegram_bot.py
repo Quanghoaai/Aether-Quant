@@ -23,7 +23,8 @@ from subscription import (
     verify_coupon,
     format_plans_message,
     format_subscription_status,
-    grant_subscription
+    grant_subscription,
+    load_subscriptions
 )
 
 # Force IPv4 to prevent ConnectionResetError on some Linux environments
@@ -35,17 +36,50 @@ load_dotenv()
 
 CONFIG_FILE = "config.json"
 PORTFOLIO_FILE = "portfolio.json"
+USER_CONFIG_FILE = "user_configs.json"
 DEFAULT_CAPITAL = 50000000  # 50 million VND default for new users
+DEFAULT_CONFIG = {
+    "primary": "HHV",
+    "watchlist": ["TOS", "NKG", "AAS"],
+    "min_score": 3.8
+}
 
-def load_config():
+def load_global_config():
+    """Load global config (for backward compatibility)."""
     if os.path.exists(CONFIG_FILE):
         with open(CONFIG_FILE, "r") as f:
             return json.load(f)
-    return {"primary": "HHV", "watchlist": ["TOS", "NKG", "AAS"], "capital": 50000000, "min_score": 3.8}
+    return DEFAULT_CONFIG
 
-def save_config(cfg):
-    with open(CONFIG_FILE, "w") as f:
-        json.dump(cfg, f, indent=4)
+def load_all_user_configs():
+    """Load all user configs from file."""
+    if os.path.exists(USER_CONFIG_FILE):
+        with open(USER_CONFIG_FILE, "r") as f:
+            return json.load(f)
+    return {"users": {}}
+
+def save_all_user_configs(data):
+    """Save all user configs to file."""
+    with open(USER_CONFIG_FILE, "w") as f:
+        json.dump(data, f, indent=4, ensure_ascii=False)
+
+def get_user_config(chat_id: int) -> dict:
+    """Get config for a specific user, create if not exists."""
+    data = load_all_user_configs()
+    chat_str = str(chat_id)
+
+    if chat_str not in data["users"]:
+        # Create new config for user
+        data["users"][chat_str] = DEFAULT_CONFIG.copy()
+        save_all_user_configs(data)
+
+    return data["users"][chat_str]
+
+def save_user_config(chat_id: int, cfg: dict):
+    """Save config for a specific user."""
+    data = load_all_user_configs()
+    data["users"][str(chat_id)] = cfg
+    save_all_user_configs(data)
 
 def load_all_portfolios():
     """Load all portfolios from file."""
@@ -81,7 +115,7 @@ def save_user_portfolio(chat_id: int, portfolio: dict):
     data["users"][str(chat_id)] = portfolio
     save_all_portfolios(data)
 
-def run_analysis(cfg):
+def run_analysis(cfg, capital):
     """Run main.py with current config and return output."""
     wl = ",".join(cfg["watchlist"])
     cmd = [
@@ -89,7 +123,7 @@ def run_analysis(cfg):
         "--mode", "hybrid",
         "--primary", cfg["primary"],
         "--watchlist", wl,
-        "--cap", str(cfg["capital"]),
+        "--cap", str(capital),
         "--min_score", str(cfg["min_score"])
     ]
     try:
@@ -110,7 +144,6 @@ def main():
     
     base_url = f"https://api.telegram.org/bot{bot_token}"
     offset = 0
-    cfg = load_config()
     
     # Register command menu on Telegram
     commands = [
@@ -136,8 +169,7 @@ def main():
     if resp.status_code == 200:
         logger.info("Commands menu registered on Telegram!")
     
-    logger.info(f"Bot started! Config: primary={cfg['primary']}, watchlist={cfg['watchlist']}")
-    logger.info("Waiting for Telegram commands...")
+    logger.info("Bot started! Waiting for Telegram commands...")
     
     while True:
         try:
@@ -156,7 +188,7 @@ def main():
                 # Log incoming command with chat_id
                 logger.info(f"Received from chat_id={chat_id}: {text}")
                 
-                reply = handle_command(text, cfg, chat_id, bot_token)
+                reply = handle_command(text, chat_id, bot_token)
                 if reply:
                     send_msg(bot_token, chat_id, reply)
                     
@@ -164,11 +196,14 @@ def main():
             logger.error(f"Polling error: {e}")
             time.sleep(5)
 
-def handle_command(text, cfg, chat_id, bot_token):
+def handle_command(text, chat_id, bot_token):
     """Process a command and return reply text."""
     
     parts = text.split()
     cmd = parts[0].lower() if parts else ""
+    
+    # Get user's own config
+    cfg = get_user_config(chat_id)
     
     # /start or /help
     if cmd in ["/start", "/help"]:
@@ -195,12 +230,14 @@ def handle_command(text, cfg, chat_id, bot_token):
     # /status
     elif cmd == "/status":
         wl = ", ".join(cfg["watchlist"])
+        pf = get_user_portfolio(chat_id)
+        capital = pf.get("capital", DEFAULT_CAPITAL)
         return (
-            "📊 *Cấu hình hiện tại*\n\n"
-            f"👑 Mã chính: *{cfg['primary']}*\n"
-            f"📋 Watchlist: *{wl}*\n"
-            f"💰 Vốn: *{cfg['capital']:,.0f}* VND\n"
-            f"🎯 Min Score: *{cfg['min_score']}*\n"
+            " *Cau hinh hien tai*\n\n"
+            f" Ma chinh: *{cfg['primary']}*\n"
+            f" Watchlist: *{wl}*\n"
+            f" Von: *{capital:,.0f}* VND\n"
+            f" Min Score: *{cfg['min_score']}*\n"
         )
     
     # /portfolio
@@ -323,7 +360,7 @@ def handle_command(text, cfg, chat_id, bot_token):
             return " Thiếu mã. VD: `/set_primary HHV`"
         new_primary = parts[1].upper()
         cfg["primary"] = new_primary
-        save_config(cfg)
+        save_user_config(chat_id, cfg)
         return f" Đã đổi mã chính → *{new_primary}*"
     
     # /set_watchlist
@@ -332,7 +369,7 @@ def handle_command(text, cfg, chat_id, bot_token):
             return " Thiếu danh sách. VD: `/set_watchlist TOS,NKG,AAS`"
         wl = [s.strip().upper() for s in parts[1].split(",") if s.strip()]
         cfg["watchlist"] = wl
-        save_config(cfg)
+        save_user_config(chat_id, cfg)
         return f" Đã đổi Watchlist → *{', '.join(wl)}*"
     
     # /add
@@ -342,7 +379,7 @@ def handle_command(text, cfg, chat_id, bot_token):
         sym = parts[1].upper()
         if sym not in cfg["watchlist"]:
             cfg["watchlist"].append(sym)
-            save_config(cfg)
+            save_user_config(chat_id, cfg)
             return f" Đã thêm *{sym}* → Watchlist: *{', '.join(cfg['watchlist'])}*"
         return f" *{sym}* đã có trong Watchlist rồi."
     
@@ -353,7 +390,7 @@ def handle_command(text, cfg, chat_id, bot_token):
         sym = parts[1].upper()
         if sym in cfg["watchlist"]:
             cfg["watchlist"].remove(sym)
-            save_config(cfg)
+            save_user_config(chat_id, cfg)
             return f" Đã xóa *{sym}* → Watchlist: *{', '.join(cfg['watchlist'])}*"
         return f" *{sym}* không có trong Watchlist."
     
@@ -377,7 +414,7 @@ def handle_command(text, cfg, chat_id, bot_token):
         try:
             ms = float(parts[1])
             cfg["min_score"] = ms
-            save_config(cfg)
+            save_user_config(chat_id, cfg)
             return f"✅ Đã đổi Min Score → *{ms}*"
         except ValueError:
             return "⚠️ Số điểm không hợp lệ."
@@ -425,6 +462,44 @@ def handle_command(text, cfg, chat_id, bot_token):
     elif cmd == "/subscription":
         return format_subscription_status(chat_id)
     
+    # /users - Admin only: list all users
+    elif cmd == "/users":
+        admin_chat_id = os.environ.get("ADMIN_CHAT_ID", "")
+        if str(chat_id) != str(admin_chat_id):
+            return "Ban khong co quyen su dung lenh nay."
+        
+        # Load all data
+        user_configs = load_all_user_configs()
+        user_portfolios = load_all_portfolios()
+        sub_data = load_subscriptions()
+        
+        msg = "*DANH SACH USERS*\n"
+        msg += "-----------------\n\n"
+        
+        all_chat_ids = set(user_configs.get("users", {}).keys())
+        all_chat_ids.update(user_portfolios.get("users", {}).keys())
+        all_chat_ids.update(sub_data.get("users", {}).keys())
+        
+        if not all_chat_ids:
+            msg += "Chua co user nao."
+        else:
+            for cid in sorted(all_chat_ids):
+                # Get subscription status
+                sub_status = "Chua dang ky"
+                sub = sub_data.get("users", {}).get(cid, {}).get("subscription")
+                if sub and sub.get("active"):
+                    sub_status = f"Active ({sub.get('plan_name', 'N/A')})"
+                
+                # Get portfolio info
+                pf = user_portfolios.get("users", {}).get(cid, {})
+                capital = pf.get("capital", DEFAULT_CAPITAL)
+                
+                msg += f"Chat ID: `{cid}`\n"
+                msg += f"  Von: {capital:,.0f} VND\n"
+                msg += f"  Sub: {sub_status}\n\n"
+        
+        return msg
+    
     # /grant - Admin only: grant subscription to user
     elif cmd == "/grant":
         admin_chat_id = os.environ.get("ADMIN_CHAT_ID", "")
@@ -461,8 +536,11 @@ def handle_command(text, cfg, chat_id, bot_token):
         if not has_active_subscription(chat_id):
             return "*Cần subscription để sử dụng tính năng này.*\n\nDùng `/plans` để xem các gói và `/subscribe` để đăng ký."
         
+        pf = get_user_portfolio(chat_id)
+        capital = pf.get("capital", DEFAULT_CAPITAL)
+        
         send_msg(bot_token, chat_id, "Đang chạy phân tích... Chờ 30-60 giây.")
-        output = run_analysis(cfg)
+        output = run_analysis(cfg, capital)
         # The analysis itself sends the full report via Telegram
         lines = output.strip().split('\n')
         summary = '\n'.join(lines[-5:]) if len(lines) > 5 else output

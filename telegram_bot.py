@@ -222,6 +222,7 @@ def handle_command(text, chat_id, bot_token):
     if cmd in ["/start", "/help"]:
         return (
             " *Aether-Quant HCA Bot*\n\n"
+            f" *Chat ID cua ban:* `{chat_id}`\n\n"
             "*SUBSCRIPTION:*\n"
             " */plans* - Xem cac goi\n"
             " */subscribe <goi> [coupon]* - Dang ky\n"
@@ -239,6 +240,10 @@ def handle_command(text, chat_id, bot_token):
             " */set\\_capital SO* - Doi von\n"
             " */set\\_minscore SO* - Doi diem\n"
         )
+    
+    # /myid - Show user's chat ID
+    elif cmd == "/myid":
+        return f" *Chat ID cua ban:* `{chat_id}`"
     
     # /status
     elif cmd == "/status":

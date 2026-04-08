@@ -1,16 +1,20 @@
 import argparse
 import json
 import os
+import sys
 import socket
 import logging
 import warnings
 import requests.packages.urllib3.util.connection as urllib3_cn
 from dotenv import load_dotenv
 
-# Suppress vnstock/vnai info messages and warnings
-logging.getLogger("vnstock").setLevel(logging.ERROR)
-logging.getLogger("vnstock.common.data").setLevel(logging.ERROR)
-warnings.filterwarnings("ignore", message=".*Vnai.*")
+# Suppress ALL vnstock/vnai messages BEFORE any imports
+logging.getLogger("vnstock").setLevel(logging.CRITICAL)
+logging.getLogger("vnstock.common.data").setLevel(logging.CRITICAL)
+logging.getLogger("vnai").setLevel(logging.CRITICAL)
+logging.getLogger("pip").setLevel(logging.CRITICAL)
+warnings.filterwarnings("ignore")
+os.environ["VNai_DISABLE_UPDATE_CHECK"] = "1"
 
 # Force IPv4
 def allowed_gai_family():

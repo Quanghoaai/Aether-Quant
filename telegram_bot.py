@@ -162,14 +162,24 @@ def run_analysis(cfg, capital, chat_id):
 
 def main():
     import requests
-    
+
     bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
     if not bot_token:
         print("TELEGRAM_BOT_TOKEN not set in .env")
         return
-    
+
     base_url = f"https://api.telegram.org/bot{bot_token}"
+
+    # Load last offset to avoid re-processing messages after restart
+    offset_file = "bot_offset.txt"
     offset = 0
+    if os.path.exists(offset_file):
+        try:
+            with open(offset_file, "r") as f:
+                offset = int(f.read().strip())
+            logger.info(f"Resuming from offset: {offset}")
+        except:
+            offset = 0
     
     # Register command menu on Telegram
     commands = [
@@ -205,6 +215,14 @@ def main():
             
             for update in updates:
                 offset = update["update_id"] + 1
+
+                # Save offset to file
+                try:
+                    with open(offset_file, "w") as f:
+                        f.write(str(offset))
+                except:
+                    pass
+
                 msg = update.get("message", {})
                 chat_id = msg.get("chat", {}).get("id")
                 text = msg.get("text", "").strip()

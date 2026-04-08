@@ -7,6 +7,8 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 
 SUBSCRIPTIONS_FILE = "subscriptions.json"
+PAYMENTS_FILE = "payments.json"
+FREE_TRIAL_DAYS = 7  # Free trial for new users
 
 # Subscription Plans
 PLANS = {
@@ -76,6 +78,25 @@ def load_subscriptions() -> Dict[str, Any]:
         "coupons": DEFAULT_COUPONS.copy(),
         "transactions": []
     }
+
+
+def load_payments() -> Dict[str, Any]:
+    """Load pending payments data."""
+    if os.path.exists(PAYMENTS_FILE):
+        with open(PAYMENTS_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if "pending" not in data:
+            data["pending"] = {}
+        if "approved" not in data:
+            data["approved"] = []
+        return data
+    return {"pending": {}, "approved": []}
+
+
+def save_payments(data: Dict[str, Any]) -> None:
+    """Save payments data to file."""
+    with open(PAYMENTS_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
 
 
 def save_subscriptions(data: Dict[str, Any]) -> None:
@@ -182,6 +203,193 @@ def get_user_subscription(chat_id: int) -> Optional[Dict[str, Any]]:
             pass
     
     return sub
+
+
+def grant_free_trial(chat_id: int) -> Dict[str, Any]:
+    """Grant free trial to new user."""
+    data = load_subscriptions()
+    chat_str = str(chat_id)
+    
+    # Check if user already exists
+    if chat_str in data["users"]:
+        user = data["users"][chat_str]
+        # Check if they've used free trial
+        if user.get("free_trial_used", False):
+            return {"success": False, "message": "Ban da su dung qua thoi gian dung thu."}
+    
+    # Create new user with free trial
+    now = datetime.now()
+    expires_at = now + timedelta(days=FREE_TRIAL_DAYS)
+    
+    if chat_str not in data["users"]:
+        data["users"][chat_str] = {}
+    
+    data["users"][chat_str]["free_trial_used"] = True
+    data["users"][chat_str]["subscription"] = {
+        "active": True,
+        "plan_id": "free_trial",
+        "plan_name": "Dung Thu Mien Phi",
+        "price": 0,
+        "starts_at": now.strftime("%Y-%m-%d %H:%M:%S"),
+        "expires_at": expires_at.strftime("%Y-%m-%d %H:%M:%S"),
+        "days": FREE_TRIAL_DAYS,
+        "is_free_trial": True
+    }
+    
+    # Add transaction record
+    data["transactions"].append({
+        "chat_id": chat_str,
+        "type": "free_trial",
+        "plan_id": "free_trial",
+        "price": 0,
+        "timestamp": now.strftime("%Y-%m-%d %H:%M:%S")
+    })
+    
+    save_subscriptions(data)
+    return {
+        "success": True,
+        "message": f"Cap {FREE_TRIAL_DAYS} ngay dung thu mien phi thanh cong!",
+        "data": {
+            "plan": "Dung Thu Mien Phi",
+            "days": FREE_TRIAL_DAYS,
+            "expires_at": expires_at.strftime("%Y-%m-%d %H:%M:%S")
+        }
+    }
+
+
+def has_used_free_trial(chat_id: int) -> bool:
+    """Check if user has used their free trial."""
+    data = load_subscriptions()
+    chat_str = str(chat_id)
+    if chat_str not in data["users"]:
+        return False
+    return data["users"][chat_str].get("free_trial_used", False)
+
+
+def create_pending_payment(chat_id: int, plan_id: str, coupon_code: str = None) -> Dict[str, Any]:
+    """Create a pending payment request."""
+    if plan_id not in PLANS:
+        return {"success": False, "message": "Goi khong hop le."}
+    
+    plan = PLANS[plan_id]
+    price = plan["price"]
+    discount = 0
+    
+    # Apply coupon if provided
+    if coupon_code:
+        coupon_result = verify_coupon(coupon_code)
+        if coupon_result["success"]:
+            discount = coupon_result["data"]["discount"]
+    
+    final_price = max(0, price - discount)
+    
+    # Create pending payment
+    payments = load_payments()
+    now = datetime.now()
+    payment_id = f"{chat_id}_{now.strftime('%Y%m%d%H%M%S')}"
+    
+    payments["pending"][payment_id] = {
+        "chat_id": chat_id,
+        "plan_id": plan_id,
+        "plan_name": plan["name"],
+        "original_price": price,
+        "discount": discount,
+        "final_price": final_price,
+        "coupon_code": coupon_code,
+        "status": "pending",
+        "created_at": now.strftime("%Y-%m-%d %H:%M:%S"),
+        "photo_received": False
+    }
+    
+    save_payments(payments)
+    
+    return {
+        "success": True,
+        "payment_id": payment_id,
+        "data": {
+            "plan": plan["name"],
+            "original_price": price,
+            "discount": discount,
+            "final_price": final_price,
+            "bank_info": "Ngan hang: Vietcombank\nSo TK: 1234567890\nChu TK: NGUYEN VAN A\nNoi dung: AQ_{payment_id}"
+        }
+    }
+
+
+def approve_payment(payment_id: str) -> Dict[str, Any]:
+    """Approve a pending payment and activate subscription."""
+    payments = load_payments()
+    
+    if payment_id not in payments["pending"]:
+        return {"success": False, "message": "Khong tim thay yeu cau thanh toan."}
+    
+    
+    payment = payments["pending"][payment_id]
+    
+    if payment["status"] != "pending":
+        return {"success": False, "message": "Yeu cau thanh toan da duoc xu ly."}
+    
+    
+    # Activate subscription
+    chat_id = payment["chat_id"]
+    plan_id = payment["plan_id"]
+    plan = PLANS[plan_id]
+    
+    data = load_subscriptions()
+    chat_str = str(chat_id)
+    now = datetime.now()
+    expires_at = now + timedelta(days=plan["duration_days"])
+    
+    if chat_str not in data["users"]:
+        data["users"][chat_str] = {}
+    
+    data["users"][chat_str]["subscription"] = {
+        "active": True,
+        "plan_id": plan_id,
+        "plan_name": plan["name"],
+        "price": payment["final_price"],
+        "starts_at": now.strftime("%Y-%m-%d %H:%M:%S"),
+        "expires_at": expires_at.strftime("%Y-%m-%d %H:%M:%S"),
+        "days": plan["duration_days"],
+        "is_free_trial": False,
+        "payment_id": payment_id
+    }
+    
+    # Add transaction
+    data["transactions"].append({
+        "chat_id": chat_str,
+        "type": "paid_subscription",
+        "plan_id": plan_id,
+        "price": payment["final_price"],
+        "payment_id": payment_id,
+        "timestamp": now.strftime("%Y-%m-%d %H:%M:%S")
+    })
+    
+    save_subscriptions(data)
+    
+    # Move payment to approved
+    payment["status"] = "approved"
+    payment["approved_at"] = now.strftime("%Y-%m-%d %H:%M:%S")
+    payments["approved"].append(payment)
+    del payments["pending"][payment_id]
+    save_payments(payments)
+    
+    return {
+        "success": True,
+        "message": "Duyet thanh toan thanh cong!",
+        "data": {
+            "chat_id": chat_id,
+            "plan": plan["name"],
+            "price": payment["final_price"],
+            "expires_at": expires_at.strftime("%Y-%m-%d %H:%M:%S")
+        }
+    }
+
+
+def get_pending_payments() -> Dict[str, Any]:
+    """Get all pending payments for admin."""
+    payments = load_payments()
+    return {"success": True, "data": payments["pending"]}
 
 
 def has_active_subscription(chat_id: int) -> bool:

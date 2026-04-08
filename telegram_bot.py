@@ -5,6 +5,8 @@ import sys
 import time
 import socket
 import logging
+import re
+from datetime import datetime
 import requests.packages.urllib3.util.connection as urllib3_cn
 from dotenv import load_dotenv
 
@@ -24,7 +26,13 @@ from subscription import (
     format_plans_message,
     format_subscription_status,
     grant_subscription,
-    load_subscriptions
+    load_subscriptions,
+    grant_free_trial,
+    has_used_free_trial,
+    create_pending_payment,
+    approve_payment,
+    get_pending_payments,
+    FREE_TRIAL_DAYS
 )
 
 # Force IPv4 to prevent ConnectionResetError on some Linux environments
@@ -195,7 +203,59 @@ def main():
                 chat_id = msg.get("chat", {}).get("id")
                 text = msg.get("text", "").strip()
                 
-                if not chat_id or not text:
+                if not chat_id:
+                    continue
+                
+                # Check if message has photo (payment receipt)
+                if msg.get("photo"):
+                    # Get the largest photo
+                    photos = msg["photo"]
+                    photo = photos[-1]  # Largest size
+                    file_id = photo["file_id"]
+                    
+                    # Check if it's a reply to payment request
+                    reply_to = msg.get("reply_to_message", {})
+                    reply_text = reply_to.get("text", "")
+                    
+                    # Extract payment_id from reply
+                    payment_id = None
+                    if "Ma GD:" in reply_text:
+                        import re
+                        match = re.search(r"Ma GD: `([^`]+)`", reply_text)
+                        if match:
+                            payment_id = match.group(1)
+                    
+                    if payment_id:
+                        # Mark payment as having photo
+                        from subscription import load_payments, save_payments
+                        payments = load_payments()
+                        if payment_id in payments["pending"]:
+                            payments["pending"][payment_id]["photo_received"] = True
+                            payments["pending"][payment_id]["photo_file_id"] = file_id
+                            save_payments(payments)
+                            
+                            # Notify user
+                            send_msg(bot_token, chat_id, " *Da nhan anh bien nhan!*\n\nAdmin se duyet trong thoi gian ngan. Cam on ban!")
+                            
+                            # Notify admin
+                            admin_chat_id = os.environ.get("ADMIN_CHAT_ID", "")
+                            if admin_chat_id:
+                                admin_msg = f" *ANH BIEN NHAN MOI*\n\n"
+                                admin_msg += f"Chat ID: `{chat_id}`\n"
+                                admin_msg += f"Ma GD: `{payment_id}`\n"
+                                admin_msg += f"Thoi gian: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+                                admin_msg += "Dung `/payments` de xem chi tiet.\n"
+                                admin_msg += f"Dung `/approve {payment_id}` de duyet."
+                                send_msg(bot_token, int(admin_chat_id), admin_msg)
+                                # Forward photo to admin
+                                forward_photo(bot_token, int(admin_chat_id), file_id)
+                        else:
+                            send_msg(bot_token, chat_id, "Khong tim thay ma giao dich. Vui long reply vao tin nhan yeu cau thanh toan.")
+                    else:
+                        send_msg(bot_token, chat_id, "Vui long reply vao tin nhan yeu cau thanh toan khi gui anh bien nhan.")
+                    continue
+                
+                if not text:
                     continue
                 
                 # Log incoming command with chat_id
@@ -220,9 +280,18 @@ def handle_command(text, chat_id, bot_token):
     
     # /start or /help
     if cmd in ["/start", "/help"]:
+        # Auto-grant free trial for new users
+        trial_msg = ""
+        if cmd == "/start" and not has_used_free_trial(chat_id):
+            result = grant_free_trial(chat_id)
+            if result["success"]:
+                trial_msg = f"\n\n *QUA TANG: {FREE_TRIAL_DAYS} NGAY DUNG THU MIEN PHI!*\n"
+                trial_msg += f"Het han: {result['data']['expires_at']}\n"
+        
         return (
             " *Aether-Quant HCA Bot*\n\n"
-            f" *Chat ID cua ban:* `{chat_id}`\n\n"
+            f" *Chat ID cua ban:* `{chat_id}`\n"
+            f"{trial_msg}\n"
             "*SUBSCRIPTION:*\n"
             " */plans* - Xem cac goi\n"
             " */subscribe <goi> [coupon]* - Dang ky\n"
@@ -441,24 +510,33 @@ def handle_command(text, chat_id, bot_token):
     elif cmd == "/plans":
         return format_plans_message()
     
-    # /subscribe - Subscribe to a plan
+    # /subscribe - Subscribe to a plan (create pending payment)
     elif cmd == "/subscribe":
         if len(parts) < 2:
-            return "Cú pháp: `/subscribe <plan_id> [ma_giam_gia]`\n\nPlan ID: `daily`, `weekly`, `monthly`, `quarterly`, `yearly`\nVD: `/subscribe monthly NEWUSER`\n\nDùng `/plans` để xem các gói."
+            return "Cu phap: `/subscribe <plan_id> [ma_giam_gia]`\n\nPlan ID: `daily`, `weekly`, `monthly`, `quarterly`, `yearly`\nVD: `/subscribe monthly NEWUSER`\n\nDung `/plans` de xem cac goi."
         plan_id = parts[1].lower()
         coupon_code = parts[2].upper() if len(parts) >= 3 else None
         
-        result = subscribe_user(chat_id, plan_id, coupon_code)
+        # Create pending payment
+        result = create_pending_payment(chat_id, plan_id, coupon_code)
         
         if result["success"]:
             data = result["data"]
-            msg = f"*{result['message']}*\n\n"
-            msg += f"Gói: {data['plan']}\n"
-            msg += f"Giá gốc: {data['price']:,.0f} VND\n"
+            payment_id = result["payment_id"]
+            msg = f" *YEU CAU THANH TOAN*\n\n"
+            msg += f"Goi: {data['plan']}\n"
+            msg += f"Gia goc: {data['original_price']:,.0f} VND\n"
             if data['discount'] > 0:
-                msg += f"Giảm giá: -{data['discount']:,.0f} VND\n"
-            msg += f"Thanh toán: *{data['final_price']:,.0f}* VND\n"
-            msg += f"Hết hạn: {data['expires_at']}\n"
+                msg += f"Giam gia: -{data['discount']:,.0f} VND\n"
+            msg += f"Can thanh toan: *{data['final_price']:,.0f}* VND\n\n"
+            msg += f" *THONG TIN CHUYEN KHOAN:*\n"
+            msg += f"```\n{data['bank_info'].replace('{payment_id}', payment_id)}\n```\n\n"
+            msg += f" *HUONG DAN:*\n"
+            msg += f"1. Chuyen khoan dung so tien\n"
+            msg += f"2. Chup anh bien nhan\n"
+            msg += f"3. Gui anh cho bot (reply tin nhan nay)\n"
+            msg += f"4. Cho admin duyet\n\n"
+            msg += f"Ma GD: `{payment_id}`"
             return msg
         else:
             return f"{result['message']}"
@@ -548,6 +626,55 @@ def handle_command(text, chat_id, bot_token):
         else:
             return result["message"]
     
+    # /payments - Admin only: view pending payments
+    elif cmd == "/payments":
+        admin_chat_id = os.environ.get("ADMIN_CHAT_ID", "")
+        if str(chat_id) != str(admin_chat_id):
+            return "Ban khong co quyen su dung lenh nay."
+        
+        result = get_pending_payments()
+        pending = result["data"]
+        
+        if not pending:
+            return "Khong co yeu cau thanh toan nao dang cho."
+        
+        msg = " *DANH SACH THANH TOAN CHO*\n"
+        msg += "------------------------\n\n"
+        
+        for payment_id, payment in pending.items():
+            msg += f"Ma GD: `{payment_id}`\n"
+            msg += f"  Chat ID: `{payment['chat_id']}`\n"
+            msg += f"  Goi: {payment['plan_name']}\n"
+            msg += f"  So tien: {payment['final_price']:,.0f} VND\n"
+            msg += f"  Thoi gian: {payment['created_at']}\n"
+            msg += f"  Anh: {'Co' if payment.get('photo_received') else 'Chua'}\n\n"
+        
+        msg += "Dung `/approve <ma_gd>` de duyet."
+        return msg
+    
+    # /approve - Admin only: approve payment
+    elif cmd == "/approve":
+        admin_chat_id = os.environ.get("ADMIN_CHAT_ID", "")
+        if str(chat_id) != str(admin_chat_id):
+            return "Ban khong co quyen su dung lenh nay."
+        
+        if len(parts) < 2:
+            return "Cu phap: `/approve <payment_id>`\n\nDung `/payments` de xem danh sach."
+        
+        payment_id = parts[1]
+        result = approve_payment(payment_id)
+        
+        if result["success"]:
+            data = result["data"]
+            msg = f"*{result['message']}*\n\n"
+            msg += f"Chat ID: `{data['chat_id']}`\n"
+            msg += f"Goi: {data['plan']}\n"
+            msg += f"Thanh toan: {data['price']:,.0f} VND\n"
+            msg += f"Het han: {data['expires_at']}"
+            return msg
+        else:
+            return result["message"]
+    
     # /run
     elif cmd == "/run":
         # Check subscription
@@ -571,6 +698,16 @@ def send_msg(bot_token, chat_id, text):
     import requests
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     payload = {"chat_id": chat_id, "text": text, "parse_mode": "Markdown"}
+    try:
+        requests.post(url, json=payload)
+    except:
+        pass
+
+def forward_photo(bot_token, chat_id, file_id):
+    """Forward a photo to a chat."""
+    import requests
+    url = f"https://api.telegram.org/bot{bot_token}/sendPhoto"
+    payload = {"chat_id": chat_id, "photo": file_id}
     try:
         requests.post(url, json=payload)
     except:

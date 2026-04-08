@@ -205,9 +205,17 @@ def main():
     resp = requests.post(f"{base_url}/setMyCommands", json={"commands": commands})
     if resp.status_code == 200:
         logger.info("Commands menu registered on Telegram!")
-    
+
+    # Send startup notification to admin
+    admin_chat_id = os.environ.get("ADMIN_CHAT_ID", "")
+    if admin_chat_id:
+        startup_msg = " *BOT DA KHOI DONG THANH CONG!*\n\n"
+        startup_msg += f"Thoi gian: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+        startup_msg += "Bot san sang nhan lenh."
+        send_msg(bot_token, int(admin_chat_id), startup_msg)
+
     logger.info("Bot started! Waiting for Telegram commands...")
-    
+
     while True:
         try:
             resp = requests.get(f"{base_url}/getUpdates", params={"offset": offset, "timeout": 30}, timeout=35)

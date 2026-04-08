@@ -9,7 +9,7 @@ import ta
 import socket
 import requests
 import requests.packages.urllib3.util.connection as urllib3_cn
-from contextlib import redirect_stdout, redirect_stderr
+from io import StringIO
 
 # Suppress all vnstock/vnai warnings BEFORE importing vnstock
 logging.getLogger("vnstock").setLevel(logging.CRITICAL)
@@ -19,22 +19,13 @@ logging.getLogger("pip").setLevel(logging.CRITICAL)
 warnings.filterwarnings("ignore")
 os.environ["VNai_DISABLE_UPDATE_CHECK"] = "1"
 
-# Suppress stdout/stderr during vnstock import (hides update messages)
-class SuppressOutput:
-    def __enter__(self):
-        self._original_stdout = sys.stdout
-        self._original_stderr = sys.stderr
-        sys.stdout = open(os.devnull, 'w')
-        sys.stderr = open(os.devnull, 'w')
-        return self
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        sys.stdout.close()
-        sys.stderr.close()
-        sys.stdout = self._original_stdout
-        sys.stderr = self._original_stderr
-
-with SuppressOutput():
+# Suppress stdout temporarily to hide vnai update message
+_original_stdout = sys.stdout
+sys.stdout = StringIO()
+try:
     from vnstock import Vnstock
+finally:
+    sys.stdout = _original_stdout
 
 from datetime import datetime, timedelta
 

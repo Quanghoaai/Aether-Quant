@@ -7,6 +7,15 @@ import socket
 import requests.packages.urllib3.util.connection as urllib3_cn
 from dotenv import load_dotenv
 
+# Subscription system
+from subscription import (
+    has_active_subscription,
+    subscribe_user,
+    verify_coupon,
+    format_plans_message,
+    format_subscription_status
+)
+
 # Force IPv4 to prevent ConnectionResetError on some Linux environments
 def allowed_gai_family():
     return socket.AF_INET
@@ -70,18 +79,23 @@ def main():
     
     # Register command menu on Telegram
     commands = [
-        {"command": "status", "description": "📊 Xem cấu hình hiện tại"},
-        {"command": "run", "description": "🔥 Chạy phân tích ngay lập tức"},
-        {"command": "portfolio", "description": "💼 Xem danh mục đầu tư"},
-        {"command": "set_primary", "description": "👑 Đổi mã chính (VD: /set_primary HHV)"},
-        {"command": "set_watchlist", "description": "📋 Đổi watchlist (VD: /set_watchlist TOS,NKG,AAS)"},
-        {"command": "add", "description": "➕ Thêm mã vào watchlist (VD: /add FPT)"},
-        {"command": "remove", "description": "➖ Xóa mã khỏi watchlist (VD: /remove NKG)"},
-        {"command": "confirm_buy", "description": "✅ Xác nhận mua (VD: /confirm_buy TCB 1000 25500)"},
-        {"command": "confirm_sell", "description": "🔴 Xác nhận bán (VD: /confirm_sell TCB 500)"},
-        {"command": "set_capital", "description": "💰 Đổi vốn (VD: /set_capital 100000000)"},
-        {"command": "set_minscore", "description": "🎯 Đổi điểm (VD: /set_minscore 3.5)"},
-        {"command": "help", "description": "❓ Xem hướng dẫn sử dụng"}
+        {"command": "start", "description": "Khởi động bot"},
+        {"command": "plans", "description": "Xem các gói subscription"},
+        {"command": "subscribe", "description": "Đăng ký (VD: /subscribe monthly NEWUSER)"},
+        {"command": "coupon", "description": "Kiểm tra mã giảm giá (VD: /coupon NEWUSER)"},
+        {"command": "subscription", "description": "Xem trạng thái đăng ký"},
+        {"command": "status", "description": "Xem cấu hình hiện tại"},
+        {"command": "run", "description": "Chạy phân tích ngay lập tức"},
+        {"command": "portfolio", "description": "Xem danh mục đầu tư"},
+        {"command": "set_primary", "description": "Đổi mã chính (VD: /set_primary HHV)"},
+        {"command": "set_watchlist", "description": "Đổi watchlist (VD: /set_watchlist TOS,NKG,AAS)"},
+        {"command": "add", "description": "Thêm mã vào watchlist (VD: /add FPT)"},
+        {"command": "remove", "description": "Xóa mã khỏi watchlist (VD: /remove NKG)"},
+        {"command": "confirm_buy", "description": "Xác nhận mua (VD: /confirm_buy TCB 1000 25500)"},
+        {"command": "confirm_sell", "description": "Xác nhận bán (VD: /confirm_sell TCB 500)"},
+        {"command": "set_capital", "description": "Đổi vốn (VD: /set_capital 100000000)"},
+        {"command": "set_minscore", "description": "Đổi điểm (VD: /set_minscore 3.5)"},
+        {"command": "help", "description": "Xem hướng dẫn sử dụng"}
     ]
     resp = requests.post(f"{base_url}/setMyCommands", json={"commands": commands})
     if resp.status_code == 200:
@@ -121,17 +135,23 @@ def handle_command(text, cfg, chat_id, bot_token):
     # /start or /help
     if cmd in ["/start", "/help"]:
         return (
-            "🚀 *Aether-Quant HCA Bot*\n\n"
-            "📌 */status* — Xem cấu hình\n"
-            "📌 */portfolio* — Xem danh mục & PnL\n"
-            "📌 */run* — Chạy phân tích ngay\n"
-            "📌 */set\\_primary MÃ* — Đổi mã chính\n"
-            "📌 */set\\_watchlist MÃ1,MÃ2* — Đổi watchlist\n"
-            "📌 */add MÃ* / */remove MÃ* — Thêm/Xóa mã\n"
-            "📌 */confirm\\_buy MÃ SỐ\\_CP GIÁ* — Xác nhận mua\n"
-            "📌 */confirm\\_sell MÃ SỐ\\_CP* — Xác nhận bán\n"
-            "📌 */set\\_capital SỐ* — Đổi vốn\n"
-            "📌 */set\\_minscore SỐ* — Đổi điểm\n"
+            " *Aether-Quant HCA Bot*\n\n"
+            "*SUBSCRIPTION:*\n"
+            " */plans*  Xem c c g i\n"
+            " */subscribe <g i> [coupon]*  D ng k\n"
+            " */coupon <m >*  Ki m tra coupon\n"
+            " */subscription*  Tr ng th i g i\n\n"
+            "*TRADING:*\n"
+            " */status*  Xem c u hinh\n"
+            " */portfolio*  Xem danh m c & PnL\n"
+            " */run*  Ch y ph n tich ngay\n"
+            " */set\\_primary M *   i m chinh\n"
+            " */set\\_watchlist M 1,M 2*   i watchlist\n"
+            " */add M * / */remove M *  Th m/X a m\n"
+            " */confirm\\_buy M S  \\_CP GI *  X c nh n mua\n"
+            " */confirm\\_sell M S  \\_CP*  X c nh n b n\n"
+            " */set\\_capital S *   i v n\n"
+            " */set\\_minscore S *   i i m\n"
         )
     
     # /status
@@ -322,17 +342,64 @@ def handle_command(text, cfg, chat_id, bot_token):
         except ValueError:
             return "⚠️ Số điểm không hợp lệ."
     
+    # /plans - View subscription plans
+    elif cmd == "/plans":
+        return format_plans_message()
+    
+    # /subscribe - Subscribe to a plan
+    elif cmd == "/subscribe":
+        if len(parts) < 2:
+            return "Cú pháp: `/subscribe <gói> [mã giảm giá]`\nVD: `/subscribe monthly NEWUSER`\n\nDùng `/plans` để xem các gói."
+        plan_id = parts[1].lower()
+        coupon_code = parts[2].upper() if len(parts) >= 3 else None
+        
+        result = subscribe_user(chat_id, plan_id, coupon_code)
+        
+        if result["success"]:
+            data = result["data"]
+            msg = f"*{result['message']}*\n\n"
+            msg += f"Gói: {data['plan']}\n"
+            msg += f"Giá gốc: {data['price']:,.0f} VND\n"
+            if data['discount'] > 0:
+                msg += f"Giảm giá: -{data['discount']:,.0f} VND\n"
+            msg += f"Thanh toán: *{data['final_price']:,.0f}* VND\n"
+            msg += f"Hết hạn: {data['expires_at']}\n"
+            return msg
+        else:
+            return f"{result['message']}"
+    
+    # /coupon - Verify a coupon
+    elif cmd == "/coupon":
+        if len(parts) < 2:
+            return "Cú pháp: `/coupon <mã>`\nVD: `/coupon NEWUSER`"
+        code = parts[1].upper()
+        result = verify_coupon(code)
+        
+        if result["success"]:
+            data = result["data"]
+            return f"*Mã hợp lệ!* \n\nMã: `{data['code']}`\nGiảm giá: *{data['discount']:,.0f}* VND\n\nDùng `/subscribe <gói> {code}` để đăng ký."
+        else:
+            return f"{result['error']}"
+    
+    # /subscription - View subscription status
+    elif cmd == "/subscription":
+        return format_subscription_status(chat_id)
+    
     # /run
     elif cmd == "/run":
-        send_msg(bot_token, chat_id, "⏳ Đang chạy phân tích... Chờ 30-60 giây.")
+        # Check subscription
+        if not has_active_subscription(chat_id):
+            return "*Cần subscription để sử dụng tính năng này.*\n\nDùng `/plans` để xem các gói và `/subscribe` để đăng ký."
+        
+        send_msg(bot_token, chat_id, "Đang chạy phân tích... Chờ 30-60 giây.")
         output = run_analysis(cfg)
         # The analysis itself sends the full report via Telegram
         lines = output.strip().split('\n')
         summary = '\n'.join(lines[-5:]) if len(lines) > 5 else output
-        return f"✅ Phân tích hoàn tất!\n\n```\n{summary}\n```"
+        return f"Phân tích hoàn tất!\n\n```\n{summary}\n```"
     
     else:
-        return "❓ Lệnh không nhận dạng. Gõ */help* để xem menu."
+        return "Lệnh không nhận dạng. Gõ */help* để xem menu."
 
 def send_msg(bot_token, chat_id, text):
     import requests

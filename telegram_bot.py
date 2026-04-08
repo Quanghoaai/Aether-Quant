@@ -32,7 +32,11 @@ from subscription import (
     create_pending_payment,
     approve_payment,
     get_pending_payments,
-    FREE_TRIAL_DAYS
+    FREE_TRIAL_DAYS,
+    build_vietqr_image_url,
+    is_trial_expired_and_not_notified,
+    mark_trial_expired_notified,
+    PLANS
 )
 
 # Force IPv4 to prevent ConnectionResetError on some Linux environments
@@ -277,6 +281,18 @@ def handle_command(text, chat_id, bot_token):
     
     # Get user's own config
     cfg = get_user_config(chat_id)
+
+    # Notify user when free trial just expired (send once)
+    if is_trial_expired_and_not_notified(chat_id):
+        mark_trial_expired_notified(chat_id)
+        msg = "*DUNG THU DA HET HAN!*\n\n"
+        msg += "Ban vui long chon goi va thanh toan de tiep tuc su dung bot.\n\n"
+        msg += "*CAC GOI HIEN CO:*\n"
+        for plan_id, plan in PLANS.items():
+            msg += f"- `{plan_id}`: {plan['name']} - *{plan['price']:,.0f}* VND ({plan['duration_days']} ngay)\n"
+        msg += "\nDung: `/subscribe <plan_id>` de tao yeu cau thanh toan.\n"
+        msg += "Hoac dung: `/qr <plan_id>` de nhan QR thanh toan nhanh."
+        send_msg(bot_token, chat_id, msg)
     
     # /start or /help
     if cmd in ["/start", "/help"]:
@@ -313,6 +329,25 @@ def handle_command(text, chat_id, bot_token):
     # /myid - Show user's chat ID
     elif cmd == "/myid":
         return f" *Chat ID cua ban:* `{chat_id}`"
+
+    # /qr - Send VietQR for a plan (quick pay)
+    elif cmd == "/qr":
+        if len(parts) < 2:
+            return "Cu phap: `/qr <plan_id>`\n\nVD: `/qr monthly`"
+        plan_id = parts[1].lower()
+        if plan_id not in PLANS:
+            return "Plan ID khong hop le. Dung `/plans` de xem danh sach."
+
+        plan = PLANS[plan_id]
+        add_info = f"AQ_{chat_id}_{plan_id}"
+        qr_url = build_vietqr_image_url(plan["price"], add_info)
+        if not qr_url:
+            return "Chua cau hinh VietQR (BANK_BIN/BANK_ACCOUNT)."
+
+        send_photo_url(bot_token, chat_id, qr_url, caption=(
+            f"*QR THANH TOAN*\n\nGoi: {plan['name']}\nSo tien: *{plan['price']:,.0f}* VND\nNoi dung: `{add_info}`"
+        ))
+        return None
     
     # /status
     elif cmd == "/status":
@@ -708,6 +743,19 @@ def forward_photo(bot_token, chat_id, file_id):
     import requests
     url = f"https://api.telegram.org/bot{bot_token}/sendPhoto"
     payload = {"chat_id": chat_id, "photo": file_id}
+    try:
+        requests.post(url, json=payload)
+    except:
+        pass
+
+
+def send_photo_url(bot_token, chat_id, photo_url, caption=None):
+    import requests
+    url = f"https://api.telegram.org/bot{bot_token}/sendPhoto"
+    payload = {"chat_id": chat_id, "photo": photo_url}
+    if caption:
+        payload["caption"] = caption
+        payload["parse_mode"] = "Markdown"
     try:
         requests.post(url, json=payload)
     except:

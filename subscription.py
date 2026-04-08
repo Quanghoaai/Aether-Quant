@@ -10,6 +10,36 @@ SUBSCRIPTIONS_FILE = "subscriptions.json"
 PAYMENTS_FILE = "payments.json"
 FREE_TRIAL_DAYS = 7  # Free trial for new users
 
+
+def _now_str() -> str:
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+def build_vietqr_image_url(amount: int, add_info: str) -> str:
+    """Build VietQR image URL (no API key).
+
+    Requires env:
+    - BANK_BIN (e.g. 970423 for TPBank, 970415 for VietinBank, etc.)
+    - BANK_ACCOUNT
+    - BANK_OWNER
+    """
+    bank_bin = os.environ.get("BANK_BIN", "")
+    bank_account = os.environ.get("BANK_ACCOUNT", "")
+    bank_owner = os.environ.get("BANK_OWNER", "")
+    if not bank_bin or not bank_account:
+        return ""
+    # compact2 has nicer layout for Telegram
+    # VietQR endpoint supports: amount, addInfo, accountName
+    from urllib.parse import quote
+
+    qs_amount = str(int(amount))
+    qs_add_info = quote(add_info)
+    qs_owner = quote(bank_owner) if bank_owner else ""
+    return (
+        f"https://img.vietqr.io/image/{bank_bin}-{bank_account}-compact2.png"
+        f"?amount={qs_amount}&addInfo={qs_add_info}&accountName={qs_owner}"
+    )
+
 # Subscription Plans
 PLANS = {
     "daily": {
@@ -203,6 +233,38 @@ def get_user_subscription(chat_id: int) -> Optional[Dict[str, Any]]:
             pass
     
     return sub
+
+
+def is_trial_expired_and_not_notified(chat_id: int) -> bool:
+    """Return True if user had a free trial that is expired and we haven't notified yet."""
+    data = load_subscriptions()
+    user = data.get("users", {}).get(str(chat_id), {})
+    if not user:
+        return False
+
+    sub = user.get("subscription") or {}
+    if not sub.get("is_free_trial"):
+        return False
+    if user.get("trial_expired_notified"):
+        return False
+
+    expires_at = sub.get("expires_at")
+    if not expires_at:
+        return False
+    try:
+        exp_date = datetime.strptime(expires_at, "%Y-%m-%d %H:%M:%S")
+    except ValueError:
+        return False
+    return datetime.now() > exp_date
+
+
+def mark_trial_expired_notified(chat_id: int) -> None:
+    data = load_subscriptions()
+    chat_str = str(chat_id)
+    if chat_str not in data.get("users", {}):
+        data.setdefault("users", {})[chat_str] = {}
+    data["users"][chat_str]["trial_expired_notified"] = True
+    save_subscriptions(data)
 
 
 def grant_free_trial(chat_id: int) -> Dict[str, Any]:

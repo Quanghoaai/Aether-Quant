@@ -55,8 +55,7 @@ def allowed_gai_family():
     return socket.AF_INET
 urllib3_cn.allowed_gai_family = allowed_gai_family
 
-ENV_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
-load_dotenv(ENV_PATH)
+load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 
 CONFIG_FILE = "config.json"
 PORTFOLIO_FILE = "portfolio.json"
@@ -255,7 +254,6 @@ def main():
         {"command": "set_capital", "description": "Đổi vốn (VD: /set_capital 100000000)"},
         {"command": "reset_capital", "description": "Reset vốn và xóa vị thế"},
         {"command": "set_minscore", "description": "Đổi điểm (VD: /set_minscore 3.5)"},
-        {"command": "gemini_debug", "description": "Admin: Debug Gemini OAuth env"},
         {"command": "update", "description": "Admin: Cập nhật bot từ GitHub"},
         {"command": "help", "description": "Xem hướng dẫn sử dụng"}
     ]
@@ -407,7 +405,6 @@ def handle_command(text, chat_id, bot_token):
             " */info MA* - Xem thong tin cong ty\n"
             " */gemini* - Ket noi Gemini AI\n"
             " */gemini_auth <1|2|3>* - Chon auth method\n"
-            " */gemini_debug* - Admin: Debug OAuth env\n"
             " */ask <cau hoi>* - Hoi AI\n"
             " */add MA1,MA2* - Them ma\n"
             " */remove MA1,MA2* - Xoa ma\n"
@@ -856,29 +853,6 @@ def handle_command(text, chat_id, bot_token):
             return " *Da huy ket noi Gemini AI.*\n\nDung `/gemini` de ket noi lai neu can."
         else:
             return "Loi huy ket noi."
-
-    # /gemini_debug - Admin only: debug OAuth env
-    elif cmd == "/gemini_debug":
-        admin_chat_id = os.environ.get("ADMIN_CHAT_ID", "")
-        if str(chat_id) != str(admin_chat_id):
-            return "Ban khong co quyen su dung lenh nay."
-
-        cid = os.environ.get("GOOGLE_CLIENT_ID", "")
-        csec = os.environ.get("GOOGLE_CLIENT_SECRET", "")
-
-        def _mask(v: str) -> str:
-            if not v:
-                return "(empty)"
-            if len(v) <= 12:
-                return v[:2] + "..."
-            return v[:6] + "..." + v[-4:]
-
-        msg = " *GEMINI DEBUG*\n\n"
-        msg += f"ENV_PATH: `{ENV_PATH}`\n\n"
-        msg += f"GOOGLE_CLIENT_ID: `{_mask(cid)}`\n"
-        msg += f"GOOGLE_CLIENT_SECRET: `{_mask(csec)}`\n\n"
-        msg += f"OAuth configured: `{'YES' if is_oauth_mode() else 'NO'}`"
-        return msg
 
     # /add - Add one or multiple symbols
     elif cmd == "/add":
@@ -1381,6 +1355,25 @@ def handle_command(text, chat_id, bot_token):
     elif cmd == "/sell":
         return "Dung `/confirm_sell MA SL [GIA]` de ban.\n\nVD: `/confirm_sell TCB 100 28000`"
     
+    # /check_env - Admin only: check if env vars are loaded
+    elif cmd == "/check_env":
+        admin_chat_id = os.environ.get("ADMIN_CHAT_ID", "")
+        if str(chat_id) != str(admin_chat_id):
+            return "Ban khong co quyen."
+        
+        from gemini import _get_google_client_id, _get_google_client_secret
+        
+        cid = _get_google_client_id()
+        sec = _get_google_client_secret()
+        
+        msg = "🔍 *ENV STATUS:*\n\n"
+        msg += f"GOOGLE_CLIENT_ID: {'✅ LOADED' if cid else '❌ MISSING'}\n"
+        msg += f"GOOGLE_CLIENT_SECRET: {'✅ LOADED' if sec else '❌ MISSING'}\n"
+        msg += f"ADMIN_CHAT_ID: {'✅ LOADED' if admin_chat_id else '❌ MISSING'}\n\n"
+        msg += f"Current path: `{os.getcwd()}`\n"
+        msg += f"File path: `{os.path.abspath(__file__)}`"
+        return msg
+
     # Unknown command
     return "Lenh khong nhan dang. Go */help* de xem menu."
 

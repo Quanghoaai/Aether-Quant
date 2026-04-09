@@ -744,29 +744,18 @@ def handle_command(text, chat_id, bot_token):
         api_url = get_api_key_url()
         
         if choice == "1":
-            # Check if OAuth is configured
-            if is_oauth_mode():
-                auth_url = get_oauth_login_url(chat_id)
-                msg = " *DA CHON: Login with Google (OAuth2)*\n\n"
-                msg += f"💡 Bam day de Sign in with Google: [Login]({auth_url})\n\n"
-                msg += "Select *Sign in with Google*. Bot se mo trinh duyet de dang nhap.\n"
-                msg += "Lam theo huong dan tren man hinh. Credentials se duoc cache local cho cac phien sau.\n\n"
-                msg += " *Waiting for authentication...*\n\n"
-                msg += "Sau khi dang nhap thanh cong:\n"
-                msg += "1. Copy *ma xac thuc* (authorization code)\n"
-                msg += "2. Gui: `/gemini_code <ma>`\n\n"
-                msg += "_Admin da cau hinh OAuth._"
-            else:
-                msg = " *LOGIN WITH GOOGLE (OAuth2)*\n\n"
-                msg += "Che do OAuth chua duoc Admin cau hinh.\n\n"
-                msg += "Admin can them vao .env:\n"
-                msg += "```\n"
-                msg += "GOOGLE_CLIENT_ID=xxx.apps.googleusercontent.com\n"
-                msg += "GOOGLE_CLIENT_SECRET=GOCSPX-xxx\n"
-                msg += "```\n\n"
-                msg += "Tam thoi, dung cach 2:\n"
-                msg += f"[Gemini API Key]({api_url})\n\n"
-                msg += "Gui: `/gemini_key AIza...`"
+            # Use public Google SDK Client ID (no admin config needed)
+            auth_url = get_oauth_login_url(chat_id)
+            msg = "i *Code Assist login required.*\n"
+            msg += "Attempting to open authentication page in your browser.\n"
+            msg += "Otherwise navigate to:\n\n"
+            msg += f"🔗 [Dang nhap tai day]({auth_url})\n\n"
+            msg += "i *Waiting for authentication...*\n\n"
+            msg += "Huong dan:\n"
+            msg += "1. Chon tai khoan Google.\n"
+            msg += "2. Nhan *Sign in* de xac nhan tin cay.\n"
+            msg += "3. Khi thay *Authentication successful*, copy ma xac thuc.\n"
+            msg += "4. Gui cho bot: `/gemini_code <ma>`"
             return msg
         
         elif choice == "2":

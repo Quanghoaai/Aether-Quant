@@ -202,10 +202,12 @@ def build_full_report(scored_data, classification, actions, portfolio, benchmark
         # Get company info
         company_name = ""
         industry = ""
+        description = ""
         try:
             info = get_company_info(sym)
-            company_name = info.get('name', '')[:25] if info.get('name') else ''
+            company_name = info.get('name', '')[:30] if info.get('name') else ''
             industry = info.get('industry', '')[:20] if info.get('industry') else ''
+            description = info.get('description', '')[:120] if info.get('description') else ''
         except:
             pass
         
@@ -215,6 +217,8 @@ def build_full_report(scored_data, classification, actions, portfolio, benchmark
             if industry:
                 report += f" [{industry}]"
             report += "\n"
+        if description:
+            report += f"  _{description}_\n"
         report += f"  Tổng: {_format_score_bar(score)} (Rank: {rank:.2f})\n"
         report += f"  RS:      {_format_score_bar(rs)}\n"
         report += f"  PA:      {_format_score_bar(pa)}\n"

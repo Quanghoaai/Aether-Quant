@@ -27,50 +27,226 @@ from datetime import datetime
 
 # Static fallback data for common stocks (used when API fails)
 _STATIC_DATA = {
-    "HHV": {"name": "Hoang Han Viet Corp", "industry": "Bat dong san"},
-    "TOS": {"name": "Toshiba Vietnam", "industry": "Dien tu"},
-    "NKG": {"name": "Nong nghiep Song Hau", "industry": "Nong nghiep"},
-    "AAS": {"name": "Aa Dung A", "industry": "Xay dung"},
-    "MSB": {"name": "Maritime Bank", "industry": "Ngan hang"},
-    "TCB": {"name": "Techcombank", "industry": "Ngan hang"},
-    "VNM": {"name": "Vinamilk", "industry": "Thuc pham"},
-    "FPT": {"name": "FPT Corp", "industry": "Cong nghe thong tin"},
-    "VIC": {"name": "Vingroup", "industry": "Bat dong san"},
-    "VHM": {"name": "Vinhomes", "industry": "Bat dong san"},
-    "HPG": {"name": "Hoa Phat Group", "industry": "Thep"},
-    "MWG": {"name": "Mobile World", "industry": "Ban le"},
-    "SAB": {"name": "Sabeco", "industry": "Thuc pham"},
-    "VCB": {"name": "Vietcombank", "industry": "Ngan hang"},
-    "BID": {"name": "BIDV", "industry": "Ngan hang"},
-    "CTG": {"name": "VietinBank", "industry": "Ngan hang"},
-    "MBB": {"name": "Military Bank", "industry": "Ngan hang"},
-    "ACB": {"name": "Asia Commercial Bank", "industry": "Ngan hang"},
-    "VPB": {"name": "VPBank", "industry": "Ngan hang"},
-    "EIB": {"name": "Eximbank", "industry": "Ngan hang"},
-    "HDB": {"name": "HDBank", "industry": "Ngan hang"},
-    "TPB": {"name": "TPBank", "industry": "Ngan hang"},
-    "STB": {"name": "Sacombank", "industry": "Ngan hang"},
-    "PVD": {"name": "Petrovietnam Drilling", "industry": "Dau khi"},
-    "PVS": {"name": "Petrovietnam Tech", "industry": "Dau khi"},
-    "GAS": {"name": "PV Gas", "industry": "Dau khi"},
-    "PLX": {"name": "Petrolimex", "industry": "Dau khi"},
-    "POW": {"name": "PV Power", "industry": "Dien"},
-    "NT2": {"name": "Nghi Son 2 Power", "industry": "Dien"},
-    "REE": {"name": "Ree Corp", "industry": "Dien"},
-    "KDC": {"name": "KIDO Group", "industry": "Thuc pham"},
-    "SBT": {"name": "La Vie", "industry": "Thuc pham"},
-    "ANV": {"name": "Nam Viet", "industry": "Thuy san"},
-    "VHC": {"name": "Viet Hung", "industry": "Thuy san"},
-    "DBD": {"name": "Dong Bac", "industry": "Xay dung"},
-    "HBC": {"name": "Hoang Bao", "industry": "Xay dung"},
-    "FLC": {"name": "FLC Group", "industry": "Bat dong san"},
-    "LDG": {"name": "LDG Group", "industry": "Bat dong san"},
-    "DIG": {"name": "DIC Corp", "industry": "Bat dong san"},
-    "DXG": {"name": "Dat Xanh", "industry": "Bat dong san"},
-    "NVL": {"name": "No Va Land", "industry": "Bat dong san"},
-    "PDR": {"name": "Phat Dat", "industry": "Bat dong san"},
-    "NLG": {"name": "Nam Long", "industry": "Bat dong san"},
-    "ITA": {"name": "ITA Corp", "industry": "Bat dong san"},
+    "HHV": {
+        "name": "Hoang Han Viet Corp",
+        "industry": "Bat dong san",
+        "description": "Cong ty dau tu va phat trien bat dong san tai cac tinh mien Tay. Chuyen kinh doanh khu cong nghiep, khu dan cu va khu do thi. Co von hoa nho, thanh kho luong thap. Phu hop dau tu ngan han."
+    },
+    "TOS": {
+        "name": "Toshiba Vietnam",
+        "industry": "Dien tu",
+        "description": "Cong ty lien doanh san xuat thang may, dieu hoa va thiet bi dien tu. Thuoc tap doan Toshiba Nhat Ban. San pham chat luong cao, xuat khau chinh sang Nhat Ban. Doanh thu on dinh, bien lo nhuan tot."
+    },
+    "NKG": {
+        "name": "Nong nghiep Song Hau",
+        "industry": "Nong nghiep",
+        "description": "Cong ty san xuat va che bien gao hang dau tai khu vuc Tay Nam Bo. So huu nhieu kho luong va dat trong cay. Xuat khau gao sang cac thi truong chau A. Doanh thu phu thuoc gia gao the gioi."
+    },
+    "AAS": {
+        "name": "Aa Dung A",
+        "industry": "Xay dung",
+        "description": "Cong ty thau khoi cong trinh xay dung dan dung va cong nghiep. Hoat dong chu yeu tai cac tinh mien Tay. Quy mo nho, canh tranh cao trong nganh xay dung. Thanh kho luong thap, rui ro tai chinh lon."
+    },
+    "MSB": {
+        "name": "Maritime Bank",
+        "industry": "Ngan hang",
+        "description": "Ngan hang TMCP Hang Hai, thanh lap nam 1991. Cung cap cac dich vu ngan hang doanh nghiep va ca nhan. Co mang luoi chi nhanh toan quoc. Tang truong tin dung on dinh, chat luong tai san tot."
+    },
+    "TCB": {
+        "name": "Techcombank",
+        "industry": "Ngan hang",
+        "description": "Ngan hang TMCP Ky Thuac, thanh lap nam 1993. La ngan hang thuong mai hang dau Viet Nam. Cung cap day du dich vu tai chinh cho ca nhan va doanh nghiep. Co chat luong tai san tot, hieu qua hoat dong cao."
+    },
+    "VNM": {
+        "name": "Vinamilk",
+        "industry": "Thuc pham",
+        "description": "Cong ty sua hang dau Viet Nam, thanh lap nam 1976. San xuat va kinh doanh sua va cac san pham tu sua. Co thi phan lon thi truong sua trong nuoc. Xuat khau sang 50 nuoc, von hoa lon nhat nganh."
+    },
+    "FPT": {
+        "name": "FPT Corp",
+        "industry": "Cong nghe thong tin",
+        "description": "Tap doan cong nghe hang dau Viet Nam, thanh lap nam 1988. Hoat dong trong linh vuc phan mem, vien thong va giao duc. Co hieu qua hoat dong cao, tang truong on dinh. Mo rong thi truong quoc te manh me."
+    },
+    "VIC": {
+        "name": "Vingroup",
+        "industry": "Bat dong san",
+        "description": "Tap doan tu nhan lon nhat Viet Nam cua Pham Nhat Vuong. Hoat dong bat dong san, xe dien, y te va giao duc. So huu Vinhomes, VinFast, Vinpearl. Von hoa lon nhat thi truong chung khoan Viet Nam."
+    },
+    "VHM": {
+        "name": "Vinhomes",
+        "industry": "Bat dong san",
+        "description": "Cong ty phat trien bat dong san hang dau Viet Nam. So huu nhieu du an do thi cao cap tai Ha Noi va TP.HCM. Thuoc tap doan Vingroup. Doanh thu lon, von hoa lon, tang truong on dinh."
+    },
+    "HPG": {
+        "name": "Hoa Phat Group",
+        "industry": "Thep",
+        "description": "Tap doan san xuat thep hang dau Viet Nam. San xuat thep xay dung, thep dai va sat thep. Co nha may Khuong Duy va Dung Quat. Von hoa lon, doanh thu cao, lanh dao nganh thep."
+    },
+    "MWG": {
+        "name": "Mobile World",
+        "industry": "Ban le",
+        "description": "Cong ty ban le dien thoai va do gia dung hang dau. So huu thuong hieu The Gioi Di Dong, Dien May Xanh, Bach Hoa Xanh. Mang luoi cua hang phu khap toan quoc. Tang truong doanh thu nhanh, hieu qua hoat dong tot."
+    },
+    "SAB": {
+        "name": "Sabeco",
+        "industry": "Thuc pham",
+        "description": "Cong ty bia Saigon, hang bia lon nhat Viet Nam. So huu cac thuong hieu bia 333, Bia Saigon. Thi phan lon thi truong bia trong nuoc. Von hoa lon, doanh thu on dinh, chi tra co tuc tot."
+    },
+    "VCB": {
+        "name": "Vietcombank",
+        "industry": "Ngan hang",
+        "description": "Ngan hang Ngoai thuong Viet Nam, ngan hang lon nhat theo von hoa. Cung cap day du dich vu tai chinh. Co vi the thi truong manh, chat luong tai san tot. Ngan hang co phan nha nuoc, on dinh tai chinh."
+    },
+    "BID": {
+        "name": "BIDV",
+        "industry": "Ngan hang",
+        "description": "Ngan hang Dau tu va Phat trien Viet Nam. Ngan hang thuong mai lon nhat theo tai san. Phuc vu khach hang doanh nghiep va ca nhan. Ngan hang nha nuoc, mang luoi rong khap toan quoc."
+    },
+    "CTG": {
+        "name": "VietinBank",
+        "industry": "Ngan hang",
+        "description": "Ngan hang Cong thuong Viet Nam. Ngan hang thuong mai lon nhat theo quy mo. Cung cap day du dich vu ngan hang. Ngan hang nha nuoc, chat luong tai san on dinh, hieu qua hoat dong tot."
+    },
+    "MBB": {
+        "name": "Military Bank",
+        "industry": "Ngan hang",
+        "description": "Ngan hang Quan doi, thanh lap nam 1994. Ngan hang thuong mai co quy mo trung binh. Phuc vu khach hang doanh nghiep va ca nhan. Chat luong tai san tot, hieu qua hoat dong cao."
+    },
+    "ACB": {
+        "name": "Asia Commercial Bank",
+        "industry": "Ngan hang",
+        "description": "Ngan hang TMCP A Chau, thanh lap nam 1996. Ngan hang thuong mai tu nhan quy mo trung binh. Cung cap day du dich vu ngan hang. Chat luong tai san tot, quan tri rui ro can than."
+    },
+    "VPB": {
+        "name": "VPBank",
+        "industry": "Ngan hang",
+        "description": "Ngan hang Viet Nam Thinh Vuong, thanh lap nam 1993. Ngan hang thuong mai tu nhan quy mo lon. Phat trien manh me tin dung ban le. Tang truong nhanh, hieu qua hoat dong cao."
+    },
+    "EIB": {
+        "name": "Eximbank",
+        "industry": "Ngan hang",
+        "description": "Ngan hang Xuat Nhap Khau, thanh lap nam 1989. Ngan hang thuong mai quy mo trung binh. Chuyen cung cap dich vu xuat nhap khau. Chat luong tai san on dinh, thanh kho luong thap."
+    },
+    "HDB": {
+        "name": "HDBank",
+        "industry": "Ngan hang",
+        "description": "Ngan hang Phat Trien Nha TP.HCM, thanh lap nam 1990. Ngan hang thuong mai quy mo trung binh. Phat trien tin dung doanh nghiep nho va vua. Tang truong on dinh, chat luong tai san cai thien."
+    },
+    "TPB": {
+        "name": "TPBank",
+        "industry": "Ngan hang",
+        "description": "Ngan hang Tien Phong, thanh lap nam 2008. Ngan hang thuong mai quy mo nho. Phat trien ngan hang so manh me. Tang truong nhanh, hieu qua hoat dong tot."
+    },
+    "STB": {
+        "name": "Sacombank",
+        "industry": "Ngan hang",
+        "description": "Ngan hang Sai Gon Thuong Tin, thanh lap nam 1991. Ngan hang thuong mai quy mo lon. Co mang luoi chi nhieu toan mien Nam. Dang cai to tai san, chat luong tai san cai thien."
+    },
+    "PVD": {
+        "name": "Petrovietnam Drilling",
+        "industry": "Dau khi",
+        "description": "Cong ty Khoan va Dau khi Petrovietnam. Cung cap dich vu khoan dau khi bien. Thuoc tap doan Petrovietnam. Doanh thu phu thuoc gia dau, bien lo nhuan bien dong."
+    },
+    "PVS": {
+        "name": "Petrovietnam Tech",
+        "industry": "Dau khi",
+        "description": "Cong ty Ky thuat Dau khi Petrovietnam. Cung cap dich vu ky thuat dau khi. Thuoc tap doan Petrovietnam. Doanh thu on dinh, bien lo nhuan phu thuoc gia dau."
+    },
+    "GAS": {
+        "name": "PV Gas",
+        "industry": "Dau khi",
+        "description": "Cong ty Khi Petrovietnam. Don vi kinh doanh khi tu nhien. Thuoc tap doan Petrovietnam. Doanh thu on dinh, chi tra co tuc tot, von hoa lon."
+    },
+    "PLX": {
+        "name": "Petrolimex",
+        "industry": "Dau khi",
+        "description": "Tong cong ty Xang dau Viet Nam. Don vi kinh doanh xang dau lon nhat. Co mang luoi tram xang phu khap toan quoc. Von hoa lon, doanh thu cao, bien lo nhuan thap."
+    },
+    "POW": {
+        "name": "PV Power",
+        "industry": "Dien",
+        "description": "Cong ty Dien luc Petrovietnam. Don vi san xuat dien lon. Thuoc tap doan Petrovietnam. Doanh thu on dinh, chi tra co tuc tot."
+    },
+    "NT2": {
+        "name": "Nghi Son 2 Power",
+        "industry": "Dien",
+        "description": "Nha may dien Nghi Son 2. Du an BOT dien than. Doanh thu on dinh tu hop dong mua ban dien. Rui ro phu thuoc gia than."
+    },
+    "REE": {
+        "name": "Ree Corp",
+        "industry": "Dien",
+        "description": "Cong ty Co phan Cao su Thuy Dau. Chuyen sang dau tu dien va lanh. So huu nhieu nha may dien nho. Doanh thu on dinh, chi tra co tuc tot."
+    },
+    "KDC": {
+        "name": "KIDO Group",
+        "industry": "Thuc pham",
+        "description": "Cong ty Thuc pham KIDO, truoc day la Kinh Do. San xuat kem, dau an va thuc pham. Thuoc tap doan KIDO. Doanh thu on dinh, mo rong san pham moi."
+    },
+    "SBT": {
+        "name": "La Vie",
+        "industry": "Thuc pham",
+        "description": "Cong ty nuoc giai khat La Vie. San xuat va kinh doanh nuoc tinh khiet. Thuoc tap doan Nestle. Doanh thu on dinh, thi phan lon nganh nuoc."
+    },
+    "ANV": {
+        "name": "Nam Viet",
+        "industry": "Thuy san",
+        "description": "Cong ty Nuoi trong va Che bien Thuy san Nam Viet. San xuat ca tra, ca basa. Xuat khau sang thi truong chau Au, My. Doanh thu phu thuoc gia ca the gioi."
+    },
+    "VHC": {
+        "name": "Viet Hung",
+        "industry": "Thuy san",
+        "description": "Cong ty Thuy san Viet Hung. Nuoi trong va che bien thuy san. Xuat khau ca tra, ca basa. Doanh thu phu thuoc gia ca the gioi."
+    },
+    "DBD": {
+        "name": "Dong Bac",
+        "industry": "Xay dung",
+        "description": "Tong cong ty Xay dung Dong Bac. Thau khoi cong trinh giao thong va dan dung. Hoat dong chu yeu mien Bac. Quy mo trung binh, canh tranh cao."
+    },
+    "HBC": {
+        "name": "Hoang Bao",
+        "industry": "Xay dung",
+        "description": "Cong ty Co phan Hoang Bao. Thau khoi cong trinh xay dung. Quy mo nho, thanh kho luong thap. Rui ro tai chinh lon."
+    },
+    "FLC": {
+        "name": "FLC Group",
+        "industry": "Bat dong san",
+        "description": "Tap doan FLC cua Doan Van Binh. Hoat dong bat dong san, golf, giai tri. So huu FLC Ha Long, FLC Quy Nhon. Dang gap kho khan tai chinh, co phan bi giam sat."
+    },
+    "LDG": {
+        "name": "LDG Group",
+        "industry": "Bat dong san",
+        "description": "Cong ty LDG Group. Phat trien bat dong san tai TP.HCM va Binh Duong. Quy mo nho, thanh kho luong thap. Rui ro tai chinh lon."
+    },
+    "DIG": {
+        "name": "DIC Corp",
+        "industry": "Bat dong san",
+        "description": "Cong ty Phat trien Dia chinh DIC. Phat trien khu do thi va dan cu. Thuoc Bo Tai nguyen Moi truong. Doanh thu on dinh, von hoa trung binh."
+    },
+    "DXG": {
+        "name": "Dat Xanh",
+        "industry": "Bat dong san",
+        "description": "Cong ty Dat Xanh. Phat trien bat dong san tai TP.HCM va Binh Duong. Quy mo trung binh, doanh thu phu thuoc thi truong. Thanh kho luong thap."
+    },
+    "NVL": {
+        "name": "No Va Land",
+        "industry": "Bat dong san",
+        "description": "Tap doan No Va Land cua Bui Thanh Nhon. Phat trien bat dong san cao cap. So huu Aqua City, NovaWorld Phan Thiet. Dang gap kho khan tai chinh, co phan bi giam sat."
+    },
+    "PDR": {
+        "name": "Phat Dat",
+        "industry": "Bat dong san",
+        "description": "Cong ty Phat Dat. Phat trien bat dong san tai TP.HCM va Binh Duong. Quy mo trung binh. Dang gap kho khan tai chinh, thanh kho luong thap."
+    },
+    "NLG": {
+        "name": "Nam Long",
+        "industry": "Bat dong san",
+        "description": "Cong ty Nam Long. Phat trien khu do thi va dan cu. So huu du an Mizuki, Waterpoint. Doanh thu on dinh, quan tri tot, chi tra co tuc."
+    },
+    "ITA": {
+        "name": "ITA Corp",
+        "industry": "Bat dong san",
+        "description": "Cong ty ITA. Dau tu bat dong san va khu cong nghiep. Quy mo nho, thanh kho luong thap. Rui ro tai chinh lon."
+    },
 }
 
 # Cache for company info to reduce API calls
@@ -92,6 +268,7 @@ def get_company_info(symbol: str) -> dict:
         "name": "",
         "sector": "",
         "industry": "",
+        "description": "",
         "exchange": "",
         "market_cap": 0,
         "price": 0,
@@ -103,6 +280,7 @@ def get_company_info(symbol: str) -> dict:
     if symbol in _STATIC_DATA:
         info["name"] = _STATIC_DATA[symbol].get("name", "")
         info["industry"] = _STATIC_DATA[symbol].get("industry", "")
+        info["description"] = _STATIC_DATA[symbol].get("description", "")
     
     # Try VNStock API
     try:

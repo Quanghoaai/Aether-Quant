@@ -648,14 +648,18 @@ def handle_command(text, chat_id, bot_token):
             for sym in added:
                 try:
                     info = get_company_info(sym)
-                    name = info.get('name', '')[:25] if info.get('name') else ''
+                    name = info.get('name', '')[:30] if info.get('name') else ''
                     industry = info.get('industry', '')[:20] if info.get('industry') else ''
+                    description = info.get('description', '')[:150] if info.get('description') else ''
+                    
                     msg += f"?? *{sym}*"
                     if name:
                         msg += f" - {name}"
                     if industry:
                         msg += f" [{industry}]"
                     msg += "\n"
+                    if description:
+                        msg += f"  _{description}_\n"
                 except:
                     msg += f"?? *{sym}*\n"
             

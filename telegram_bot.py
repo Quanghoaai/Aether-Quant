@@ -1302,6 +1302,13 @@ def handle_command(text, chat_id, bot_token):
                 cwd=os.path.dirname(os.path.abspath(__file__))
             )
             
+            # Auto-install dependencies
+            subprocess.run(
+                ["pip", "install", "-r", "requirements.txt"],
+                capture_output=True, text=True, timeout=60,
+                cwd=os.path.dirname(os.path.abspath(__file__))
+            )
+            
             # Get current commit info
             log_result = subprocess.run(
                 ["git", "log", "-1", "--oneline"],

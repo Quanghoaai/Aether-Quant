@@ -1,17 +1,45 @@
-2026-04-03 02:37:15 - vnstock.common.data - INFO - Not a stock. Company and finance data unavailable.
+2026-04-09 02:36:03 - vnstock.common.data - INFO - Not a stock. Company and finance data unavailable.
 Starting HCA System in hybrid mode...
 Primary: HHV | Watchlist: ['TOS', 'NKG', 'AAS'] | Capital: 50,000,000
 Fetching data...
-Fetching data for NKG...
-Fetching data for HHV...
+Fetching data for TOS (Attempt 1)...
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                                                 ┃
+┃  ⚠️ THÔNG BÁO QUAN TRỌNG                                                        ┃
+┃                                                                                 ┃
+┃  Phát hành vnstock 3.4.0 với nguồn dữ liệu KBS, hoạt động tốt trên Colab.       ┃
+┃  Cập nhật: pip install vnstock -U                                               ┃
+┃  AI Agent Guide: https://github.com/vnstock-hq/vnstock-agent-guide/             ┃
+┃                                                                                 ┃
+┃  ────────────────────────────────────────────────────────────────────────────── ┃
+┃                                                                                 ┃
+┃  🚀 VNSTOCK INSIDERS PROGRAM - NÂNG TẦM TRẢI NGHIỆM CỦA BẠN! 🚀                 ┃
+┃                                                                                 ┃
+┃  Nếu bạn cảm thấy khó chịu với các thông báo và quảng cáo:                      ┃
+┃                                                                                 ┃
+┃  ✨ Ẩn toàn bộ thông báo và quảng cáo khó chịu                                  ┃
+┃  🔓 Mở rộng khả năng sử dụng tối đa                                             ┃
+┃  ⚡ Tăng tốc tải dữ liệu lên đến 10 lần                                          ┃
+┃  📈 Tăng giới hạn rate limit lên đến 5 lần                                      ┃
+┃  🤖 Dùng AI Agent viết code cực nhanh với tài liệu hướng dẫn                    ┃
+┃                                                                                 ┃
+┃  🔗 Tham gia ngay: https://vnstocks.com/insiders-program#tiers                  ┃
+┃                                                                                 ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+✅ Successful: TOS (131 days)
+Fetching data for HHV (Attempt 1)...
+✅ Successful: HHV (131 days)
+Fetching data for NKG (Attempt 1)...
+✅ Successful: NKG (131 days)
+Fetching data for AAS (Attempt 1)...
+✅ Successful: AAS (131 days)
 Fetching data for VNINDEX...
-Fetching data for TOS...
-Fetching data for AAS...
+✅ VNINDEX fetched.
 Running Multi-Factor Scoring...
 Ranking stocks...
 Classification: {'HHV': 'PRIMARY', 'TOS': 'ALPHA', 'NKG': 'SECONDARY', 'AAS': 'SECONDARY'}
 Evaluating execution logic...
 Saving reporting outputs...
 Email credentials not set. Skipping email.
-Telegram message sent successfully.
+Telegram message sent successfully to chat_id=5931981199.
 Done!

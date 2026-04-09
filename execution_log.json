@@ -3,6 +3,6 @@
         "symbol": "HHV",
         "action": "ROTATE_TO_ALPHA",
         "target": "TOS",
-        "reason": "Alpha Swap: TOS score 3.3 > HHV score 2.4"
+        "reason": "Alpha Swap: TOS score 3.4 > HHV score 2.9"
     }
 ]

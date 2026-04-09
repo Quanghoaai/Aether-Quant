@@ -40,3 +40,7 @@ Date,Symbol,Score,RankScore,Classification
 2026-04-03,AAS,1.49,1.42,SECONDARY
 2026-04-03,TOS,3.34,3.48,ALPHA
 >>>>>>> 643c153 (fix: force IPv4 and increase timeout to 300s for Linux VM)
+2026-04-09,TOS,3.4,3.5,ALPHA
+2026-04-09,HHV,2.86,2.89,PRIMARY
+2026-04-09,NKG,2.12,2.03,SECONDARY
+2026-04-09,AAS,2.08,2.01,SECONDARY

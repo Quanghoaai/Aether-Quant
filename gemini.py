@@ -319,7 +319,7 @@ def get_gemini_client(chat_id: int):
             genai.configure(api_key=api_key, transport='rest')
         
         
-        model_name = 'gemini-1.5-flash-latest'
+        model_name = 'gemini-2.0-flash'
         logger.info(f"Initializing Gemini model: {model_name} for chat {chat_id}")
         client = genai.GenerativeModel(model_name)
         _user_clients[chat_str] = client

@@ -713,12 +713,13 @@ def handle_command(text, chat_id, bot_token):
             auth_url = get_oauth_login_url(chat_id)
             
             msg = " *KET NOI GEMINI AI (OAuth)*\n\n"
-            msg += f"[Bam day de dang nhap Google]({auth_url})\n\n"
-            msg += "Sau khi dang nhap:\n"
-            msg += "1. Chon tai khoan Google\n"
-            msg += "2. Chap nhan quyen truy cap\n"
-            msg += "3. Copy ma xac thuc hien tren man hinh\n"
-            msg += "4. Gui ma do: `/gemini_code <ma>`\n\n"
+            msg += f"💡 Bam day de Sign in with Google: [Login]({auth_url})\n\n"
+            msg += "Select *Sign in with Google*. Bot se mo trinh duyet de dang nhap.\n"
+            msg += "Lam theo huong dan tren man hinh. Credentials se duoc cache local cho cac phien sau.\n\n"
+            msg += " *Waiting for authentication...*\n\n"
+            msg += "Sau khi dang nhap thanh cong:\n"
+            msg += "1. Copy *ma xac thuc* (authorization code) tren man hinh\n"
+            msg += "2. Gui: `/gemini_code <ma>`\n\n"
             msg += "_Admin da cau hinh OAuth._"
             return msg
         
@@ -747,12 +748,12 @@ def handle_command(text, chat_id, bot_token):
             if is_oauth_mode():
                 auth_url = get_oauth_login_url(chat_id)
                 msg = " *DA CHON: Login with Google (OAuth2)*\n\n"
-                msg += f"[Bam day de Sign in with Google]({auth_url})\n\n"
-                msg += "Gemini CLI se mo trinh duyet de dang nhap.\n"
-                msg += "Lam theo huong dan tren man hinh.\n"
-                msg += "Credentials se duoc cache local cho cac phien sau.\n\n"
-                msg += "Sau khi dang nhap:\n"
-                msg += "1. Copy ma xac thuc hien tren man hinh\n"
+                msg += f"💡 Bam day de Sign in with Google: [Login]({auth_url})\n\n"
+                msg += "Select *Sign in with Google*. Bot se mo trinh duyet de dang nhap.\n"
+                msg += "Lam theo huong dan tren man hinh. Credentials se duoc cache local cho cac phien sau.\n\n"
+                msg += " *Waiting for authentication...*\n\n"
+                msg += "Sau khi dang nhap thanh cong:\n"
+                msg += "1. Copy *ma xac thuc* (authorization code)\n"
                 msg += "2. Gui: `/gemini_code <ma>`\n\n"
                 msg += "_Admin da cau hinh OAuth._"
             else:

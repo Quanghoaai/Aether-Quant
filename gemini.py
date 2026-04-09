@@ -1,20 +1,46 @@
 """
 Gemini AI Integration for Aether-Quant Bot.
-Each user connects their personal Gemini API key.
+Supports 2 modes:
+1. OAuth 2.0 (Admin configures GOOGLE_CLIENT_ID/SECRET) - click to login
+2. API Key (User creates their own key) - paste key
 """
 import os
 import json
 import logging
+import secrets
+import urllib.parse
 from typing import Optional, Dict, Any
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
+# Files
 GEMINI_KEYS_FILE = "gemini_keys.json"
+GEMINI_TOKENS_FILE = "gemini_tokens.json"
+
+# OAuth Config (Mode 1 - Admin configured)
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
+GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
+
+# URLs
 GEMINI_API_URL = "https://aistudio.google.com/app/apikey"
+GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
+GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
+GOOGLE_REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob"
+
+# Pending OAuth states
+_pending_oauth: Dict[str, int] = {}
 
 # Per-user client cache
 _user_clients: Dict[str, Any] = {}
 
+
+def is_oauth_mode() -> bool:
+    """Check if OAuth mode is configured by admin."""
+    return bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
+
+
+# ==================== API KEY MODE ====================
 
 def load_gemini_keys() -> dict:
     """Load all Gemini API keys from file."""
@@ -42,48 +68,12 @@ def set_user_gemini_key(chat_id: int, api_key: str) -> bool:
         keys = load_gemini_keys()
         keys[str(chat_id)] = {"api_key": api_key, "active": True}
         save_gemini_keys(keys)
-        # Clear cached client
         if str(chat_id) in _user_clients:
             del _user_clients[str(chat_id)]
         return True
     except Exception as e:
         logger.error(f"Failed to save Gemini key: {e}")
         return False
-
-
-def get_gemini_client(chat_id: int):
-    """Get or create Gemini client for a specific user."""
-    chat_str = str(chat_id)
-    
-    if chat_str in _user_clients:
-        return _user_clients[chat_str]
-    
-    api_key = get_user_gemini_key(chat_id)
-    if not api_key:
-        return None
-    
-    try:
-        import google.generativeai as genai
-        genai.configure(api_key=api_key)
-        client = genai.GenerativeModel('gemini-1.5-flash')
-        _user_clients[chat_str] = client
-        return client
-    except ImportError:
-        logger.error("google-generativeai not installed")
-        return None
-    except Exception as e:
-        logger.error(f"Failed to init Gemini: {e}")
-        return None
-
-
-def has_gemini_key(chat_id: int) -> bool:
-    """Check if user has configured Gemini API key."""
-    return get_user_gemini_key(chat_id) is not None
-
-
-def get_api_key_url() -> str:
-    """Get Google AI Studio API key URL."""
-    return GEMINI_API_URL
 
 
 def revoke_gemini_key(chat_id: int) -> bool:
@@ -99,6 +89,213 @@ def revoke_gemini_key(chat_id: int) -> bool:
     except Exception as e:
         logger.error(f"Failed to revoke key: {e}")
         return False
+
+
+# ==================== OAUTH MODE ====================
+
+def load_gemini_tokens() -> dict:
+    """Load all Gemini OAuth tokens from file."""
+    if os.path.exists(GEMINI_TOKENS_FILE):
+        with open(GEMINI_TOKENS_FILE, "r") as f:
+            return json.load(f)
+    return {}
+
+
+def save_gemini_tokens(data: dict):
+    """Save Gemini OAuth tokens to file."""
+    with open(GEMINI_TOKENS_FILE, "w") as f:
+        json.dump(data, f, indent=2)
+
+
+def get_user_tokens(chat_id: int) -> Optional[dict]:
+    """Get Gemini OAuth tokens for a user."""
+    tokens = load_gemini_tokens()
+    return tokens.get(str(chat_id))
+
+
+def save_user_tokens(chat_id: int, tokens: dict) -> bool:
+    """Save Gemini OAuth tokens for a user."""
+    try:
+        data = load_gemini_tokens()
+        data[str(chat_id)] = {
+            "access_token": tokens.get("access_token"),
+            "refresh_token": tokens.get("refresh_token"),
+            "expires_at": tokens.get("expires_at"),
+            "created_at": datetime.now().isoformat()
+        }
+        save_gemini_tokens(data)
+        if str(chat_id) in _user_clients:
+            del _user_clients[str(chat_id)]
+        return True
+    except Exception as e:
+        logger.error(f"Failed to save tokens: {e}")
+        return False
+
+
+def generate_oauth_state(chat_id: int) -> str:
+    """Generate a secure OAuth state parameter."""
+    state = secrets.token_urlsafe(32)
+    _pending_oauth[state] = chat_id
+    return state
+
+
+def get_chat_id_from_state(state: str) -> Optional[int]:
+    """Get chat_id from OAuth state."""
+    return _pending_oauth.pop(state, None)
+
+
+def get_oauth_login_url(chat_id: int) -> str:
+    """Generate Google OAuth login URL."""
+    state = generate_oauth_state(chat_id)
+    
+    params = {
+        "client_id": GOOGLE_CLIENT_ID,
+        "redirect_uri": GOOGLE_REDIRECT_URI,
+        "response_type": "code",
+        "scope": "https://www.googleapis.com/auth/generative-language.retriever",
+        "state": state,
+        "access_type": "offline",
+        "prompt": "consent"
+    }
+    
+    return f"{GOOGLE_AUTH_URL}?{urllib.parse.urlencode(params)}"
+
+
+def exchange_code_for_tokens(code: str) -> Optional[dict]:
+    """Exchange OAuth code for access tokens."""
+    import requests
+    
+    data = {
+        "client_id": GOOGLE_CLIENT_ID,
+        "client_secret": GOOGLE_CLIENT_SECRET,
+        "code": code,
+        "redirect_uri": GOOGLE_REDIRECT_URI,
+        "grant_type": "authorization_code"
+    }
+    
+    try:
+        resp = requests.post(GOOGLE_TOKEN_URL, data=data)
+        if resp.status_code == 200:
+            token_data = resp.json()
+            expires_in = token_data.get("expires_in", 3600)
+            token_data["expires_at"] = datetime.now().timestamp() + expires_in
+            return token_data
+        else:
+            logger.error(f"Token exchange failed: {resp.text}")
+            return None
+    except Exception as e:
+        logger.error(f"Token exchange error: {e}")
+        return None
+
+
+def refresh_access_token(chat_id: int) -> Optional[str]:
+    """Refresh expired access token."""
+    import requests
+    
+    tokens = get_user_tokens(chat_id)
+    if not tokens or not tokens.get("refresh_token"):
+        return None
+    
+    data = {
+        "client_id": GOOGLE_CLIENT_ID,
+        "client_secret": GOOGLE_CLIENT_SECRET,
+        "refresh_token": tokens["refresh_token"],
+        "grant_type": "refresh_token"
+    }
+    
+    try:
+        resp = requests.post(GOOGLE_TOKEN_URL, data=data)
+        if resp.status_code == 200:
+            token_data = resp.json()
+            expires_in = token_data.get("expires_in", 3600)
+            token_data["expires_at"] = datetime.now().timestamp() + expires_in
+            token_data["refresh_token"] = tokens["refresh_token"]
+            save_user_tokens(chat_id, token_data)
+            return token_data.get("access_token")
+        else:
+            logger.error(f"Token refresh failed: {resp.text}")
+            return None
+    except Exception as e:
+        logger.error(f"Token refresh error: {e}")
+        return None
+
+
+def get_valid_access_token(chat_id: int) -> Optional[str]:
+    """Get valid access token, refresh if needed."""
+    tokens = get_user_tokens(chat_id)
+    if not tokens:
+        return None
+    
+    expires_at = tokens.get("expires_at", 0)
+    if datetime.now().timestamp() >= expires_at - 60:
+        return refresh_access_token(chat_id)
+    
+    return tokens.get("access_token")
+
+
+def revoke_gemini_oauth(chat_id: int) -> bool:
+    """Revoke user's Gemini OAuth tokens."""
+    try:
+        data = load_gemini_tokens()
+        if str(chat_id) in data:
+            del data[str(chat_id)]
+            save_gemini_tokens(data)
+        if str(chat_id) in _user_clients:
+            del _user_clients[str(chat_id)]
+        return True
+    except Exception as e:
+        logger.error(f"Failed to revoke OAuth: {e}")
+        return False
+
+
+# ==================== COMMON ====================
+
+def has_gemini_auth(chat_id: int) -> bool:
+    """Check if user has Gemini auth (OAuth or API key)."""
+    if is_oauth_mode():
+        tokens = get_user_tokens(chat_id)
+        return tokens is not None and tokens.get("refresh_token") is not None
+    else:
+        return get_user_gemini_key(chat_id) is not None
+
+
+def get_gemini_client(chat_id: int):
+    """Get or create Gemini client for a specific user."""
+    chat_str = str(chat_id)
+    
+    if chat_str in _user_clients:
+        return _user_clients[chat_str]
+    
+    try:
+        import google.generativeai as genai
+        
+        if is_oauth_mode():
+            # OAuth mode - use access token
+            access_token = get_valid_access_token(chat_id)
+            if not access_token:
+                return None
+            genai.configure(credentials=access_token)
+        else:
+            # API Key mode - use user's API key
+            api_key = get_user_gemini_key(chat_id)
+            if not api_key:
+                return None
+            genai.configure(api_key=api_key)
+        
+        client = genai.GenerativeModel('gemini-1.5-flash')
+        _user_clients[chat_str] = client
+        return client
+    except ImportError:
+        logger.error("google-generativeai not installed")
+        return None
+    except Exception as e:
+        logger.error(f"Failed to init Gemini: {e}")
+        return None
+
+
+def get_api_key_url() -> str:
+    """Get Google AI Studio API key URL."""
+    return GEMINI_API_URL
 
 
 def ask_gemini(question: str, chat_id: int, context: Optional[str] = None) -> str:

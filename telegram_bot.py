@@ -403,7 +403,7 @@ def handle_command(text, chat_id, bot_token):
             " */reset\\_capital SO* - Reset von & xoa vi the\n"
             " */set\\_minscore SO* - Doi diem\n\n"
             " *TUYEN BO TRACH NHIEM:*\n"
-            " Phan tich tu du an AI Trading ca nhan. Su dung Python + VNStock API. *Khong phai loi khuyen dau tu.*\n"
+            " Day la phan tich tu du an ca nhan AI Trading. Xay dung boi AI Engineer, su dung Python + mo hinh du lieu. *Khong phai loi khuyen dau tu.* Ban chiu trach nhiem voi quyet dinh cua minh.\n"
         )
     
     # /myid - Show user's chat ID
@@ -623,33 +623,33 @@ def handle_command(text, chat_id, bot_token):
         sym = parts[1].upper()
         info = get_company_info(sym)
 
-        msg = f"?? *THONG TIN {sym}*\n"
-        msg += "-------------------\n\n"
+        msg = f"📋 *THÔNG TIN {sym}*\n"
+        msg += "──────────────────────\n\n"
 
         if info.get('name'):
-            msg += f"?? Ten: {info['name']}\n"
+            msg += f"🏢 Tên: {info['name']}\n"
         else:
-            msg += f"?? Ten: (Chua co du lieu)\n"
+            msg += f"🏢 Tên: (Chưa có dữ liệu)\n"
 
         if info.get('industry'):
-            msg += f"?? Nganh: {info['industry']}\n"
+            msg += f"🏭 Ngành: {info['industry']}\n"
 
         if info.get('exchange'):
-            msg += f"?? San: {info['exchange']}\n"
+            msg += f"📍 Sàn: {info['exchange']}\n"
 
         if info.get('price', 0) > 0:
-            msg += f"?? Gia: {info['price']:,.0f} VND\n"
+            msg += f"💰 Giá: {info['price']:,.0f} VND\n"
 
         if info.get('market_cap', 0) > 0:
             cap_b = info['market_cap'] / 1e9
-            msg += f"?? Von hoa: {cap_b:.1f}B VND\n"
+            msg += f"📊 Vốn hóa: {cap_b:.1f}B VND\n"
 
         if info.get('description'):
-            msg += f"\n?? *Mo ta:*\n_{info['description']}\n"
+            msg += f"\n📝 *Mô tả:*\n_{info['description']}_\n"
         else:
-            msg += f"\n?? *Mo ta:* (Chua co du lieu)\n"
+            msg += f"\n📝 *Mô tả:* (Chưa có dữ liệu)\n"
 
-        msg += f"\n?? Dung `/add {sym}` de them vao Watchlist"
+        msg += f"\n💡 Dùng `/add {sym}` để thêm vào Watchlist"
         return msg
 
     # /add - Add one or multiple symbols

@@ -5,7 +5,7 @@ import sys
 import time
 import socket
 import logging
-import re
+import secrets
 from datetime import datetime
 import requests.packages.urllib3.util.connection as urllib3_cn
 from dotenv import load_dotenv
@@ -693,7 +693,7 @@ def handle_command(text, chat_id, bot_token):
         if response == "API_KEY_INVALID":
             return "API key khong hop le. Vui long dung `/gemini` -> chon Gemini API Key (AI Studio) -> tao/copy key bat dau bang 'AIza', sau do gui `/gemini_key <key>`."
         if response == "MISSING_LIB":
-            return "Server chua cai thu vien AI. Vui long lien he Admin."
+            return "Server chua cai thu vien AI. Vui long lien he Admin hoac dung /update de tu dong cai dat."
         if response == "INIT_FAILED":
             return "AI bi loi khoi tao. Vui long thu lai sau hoac lien he Admin."
         
@@ -1286,26 +1286,26 @@ def handle_command(text, chat_id, bot_token):
         if str(chat_id) != str(admin_chat_id):
             return "Ban khong co quyen su dung lenh nay."
         
-        send_msg(bot_token, chat_id, " *DANG CAP NHAT...*\n\nVui long doi, bot se khoi dong lai sau khi hoan tat.")
+        send_msg(bot_token, chat_id, " *DANG CAP NHAT...*\n\nVui long doi, bot se tu dong cai dat thu vien va khoi dong lai.")
         
         try:
             # Git fetch and reset
-            fetch_result = subprocess.run(
+            subprocess.run(
                 ["git", "fetch", "origin"],
                 capture_output=True, text=True, timeout=30,
                 cwd=os.path.dirname(os.path.abspath(__file__))
             )
             
-            reset_result = subprocess.run(
+            subprocess.run(
                 ["git", "reset", "--hard", "origin/main"],
                 capture_output=True, text=True, timeout=30,
                 cwd=os.path.dirname(os.path.abspath(__file__))
             )
             
-            # Auto-install dependencies
-            subprocess.run(
-                ["pip", "install", "-r", "requirements.txt"],
-                capture_output=True, text=True, timeout=60,
+            # Auto-install dependencies using sys.executable to ensure correct venv
+            pip_result = subprocess.run(
+                [sys.executable, "-m", "pip", "install", "-r", "requirements.txt"],
+                capture_output=True, text=True, timeout=120,
                 cwd=os.path.dirname(os.path.abspath(__file__))
             )
             
@@ -1317,26 +1317,33 @@ def handle_command(text, chat_id, bot_token):
             )
             
             msg = " *CAP NHAT THANH CONG!*\n\n"
-            msg += f"Commit: `{log_result.stdout.strip()}`\n\n"
-            msg += "Bot dang khoi dong lai...\n"
-            msg += "Neu bot khong phan hoi sau 30 giay, vui long kiem tra log."
+            msg += f"Commit: `{log_result.stdout.strip()}`\n"
+            if "Successfully installed" in pip_result.stdout:
+                msg += "Co thu vien moi da duoc cai dat.\n"
+            msg += "\nBot dang khoi dong lai...\n"
             
-            # Send message before restart
             send_msg(bot_token, chat_id, msg)
             
-            # Restart service (will kill current process)
+            # Restart service
             subprocess.Popen(
                 ["sudo", "systemctl", "restart", "hca-bot"],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
             )
+            return None
             
-            return None  # Don't send another message
-            
-        except subprocess.TimeoutExpired:
-            return " *LOI:* Git operation timeout."
         except Exception as e:
-            return f" *LOI:* `{str(e)}`"
+            return f" *LOI CAP NHAT:* `{str(e)}`"
+
+    # /gemini_debug - Check AI library status
+    elif cmd == "/gemini_debug":
+        try:
+            import google.generativeai as genai
+            v = getattr(genai, "__version__", "unknown")
+            return f"✅ *GEMINI STATUS: OK*\n\nLibrary: `google-generativeai`\nVersion: `{v}`\n\nDung `/ask` de hoi AI."
+        except ImportError:
+            return "❌ *GEMINI STATUS: LOI*\n\nThư viện `google-generativeai` chưa được cài đặt.\n\nHãy gõ `/update` để bot tự động cài đặt."
+        except Exception as e:
+            return f"❌ *GEMINI STATUS: LOI*\n\nError: `{str(e)}`"
     
     # === SHORT ALIASES ===
     # /set -> show available set commands

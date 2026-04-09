@@ -203,14 +203,16 @@ def exchange_code_for_tokens(code: str) -> Optional[dict]:
     }
     
     try:
+        logger.info(f"Attempting token exchange with code: {code[:10]}...")
         resp = requests.post(GOOGLE_TOKEN_URL, data=data)
         if resp.status_code == 200:
             token_data = resp.json()
             expires_in = token_data.get("expires_in", 3600)
             token_data["expires_at"] = datetime.now().timestamp() + expires_in
+            logger.info("Token exchange successful")
             return token_data
         else:
-            logger.error(f"Token exchange failed: {resp.text}")
+            logger.error(f"Token exchange failed (HTTP {resp.status_code}): {resp.text}")
             return None
     except Exception as e:
         logger.error(f"Token exchange error: {e}")

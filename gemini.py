@@ -22,8 +22,13 @@ GEMINI_KEYS_FILE = os.path.join(_BASE_DIR, "gemini_keys.json")
 GEMINI_TOKENS_FILE = os.path.join(_BASE_DIR, "gemini_tokens.json")
 
 # OAuth Config (Mode 1 - Admin configured)
-GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
-GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
+# NOTE: do not read env at import time because .env may be loaded after imports.
+def _get_google_client_id() -> str:
+    return os.environ.get("GOOGLE_CLIENT_ID", "")
+
+
+def _get_google_client_secret() -> str:
+    return os.environ.get("GOOGLE_CLIENT_SECRET", "")
 
 # URLs
 GEMINI_API_URL = "https://aistudio.google.com/app/apikey"
@@ -43,7 +48,7 @@ _last_error: Dict[str, str] = {}
 
 def is_oauth_mode() -> bool:
     """Check if OAuth mode is configured by admin."""
-    return bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
+    return bool(_get_google_client_id() and _get_google_client_secret())
 
 
 def _set_last_error(chat_id: int, code: str):
@@ -168,7 +173,7 @@ def get_oauth_login_url(chat_id: int) -> str:
     state = generate_oauth_state(chat_id)
     
     params = {
-        "client_id": GOOGLE_CLIENT_ID,
+        "client_id": _get_google_client_id(),
         "redirect_uri": GOOGLE_REDIRECT_URI,
         "response_type": "code",
         "scope": "https://www.googleapis.com/auth/generative-language.retriever",
@@ -185,8 +190,8 @@ def exchange_code_for_tokens(code: str) -> Optional[dict]:
     import requests
     
     data = {
-        "client_id": GOOGLE_CLIENT_ID,
-        "client_secret": GOOGLE_CLIENT_SECRET,
+        "client_id": _get_google_client_id(),
+        "client_secret": _get_google_client_secret(),
         "code": code,
         "redirect_uri": GOOGLE_REDIRECT_URI,
         "grant_type": "authorization_code"
@@ -216,8 +221,8 @@ def refresh_access_token(chat_id: int) -> Optional[str]:
         return None
     
     data = {
-        "client_id": GOOGLE_CLIENT_ID,
-        "client_secret": GOOGLE_CLIENT_SECRET,
+        "client_id": _get_google_client_id(),
+        "client_secret": _get_google_client_secret(),
         "refresh_token": tokens["refresh_token"],
         "grant_type": "refresh_token"
     }

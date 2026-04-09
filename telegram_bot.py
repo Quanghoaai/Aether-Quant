@@ -777,23 +777,13 @@ def handle_command(text, chat_id, bot_token):
             msg += "3. Tao Service Account & lay credentials JSON\n\n"
             msg += "Hien tai chua ho tro tu dong. Vui long dung cach 2.\n\n"
             msg += "Neu ban la Admin, them `GOOGLE_APPLICATION_CREDENTIALS` vao .env"
-            return msg
-        
-        else:
-            return "Lua chon khong hop le. Dung 1, 2 hoac 3."
-
-    # /gemini_code - Exchange OAuth code (Mode 1 only)
     elif cmd == "/gemini_code":
-        if not is_oauth_mode():
-            return "Che do OAuth chua duoc cau hinh. Dung `/gemini_key` de nhap API key."
-        
+        # We always allow this now because we have default credentials in gemini.py
         if len(parts) < 2:
-            return "Cu phap: `/gemini_code <ma_xac_thuc>`\n\nSau khi dang nhap Google, copy ma hien tren man hinh."
+            return "Cu phap: `/gemini_code <ma_xac_thuc>`"
         
-        code = " ".join(parts[1:])
-        
-        # Exchange code for tokens
-        tokens = exchange_code_for_tokens(code)
+        auth_code = parts[1].strip()
+        tokens = exchange_code_for_tokens(auth_code)
         
         if tokens:
             save_user_tokens(chat_id, tokens)

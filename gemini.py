@@ -401,10 +401,10 @@ Quy tac:
                     
                     # On last attempt, fallback to lighter model if possible
                     if attempt == max_retries - 2:
-                        logger.info("Attempting fallback to gemini-1.5-flash for final try")
+                        logger.info("Attempting fallback to gemini-2.0-flash-lite for final try")
                         try:
                             import google.generativeai as genai
-                            client = genai.GenerativeModel("gemini-1.5-flash")
+                            client = genai.GenerativeModel("gemini-2.0-flash-lite")
                         except Exception:
                             pass
                     continue

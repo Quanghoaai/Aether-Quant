@@ -491,10 +491,14 @@ def handle_command(text, chat_id, bot_token):
         
         pf = get_user_portfolio(chat_id)
         capital = pf.get("capital", DEFAULT_CAPITAL)
-        cost = qty * price
+        
+        # Calculate cost with fee (0.15% broker fee)
+        gross = qty * price
+        fee = gross * 0.0015  # 0.15% fee
+        cost = gross + fee
         
         if cost > pf['cash']:
-            return f" Khong du tien mat! Can {cost:,.0f} nhung chi co {pf['cash']:,.0f}"
+            return f" Khong du tien mat! Can {cost:,.0f} (da tinh phi) nhung chi co {pf['cash']:,.0f}"
         
         # Check cash reserve (20% of capital)
         min_reserve = capital * 0.20
@@ -513,12 +517,14 @@ def handle_command(text, chat_id, bot_token):
         save_user_portfolio(chat_id, pf)
 
         # Log transaction
-        log_transaction(chat_id, "BUY", sym, qty, price, f"Mua {qty} cp @ {price:,.0f}")
+        log_transaction(chat_id, "BUY", sym, qty, price, f"Mua {qty} cp @ {price:,.0f}, phi: {fee:,.0f}")
 
         return (
             f"✅ ĐÃ MUA {sym}\n"
             f"KL: {qty:,} cp @ {price:,.0f}\n"
-            f"Chi phí: {cost:,.0f} VND\n"
+            f"Thành tiền: {gross:,.0f} VND\n"
+            f"Phí GD (0.15%): {fee:,.0f} VND\n"
+            f"Tổng chi phí: {cost:,.0f} VND\n"
             f"Tiền mặt còn: {pf['cash']:,.0f} VND"
         )
     
@@ -543,8 +549,12 @@ def handle_command(text, chat_id, bot_token):
         
         # Use avg_price as estimated sell price (user can input 4th param for actual price)
         sell_price = float(parts[3]) if len(parts) >= 4 else pos['avg_price']
-        revenue = qty * sell_price
-        pnl = (sell_price - pos['avg_price']) * qty
+        
+        # Calculate revenue with fee (0.15% broker + 0.1% tax = 0.25%)
+        gross = qty * sell_price
+        fee = gross * 0.0025  # 0.25% fee
+        revenue = gross - fee
+        pnl = (sell_price - pos['avg_price']) * qty - fee
         
         pos['qty'] -= qty
         if pos['qty'] <= 0:
@@ -556,11 +566,13 @@ def handle_command(text, chat_id, bot_token):
         save_user_portfolio(chat_id, pf)
 
         # Log transaction
-        log_transaction(chat_id, "SELL", sym, qty, sell_price, f"Bán {qty} cp @ {sell_price:,.0f}, PnL: {pnl:+,.0f}")
+        log_transaction(chat_id, "SELL", sym, qty, sell_price, f"Bán {qty} cp @ {sell_price:,.0f}, phi: {fee:,.0f}, PnL: {pnl:+,.0f}")
 
         return (
             f"✅ ĐÃ BÁN {sym}\n"
             f"KL: {qty:,} cp @ {sell_price:,.0f}\n"
+            f"Thành tiền: {gross:,.0f} VND\n"
+            f"Phí GD (0.25%): {fee:,.0f} VND\n"
             f"Thu về: {revenue:,.0f} VND\n"
             f"PnL: {pnl:+,.0f} VND\n"
             f"Tiền mặt: {pf['cash']:,.0f} VND"

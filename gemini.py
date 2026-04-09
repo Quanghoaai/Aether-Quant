@@ -24,19 +24,22 @@ GEMINI_TOKENS_FILE = os.path.join(_BASE_DIR, "gemini_tokens.json")
 # OAuth Config (Mode 1 - Admin configured)
 # NOTE: do not read env at import time because .env may be loaded after imports.
 def _get_google_client_id() -> str:
-    # Default to Google SDK Client ID (used by gcloud/gemini-cli) if not provided in env
-    return os.environ.get("GOOGLE_CLIENT_ID", "764086051750-u9q66f916n93f54546554554.apps.googleusercontent.com")
+    # Use exact Client ID from user's Gemini CLI example
+    return os.environ.get("GOOGLE_CLIENT_ID", "681255809395-oo8ft2oprdrnp9e3aqf6av3hmdib135j.apps.googleusercontent.com")
 
 
 def _get_google_client_secret() -> str:
-    # Default to Google SDK Client Secret if not provided in env
-    return os.environ.get("GOOGLE_CLIENT_SECRET", "d-FLuY_L2v_6lX2cM0Ex99uq")
+    # Secret is usually not needed for this specific public client ID in this flow,
+    # but we keep the env override just in case.
+    return os.environ.get("GOOGLE_CLIENT_SECRET", "")
+
 
 # URLs
 GEMINI_API_URL = "https://aistudio.google.com/app/apikey"
 GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
-GOOGLE_REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob"
+# Using the specific redirect URI from the user's CLI example
+GOOGLE_REDIRECT_URI = "http://localhost:55646/oauth2callback"
 
 # Pending OAuth states
 _pending_oauth: Dict[str, int] = {}
@@ -178,7 +181,7 @@ def get_oauth_login_url(chat_id: int) -> str:
         "client_id": _get_google_client_id(),
         "redirect_uri": GOOGLE_REDIRECT_URI,
         "response_type": "code",
-        "scope": "https://www.googleapis.com/auth/generative-language.retriever",
+        "scope": "https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile",
         "state": state,
         "access_type": "offline",
         "prompt": "consent"

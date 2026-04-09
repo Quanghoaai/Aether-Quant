@@ -688,7 +688,7 @@ def handle_command(text, chat_id, bot_token):
         response = ask_gemini(question, chat_id)
         
         if response == "NEED_LOGIN":
-            return "Can dang nhap lai. Dung `/gemini` de ket noi lai."
+            return "Can ket noi Gemini. Dung `/gemini` de bat dau."
         
         return f" *AI PHAN TICH*\n-------------------\n\n{response}\n\n_ *Luu y: Day la thong tin tham khao, khong phai loi khuyen dau tu.*_"
 
@@ -819,7 +819,14 @@ def handle_command(text, chat_id, bot_token):
             return "API key khong hop le. Key phai bat dau bang 'AIza'"
         
         if set_user_gemini_key(chat_id, api_key):
-            return " *KET NOI GEMINI THANH CONG!*\n\nBan co the dung `/ask` de hoi AI.\n\nVD: `/ask RSI la gi?`"
+            # Mask the key for display
+            masked_key = api_key[:8] + "..." + api_key[-4:] if len(api_key) > 12 else "AIza...***"
+            msg = f" *KET NOI GEMINI THANH CONG!*\n\n"
+            msg += f"API Key: `{masked_key}`\n\n"
+            msg += "Ban co the dung `/ask` de hoi AI.\n\n"
+            msg += "VD: `/ask RSI la gi?`\n\n"
+            msg += "_Xoa tin nhan chua API key goc de bao mat!_"
+            return msg
         else:
             return "Loi luu API key. Vui long thu lai."
 

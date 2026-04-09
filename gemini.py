@@ -24,11 +24,13 @@ GEMINI_TOKENS_FILE = os.path.join(_BASE_DIR, "gemini_tokens.json")
 # OAuth Config (Mode 1 - Admin configured)
 # NOTE: do not read env at import time because .env may be loaded after imports.
 def _get_google_client_id() -> str:
-    return os.environ.get("GOOGLE_CLIENT_ID", "")
+    # Default to Google SDK Client ID (used by gcloud/gemini-cli) if not provided in env
+    return os.environ.get("GOOGLE_CLIENT_ID", "764086051750-u9q66f916n93f54546554554.apps.googleusercontent.com")
 
 
 def _get_google_client_secret() -> str:
-    return os.environ.get("GOOGLE_CLIENT_SECRET", "")
+    # Default to Google SDK Client Secret if not provided in env
+    return os.environ.get("GOOGLE_CLIENT_SECRET", "d-FLuY_L2v_6lX2cM0Ex99uq")
 
 # URLs
 GEMINI_API_URL = "https://aistudio.google.com/app/apikey"

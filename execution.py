@@ -1,6 +1,7 @@
 import json
 import os
 import logging
+from typing import Dict, Any, Tuple, Optional, List
 
 from constants import (
     DEFAULT_CAPITAL, MIN_CASH_RESERVE_PCT, MAX_POSITIONS, MIN_SCORE_BUY,
@@ -12,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 PORTFOLIO_FILE = "portfolio.json"
 
-def load_all_portfolios():
+def load_all_portfolios() -> Dict[str, Any]:
     """Load all portfolios from file."""
     if os.path.exists(PORTFOLIO_FILE):
         with open(PORTFOLIO_FILE, "r") as f:
@@ -26,12 +27,12 @@ def load_all_portfolios():
         return data
     return {"users": {}}
 
-def save_all_portfolios(data):
+def save_all_portfolios(data: Dict[str, Any]) -> None:
     """Save all portfolios to file."""
     with open(PORTFOLIO_FILE, "w") as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
 
-def load_portfolio(capital=DEFAULT_CAPITAL, chat_id=None):
+def load_portfolio(capital: int = DEFAULT_CAPITAL, chat_id: Optional[int] = None) -> Dict[str, Any]:
     """Load portfolio for a specific user or legacy format."""
     data = load_all_portfolios()
     
@@ -57,7 +58,7 @@ def load_portfolio(capital=DEFAULT_CAPITAL, chat_id=None):
             "capital": capital
         }
 
-def save_portfolio(portfolio, chat_id=None):
+def save_portfolio(portfolio: Dict[str, Any], chat_id: Optional[int] = None) -> None:
     """Save portfolio for a specific user."""
     data = load_all_portfolios()
     
@@ -73,7 +74,8 @@ def save_portfolio(portfolio, chat_id=None):
     
     save_all_portfolios(data)
 
-def execute_logic(scored_data, classification, current_prices, primary="HHV", capital=DEFAULT_CAPITAL, chat_id=None):
+def execute_logic(scored_data: Dict[str, Any], classification: Dict[str, str], current_prices: Dict[str, float], primary: str = "HHV", capital: int = DEFAULT_CAPITAL, chat_id: Optional[int] = None) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
+    """Execute risk controls, buy/sell generation, and portfolio updates."""
     portfolio = load_portfolio(capital, chat_id)
     
     # Ensure portfolio has required fields

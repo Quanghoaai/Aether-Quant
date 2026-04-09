@@ -10,6 +10,7 @@ import logging
 import secrets
 import urllib.parse
 import re
+import time
 from typing import Optional, Dict, Any
 from datetime import datetime
 
@@ -377,32 +378,45 @@ Quy tac:
     if context:
         full_prompt += f"Thong tin bo sung:\n{context}\n\n"
     full_prompt += f"Nguoi dung hoi: {question}"
-    
-    try:
-        response = client.generate_content(full_prompt)
-        # Attempt to bypass any internal safety blocks
-        response.resolve()
-        return response.text.strip()
-    except Exception as e:
-        error_msg = str(e).lower()
-        logger.error(f"Gemini API error (primary model): {error_msg}")
-        
-        # Fallback to older/more commonly available models on 429/404 errors
-        if "429" in error_msg or "404" in error_msg or "not found" in error_msg:
-            logger.info("Attempting fallback to gemini-1.5-flash")
-            try:
-                import google.generativeai as genai
-                fallback_client = genai.GenerativeModel("gemini-1.5-flash")
-                response = fallback_client.generate_content(full_prompt)
-                return response.text.strip()
-            except Exception as fallback_err:
-                logger.error(f"Fallback model also failed: {fallback_err}")
-                return "Bot dang qua tai. Vui long cho 1 phut roi thu lai."
-                
-        if "401" in error_msg or "403" in error_msg or "api_key" in error_msg:
-            return "AUTH_REQUIRED"
+
+    max_retries = 3
+    base_delay = 5  # Start with 5 seconds
+
+    for attempt in range(max_retries):
+        try:
+            response = client.generate_content(full_prompt)
+            # Attempt to bypass any internal safety blocks
+            response.resolve()
+            return response.text.strip()
+        except Exception as e:
+            error_msg = str(e).lower()
+            logger.error(f"Gemini API error (Attempt {attempt + 1}/{max_retries}): {error_msg}")
             
-        return f"Loi AI: {str(e)[:100]}"
+            # Check if we should retry
+            if "429" in error_msg or "too many requests" in error_msg or "404" in error_msg or "not found" in error_msg:
+                if attempt < max_retries - 1:
+                    sleep_time = base_delay * (2 ** attempt)
+                    logger.warning(f"Rate limited or model error. Retrying in {sleep_time}s...")
+                    time.sleep(sleep_time)
+                    
+                    # On last attempt, fallback to lighter model if possible
+                    if attempt == max_retries - 2:
+                        logger.info("Attempting fallback to gemini-1.5-flash for final try")
+                        try:
+                            import google.generativeai as genai
+                            client = genai.GenerativeModel("gemini-1.5-flash")
+                        except Exception:
+                            pass
+                    continue
+                else:
+                    return "Bot dang qua tai (Too Many Requests). Vui long thu lai sau ít phut."
+                    
+            if "401" in error_msg or "403" in error_msg or "api_key" in error_msg:
+                return "AUTH_REQUIRED"
+                
+            return f"Loi AI: {str(e)[:100]}"
+            
+    return "Bot dang qua tai. Vui long thu lai sau."
 
 
 def analyze_stock_with_gemini(symbol: str, score_data: dict, price: float, chat_id: int) -> str:

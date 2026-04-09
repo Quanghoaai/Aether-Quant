@@ -1,9 +1,19 @@
+from typing import Dict, Any, Tuple, Optional, List
 from constants import RANKING_WEIGHTS
 
-def rank_stocks(scored_data, primary="HHV", watchlist=None):
+def rank_stocks(scored_data: Dict[str, Any], primary: str = "HHV", watchlist: Optional[List[str]] = None) -> Tuple[Dict[str, Any], Dict[str, str]]:
     """
-    scored_data: dict of symbol -> score_dict
-    Formula: rank_score = (score * 0.45) + (rs_rank * 0.35) + (liquidity_score * 0.20)
+    Rank stocks based on multi-factor scores and assign classifications.
+    
+    Args:
+        scored_data: dict of symbol -> score_dict
+        primary: string, the primary component
+        watchlist: list of symbols to classify
+        
+    Returns:
+        Tuple mapping:
+        - Updated scored_data with 'rank_score'
+        - Classification dictionary mapping strings to roles (PRIMARY, ALPHA, SECONDARY)
     """
     if watchlist is None:
         watchlist = []

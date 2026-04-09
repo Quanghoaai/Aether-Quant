@@ -10,6 +10,7 @@ import socket
 import requests
 import requests.packages.urllib3.util.connection as urllib3_cn
 from io import StringIO
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Suppress all vnstock/vnai warnings BEFORE importing vnstock
 logging.getLogger("vnstock").setLevel(logging.CRITICAL)
@@ -49,13 +50,10 @@ def fetch_data(tickers, start_date=None, end_date=None, period="6mo"):
     stock_engine = Vnstock().stock(symbol='VN30', source='VCI')
     
     data_dict = {}
-    max_retries = 3
-    base_delay = 2  # Exponential backoff base
-
-    for symbol in tickers:
-        if symbol == "VNINDEX": continue # Handle separately
-        
-        success = False
+    
+    def _fetch_single(symbol):
+        max_retries = 3
+        base_delay = 2
         for attempt in range(max_retries):
             try:
                 print(f"Fetching data for {symbol} (Attempt {attempt + 1}/{max_retries})...")
@@ -71,32 +69,30 @@ def fetch_data(tickers, start_date=None, end_date=None, period="6mo"):
                     
                     required_cols = ['Open', 'High', 'Low', 'Close', 'Volume']
                     if all(col in df.columns for col in required_cols):
-                        # Ensure numeric
                         for col in required_cols:
                             df[col] = pd.to_numeric(df[col], errors='coerce')
                         df = df.dropna(subset=required_cols)
                         
-                        # AGENT 1.5: Calculate Indicators (Essential for Scoring)
                         df = calculate_indicators(df)
-                        
-                        data_dict[symbol] = df
-                        print(f"Successful: {symbol} ({len(df)} days)")
-                        success = True
-                        break
+                        print(f"✅ Successful: {symbol} ({len(df)} days)")
+                        return symbol, df
                 
-                # No data - exponential backoff
                 delay = base_delay * (2 ** attempt)
-                print(f"No data for {symbol}, retrying in {delay}s...")
                 time.sleep(delay)
-                
             except Exception as e:
-                # Exponential backoff on error
                 delay = base_delay * (2 ** attempt)
-                print(f"Error {symbol}: {e}, retrying in {delay}s...")
                 time.sleep(delay)
-        
-        if not success:
-            print(f" Failed to fetch {symbol}")
+        print(f"❌ Failed to fetch {symbol}")
+        return symbol, None
+
+    # Fetch stocks concurrently
+    stock_tickers = [sym for sym in tickers if sym != "VNINDEX"]
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        future_to_sym = {executor.submit(_fetch_single, sym): sym for sym in stock_tickers}
+        for future in as_completed(future_to_sym):
+            sym, df = future.result()
+            if df is not None:
+                data_dict[sym] = df
 
     # Always fetch VNINDEX for Market Regime analysis
     try:

@@ -1,12 +1,13 @@
 import pandas as pd
 import numpy as np
 import logging
+from typing import Optional, Dict, Any
 
 from constants import SCORING_WEIGHTS
 
 logger = logging.getLogger(__name__)
 
-def _validate_df(df, min_len=1, required_cols=None):
+def _validate_df(df: Optional[pd.DataFrame], min_len: int = 1, required_cols: Optional[list] = None) -> bool:
     """Validate dataframe has required columns and minimum length."""
     if df is None or df.empty or len(df) < min_len:
         return False
@@ -17,19 +18,19 @@ def _validate_df(df, min_len=1, required_cols=None):
 # ===========================
 # FACTOR 1: Relative Strength (Multi-Timeframe)
 # ===========================
-def score_rs(stock_df, benchmark_df):
+def score_rs(stock_df: pd.DataFrame, benchmark_df: pd.DataFrame) -> float:
     """Multi-timeframe RS: 5D(20%) + 20D(50%) + 60D(30%)"""
     if not _validate_df(stock_df, min_len=60, required_cols=['Close']):
         return 2.5
     if not _validate_df(benchmark_df, min_len=60, required_cols=['Close']):
         return 2.5
     
-    def _rs_at_window(w):
+    def _rs_at_window(w: int) -> float:
         if len(stock_df) < w or len(benchmark_df) < w:
-            return 0
+            return 0.0
         sr = stock_df['Close'].pct_change(w).iloc[-1]
         br = benchmark_df['Close'].pct_change(w).iloc[-1]
-        return sr - br if not (pd.isna(sr) or pd.isna(br)) else 0
+        return float(sr - br) if not (pd.isna(sr) or pd.isna(br)) else 0.0
     
     rs_5d = _rs_at_window(5)
     rs_20d = _rs_at_window(20)
@@ -48,7 +49,7 @@ def score_rs(stock_df, benchmark_df):
 # ===========================
 # FACTOR 2: Price Action + Breakout Detection
 # ===========================
-def score_price_action(stock_df):
+def score_price_action(stock_df: pd.DataFrame) -> float:
     """Enhanced: MA alignment + Breakout + Pullback + Golden/Death Cross."""
     if not _validate_df(stock_df, min_len=50, required_cols=['Close', 'MA20', 'MA50']):
         return 2.5
@@ -97,7 +98,7 @@ def score_price_action(stock_df):
 # ===========================
 # FACTOR 3: Volume Profile
 # ===========================
-def score_vol_profile(stock_df):
+def score_vol_profile(stock_df: pd.DataFrame) -> float:
     """Volume expansion detection with RSI confirmation."""
     if len(stock_df) < 20: return 2.5
     vol = stock_df['Volume'].iloc[-1]
@@ -131,7 +132,7 @@ def score_vol_profile(stock_df):
 # ===========================
 # FACTOR 4: Volatility (Bell Curve)
 # ===========================
-def score_volatility(stock_df):
+def score_volatility(stock_df: pd.DataFrame) -> float:
     """Bell-curve: ATR 2-4% = best for swing trading. Too low = dead, too high = risky."""
     if len(stock_df) < 14: return 2.5
     atr = stock_df['ATR'].iloc[-1]
@@ -157,7 +158,7 @@ def score_volatility(stock_df):
 # ===========================
 # FACTOR 5: Sector Flow + Momentum
 # ===========================
-def score_sector_flow(stock_df):
+def score_sector_flow(stock_df: pd.DataFrame) -> float:
     """5-day momentum + RSI + MACD confirmation."""
     if len(stock_df) < 10: return 2.5
     
@@ -191,7 +192,7 @@ def score_sector_flow(stock_df):
 # ===========================
 # COMPOSITE SCORING
 # ===========================
-def calculate_multi_factor_score(stock_df, benchmark_df):
+def calculate_multi_factor_score(stock_df: pd.DataFrame, benchmark_df: pd.DataFrame) -> Dict[str, float]:
     """Calculate weighted multi-factor score."""
     s_rs = score_rs(stock_df, benchmark_df)
     s_pa = score_price_action(stock_df)

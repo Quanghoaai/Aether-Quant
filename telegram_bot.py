@@ -21,6 +21,9 @@ logger = logging.getLogger(__name__)
 # Company info helper
 from company_info import get_company_info, format_company_info, get_company_name
 
+# Gemini AI
+from gemini import ask_gemini
+
 # Subscription system
 from subscription import (
     has_active_subscription,
@@ -395,6 +398,7 @@ def handle_command(text, chat_id, bot_token):
             " */run* - Chay phan tich ngay\n"
             " */watchlist* - Xem watchlist\n"
             " */info MA* - Xem thong tin cong ty\n"
+            " */ask <cau hoi>* - Hoi AI Gemini\n"
             " */add MA1,MA2* - Them ma\n"
             " */remove MA1,MA2* - Xoa ma\n"
             " */confirm\\_buy MA SL GIA* - Xac nhan mua\n"
@@ -649,8 +653,28 @@ def handle_command(text, chat_id, bot_token):
         else:
             msg += f"\n📝 *Mô tả:* (Chưa có dữ liệu)\n"
 
-        msg += f"\n💡 Dùng `/add {sym}` để thêm vào Watchlist"
+        msg += f"\n Dung `/add {sym}` de them vao Watchlist"
         return msg
+
+    # /ask - Ask Gemini AI
+    elif cmd == "/ask":
+        if len(parts) < 2:
+            return "Cu phap: `/ask <cau hoi>`\n\nVD: `/ask RSI la gi?`\nVD: `/ask Khi nao nen ban TCB?`"
+        
+        question = " ".join(parts[1:])
+        
+        # Check subscription
+        if not has_active_subscription(chat_id):
+            return "Ban can dang ky de su dung tinh nang AI.\n\nDung `/plans` de xem cac goi."
+        
+        # Show typing indicator
+        msg = " *Dang suy nghi...*"
+        send_msg(bot_token, chat_id, msg)
+        
+        # Get AI response
+        response = ask_gemini(question)
+        
+        return f" *AI PHAN TICH*\n-------------------\n\n{response}\n\n_ *Luu y: Day la thong tin tham khao, khong phai loi khuyen dau tu.*_"
 
     # /add - Add one or multiple symbols
     elif cmd == "/add":

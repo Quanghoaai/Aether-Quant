@@ -1307,11 +1307,18 @@ def handle_command(text, chat_id, bot_token):
             )
             
             # Auto-install dependencies using sys.executable to ensure correct venv
-            pip_result = subprocess.run(
-                [sys.executable, "-m", "pip", "install", "-r", "requirements.txt"],
-                capture_output=True, text=True, timeout=300,
-                cwd=os.path.dirname(os.path.abspath(__file__))
-            )
+            # Added flags to prevent hangs (no input, disable version check, short timeout)
+            try:
+                pip_result = subprocess.run(
+                    [sys.executable, "-m", "pip", "install", "-r", "requirements.txt", "--no-input", "--disable-pip-version-check"],
+                    capture_output=True, text=True, timeout=90,
+                    cwd=os.path.dirname(os.path.abspath(__file__))
+                )
+                pip_msg = "Co thu vien moi da duoc cai dat.\n" if "Successfully installed" in pip_result.stdout else ""
+            except subprocess.TimeoutExpired:
+                pip_msg = "⚠️ Pip install bi timeout (bo qua).\n"
+            except Exception as e:
+                pip_msg = f"⚠️ Pip loi: {e}\n"
             
             # Get current commit info
             log_result = subprocess.run(
@@ -1322,8 +1329,8 @@ def handle_command(text, chat_id, bot_token):
             
             msg = " *CAP NHAT THANH CONG!*\n\n"
             msg += f"Commit: `{log_result.stdout.strip()}`\n"
-            if "Successfully installed" in pip_result.stdout:
-                msg += "Co thu vien moi da duoc cai dat.\n"
+            if pip_msg:
+                msg += pip_msg
             msg += "\nBot dang khoi dong lai...\n"
             
             send_msg(bot_token, chat_id, msg)

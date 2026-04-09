@@ -1213,6 +1213,20 @@ def handle_command(text, chat_id, bot_token):
         else:
             return result["message"]
     
+    # /check_env - Admin only: check environment variables
+    elif cmd == "/check_env":
+        admin_chat_id = os.environ.get("ADMIN_CHAT_ID", "")
+        if str(chat_id) != str(admin_chat_id):
+            return "Ban khong co quyen su dung lenh nay."
+        
+        msg = " *KIEM TRA ENVIRONMENT*\n\n"
+        msg += f"ADMIN_CHAT_ID: `{admin_chat_id or 'KHONG CO!'}`\n\n"
+        msg += f"GOOGLE_CLIENT_ID: `{os.environ.get('GOOGLE_CLIENT_ID', '')[:20] + '...' if os.environ.get('GOOGLE_CLIENT_ID') else 'KHONG CO'}`\n"
+        msg += f"GOOGLE_CLIENT_SECRET: `{'***' if os.environ.get('GOOGLE_CLIENT_SECRET') else 'KHONG CO'}`\n\n"
+        msg += f"OAuth mode: `{'BAT' if is_oauth_mode() else 'TAT'}`\n\n"
+        msg += f".env file: `{os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env'))}`\n"
+        return msg
+    
     # /payments - Admin only: view pending payments
     elif cmd == "/payments":
         admin_chat_id = os.environ.get("ADMIN_CHAT_ID", "")
@@ -1355,25 +1369,6 @@ def handle_command(text, chat_id, bot_token):
     elif cmd == "/sell":
         return "Dung `/confirm_sell MA SL [GIA]` de ban.\n\nVD: `/confirm_sell TCB 100 28000`"
     
-    # /check_env - Admin only: check if env vars are loaded
-    elif cmd == "/check_env":
-        admin_chat_id = os.environ.get("ADMIN_CHAT_ID", "")
-        if str(chat_id) != str(admin_chat_id):
-            return "Ban khong co quyen."
-        
-        from gemini import _get_google_client_id, _get_google_client_secret
-        
-        cid = _get_google_client_id()
-        sec = _get_google_client_secret()
-        
-        msg = "🔍 *ENV STATUS:*\n\n"
-        msg += f"GOOGLE_CLIENT_ID: {'✅ LOADED' if cid else '❌ MISSING'}\n"
-        msg += f"GOOGLE_CLIENT_SECRET: {'✅ LOADED' if sec else '❌ MISSING'}\n"
-        msg += f"ADMIN_CHAT_ID: {'✅ LOADED' if admin_chat_id else '❌ MISSING'}\n\n"
-        msg += f"Current path: `{os.getcwd()}`\n"
-        msg += f"File path: `{os.path.abspath(__file__)}`"
-        return msg
-
     # Unknown command
     return "Lenh khong nhan dang. Go */help* de xem menu."
 

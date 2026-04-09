@@ -22,7 +22,11 @@ logger = logging.getLogger(__name__)
 from company_info import get_company_info, format_company_info, get_company_name
 
 # Gemini AI
-from gemini import ask_gemini, has_gemini_key, set_user_gemini_key, get_login_link
+from gemini import (
+    ask_gemini, has_gemini_auth, get_oauth_login_url, 
+    exchange_code_for_tokens, save_user_tokens, is_oauth_configured,
+    revoke_gemini_auth
+)
 
 # Subscription system
 from subscription import (
@@ -398,7 +402,7 @@ def handle_command(text, chat_id, bot_token):
             " */run* - Chay phan tich ngay\n"
             " */watchlist* - Xem watchlist\n"
             " */info MA* - Xem thong tin cong ty\n"
-            " */gemini* - Ket noi AI Gemini\n"
+            " */gemini* - Dang nhap Google AI\n"
             " */ask <cau hoi>* - Hoi AI\n"
             " */add MA1,MA2* - Them ma\n"
             " */remove MA1,MA2* - Xoa ma\n"
@@ -662,14 +666,15 @@ def handle_command(text, chat_id, bot_token):
         if len(parts) < 2:
             return "Cu phap: `/ask <cau hoi>`\n\nVD: `/ask RSI la gi?`"
         
-        # Check if user has Gemini key
-        if not has_gemini_key(chat_id):
-            msg = " *BAN CHUA KET NOI GEMINI AI*\n\n"
-            msg += "1. Bam link de lay API key:\n"
-            msg += f"[Google AI Studio]({get_login_link()})\n\n"
-            msg += "2. Tao API key moi\n"
-            msg += "3. Dung `/gemini_key <api_key>` de luu\n\n"
-            msg += "VD: `/gemini_key AIzaSy...`"
+        # Check if OAuth is configured
+        if not is_oauth_configured():
+            return "AI chua duoc cau hinh. Vui long lien he Admin."
+        
+        # Check if user has authenticated
+        if not has_gemini_auth(chat_id):
+            msg = " *BAN CHUA DANG NHAP GEMINI AI*\n\n"
+            msg += "Dung `/gemini` de ket noi tai khoan Google.\n\n"
+            msg += "_Chi can dang nhap 1 lan._"
             return msg
         
         question = " ".join(parts[1:])
@@ -681,38 +686,60 @@ def handle_command(text, chat_id, bot_token):
         response = ask_gemini(question, chat_id)
         
         if response == "NEED_LOGIN":
-            return "Loi ket noi. Vui long kiem tra lai API key.\n\nDung `/gemini` de lay link moi."
+            return "Phiên dang nhap da het. Vui long dung `/gemini` de dang nhap lai."
         
         return f" *AI PHAN TICH*\n-------------------\n\n{response}\n\n_ *Luu y: Day la thong tin tham khao, khong phai loi khuyen dau tu.*_"
 
-    # /gemini - Get Gemini login link
+    # /gemini - Login with Google OAuth
     elif cmd == "/gemini":
+        if not is_oauth_configured():
+            return "AI chua duoc cau hinh. Vui long lien he Admin de them GOOGLE_CLIENT_ID va GOOGLE_CLIENT_SECRET."
+        
+        # Check if already authenticated
+        if has_gemini_auth(chat_id):
+            msg = " *BAN DA KET NOI GEMINI AI*\n\n"
+            msg += "Ban co the dung `/ask` de hoi AI.\n\n"
+            msg += "Dung `/gemini_logout` de huy ket noi."
+            return msg
+        
+        # Generate OAuth URL
+        auth_url = get_oauth_login_url(chat_id)
+        
         msg = " *KET NOI GEMINI AI*\n\n"
-        msg += "1. Bam link de lay API key:\n"
-        msg += f"[Google AI Studio]({get_login_link()})\n\n"
-        msg += "2. Dang nhap Google\n"
-        msg += "3. Tao API key moi (Create API Key)\n"
-        msg += "4. Copy API key\n"
-        msg += "5. Dung `/gemini_key <api_key>` de luu\n\n"
-        msg += "VD: `/gemini_key AIzaSyC...`\n\n"
-        msg += "_API key duoc luu rieng cho ban, khong chia se voi nguoi khac._"
+        msg += "1. Bam link ben duoi de dang nhap Google:\n\n"
+        msg += f"[Dang nhap Google]({auth_url})\n\n"
+        msg += "2. Chon tai khoan Google\n"
+        msg += "3. Chap nhan quyen truy cap\n"
+        msg += "4. Copy ma xac thuc (code) hien tren man hinh\n"
+        msg += "5. Gui ma do vao day\n\n"
+        msg += "_Du lieu cua ban duoc bao mat, khong chia se._"
         return msg
 
-    # /gemini_key - Save Gemini API key
-    elif cmd == "/gemini_key":
+    # Handle OAuth code (user pastes the code)
+    elif cmd == "/gemini_code":
         if len(parts) < 2:
-            return "Cu phap: `/gemini_key <api_key>`\n\nVD: `/gemini_key AIzaSyC...`"
+            return "Cu phap: `/gemini_code <ma_xac_thuc>`\n\nSau khi dang nhap Google, copy ma hien tren man hinh."
         
-        api_key = parts[1].strip()
+        code = " ".join(parts[1:])
         
-        # Validate key format (starts with AIza)
-        if not api_key.startswith("AIza"):
-            return "API key khong hop le. Key phai bat dau bang 'AIza'"
+        # Exchange code for tokens
+        tokens = exchange_code_for_tokens(code)
         
-        if set_user_gemini_key(chat_id, api_key):
+        if tokens:
+            save_user_tokens(chat_id, tokens)
             return " *KET NOI GEMINI THANH CONG!*\n\nBan co the dung `/ask` de hoi AI.\n\nVD: `/ask RSI la gi?`"
         else:
-            return "Loi luu API key. Vui long thu lai."
+            return "Loi xac thuc. Ma khong hop le hoac da het han.\n\nDung `/gemini` de lay link moi."
+
+    # /gemini_logout - Revoke Gemini auth
+    elif cmd == "/gemini_logout":
+        if not has_gemini_auth(chat_id):
+            return "Ban chua ket noi Gemini AI."
+        
+        if revoke_gemini_auth(chat_id):
+            return " *Da huy ket noi Gemini AI.*\n\nDung `/gemini` de ket noi lai neu can."
+        else:
+            return "Loi huy ket noi."
 
     # /add - Add one or multiple symbols
     elif cmd == "/add":

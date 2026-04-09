@@ -18,6 +18,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Company info helper
+from company_info import get_company_info, format_company_info, get_company_name
+
 # Subscription system
 from subscription import (
     has_active_subscription,
@@ -639,8 +642,24 @@ def handle_command(text, chat_id, bot_token):
 
         if added:
             save_user_config(chat_id, cfg)
-            msg = f"Da them *{len(added)}* ma: *{', '.join(added)}*\n"
-            msg += f"Watchlist: *{', '.join(cfg['watchlist'])}*\n"
+            msg = f"?? Da them *{len(added)}* ma vao Watchlist:\n\n"
+            
+            # Show company info for each added symbol
+            for sym in added:
+                try:
+                    info = get_company_info(sym)
+                    name = info.get('name', '')[:25] if info.get('name') else ''
+                    industry = info.get('industry', '')[:20] if info.get('industry') else ''
+                    msg += f"?? *{sym}*"
+                    if name:
+                        msg += f" - {name}"
+                    if industry:
+                        msg += f" [{industry}]"
+                    msg += "\n"
+                except:
+                    msg += f"?? *{sym}*\n"
+            
+            msg += f"\nWatchlist hien tai: *{', '.join(cfg['watchlist'])}*\n"
             if existed:
                 msg += f"\nDa co san: *{', '.join(existed)}*"
             return msg
@@ -673,8 +692,21 @@ def handle_command(text, chat_id, bot_token):
 
         if removed:
             save_user_config(chat_id, cfg)
-            msg = f"Da xoa *{len(removed)}* ma: *{', '.join(removed)}*\n"
-            msg += f"Watchlist: *{', '.join(cfg['watchlist']) if cfg['watchlist'] else '(trong)'}*\n"
+            msg = f"?? Da xoa *{len(removed)}* ma khoi Watchlist:\n\n"
+            
+            # Show company info for each removed symbol
+            for sym in removed:
+                try:
+                    info = get_company_info(sym)
+                    name = info.get('name', '')[:25] if info.get('name') else ''
+                    msg += f"?? *{sym}*"
+                    if name:
+                        msg += f" - {name}"
+                    msg += "\n"
+                except:
+                    msg += f"?? *{sym}*\n"
+            
+            msg += f"\nWatchlist con lai: *{', '.join(cfg['watchlist']) if cfg['watchlist'] else '(trong)'}*\n"
             if not_found:
                 msg += f"\nKhong co trong list: *{', '.join(not_found)}*"
             return msg

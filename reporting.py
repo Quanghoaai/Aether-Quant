@@ -6,6 +6,9 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import datetime
 
+# Company info helper
+from company_info import get_company_info, get_company_name
+
 def save_signals_to_json(actions, filename="execution_log.json"):
     with open(filename, "w") as f:
         json.dump(actions, f, indent=4)
@@ -137,53 +140,15 @@ def build_full_report(scored_data, classification, actions, portfolio, benchmark
     
     # === HEADER ===
     report = f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-    report += f" *HCA SYSTEM — BÁO CÁO NGÀY {today}*\n"
+    report += f"🚀 *HCA SYSTEM — BÁO CÁO NGÀY {today}*\n"
     report += f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
     
     # === DISCLAIMER ===
-    report += "??  y l  ph n t ch t  d  n AI Trading c  nh n. "
-    report += "S  d ng Python + VNStock API. Kh ng ph i l i khuy n  u t .\n\n"
-    
-    # === SUMMARY RECOMMENDATIONS ===
-    # Sort by rank_score to get top picks
-    sorted_symbols = sorted(scored_data.items(), key=lambda x: x[1].get('rank_score', 0), reverse=True)
-    
-    # Get actions summary
-    buy_signals = [a for a in actions if a['action'] == 'BUY']
-    sell_signals = [a for a in actions if a['action'] in ['SELL', 'SELL_HALF']]
-    hold_count = len([s for s, d in sorted_symbols if d.get('score', 0) >= 3.0]) - len(buy_signals) - len(sell_signals)
-    
-    report += "?? *T M T T KHUY N NGH *\n"
-    report += "?????????????????????\n\n"
-    
-    # Top 3 recommendations
-    top_3 = sorted_symbols[:3]
-    for i, (sym, data) in enumerate(top_3, 1):
-        score = data.get('score', 0)
-        cp = current_prices.get(sym, 0)
-        entry, sl, tp1, tp2 = _calc_entry_sl_tp(cp)
-        cls = classification.get(sym, "")
-        
-        # Determine action
-        if score >= 3.8:
-            action = "?? MUA"
-        elif score >= 3.5:
-            action = "?? GI "
-        else:
-            action = "?? B N"
-        
-        role = "?? CORE" if cls == "PRIMARY" else "?? ALPHA" if cls == "ALPHA" else ""
-        report += f"*{i}. {sym}* {role}\n"
-        report += f"   {action} | Score: {score:.1f}/5\n"
-        report += f"   ?? Entry: {entry}\n"
-        report += f"   ?? TP1: {tp1} | TP2: {tp2} | TP3: {int(tp2 * 1.1)}\n"
-        report += f"   ?? SL: {sl}\n\n"
-    
-    # Quick stats
-    report += f"?? T ng: {len(buy_signals)} MUA | {hold_count} GI  | {len(sell_signals)} B N\n\n"
+    report += "⚠️ _Đây là phân tích từ dự án AI Trading cá nhân. "
+    report += "Sử dụng Python + VNStock API. Không phải lời khuyên đầu tư._\n\n"
     
     # === 1. MARKET REGIME ===
-    report += " *1. MARKET REGIME*\n"
+    report += "📊 *1. MARKET REGIME*\n"
     report += _detect_market_regime(benchmark_df) + "\n\n"
     
     # === 2. PORTFOLIO STATUS ===
@@ -223,10 +188,10 @@ def build_full_report(scored_data, classification, actions, portfolio, benchmark
         
         role_tag = ""
         if cls == "PRIMARY":
-            role_tag = " 👑 CORE"
+            role_tag = " CORE"
             primary_sym = sym
         elif cls == "ALPHA":
-            role_tag = " ⚡ ALPHA"
+            role_tag = " ALPHA"
             if not primary_sym:
                 primary_sym = sym
             else:
@@ -234,7 +199,22 @@ def build_full_report(scored_data, classification, actions, portfolio, benchmark
         elif cls == "SECONDARY":
             secondary_syms.append(sym)
         
-        report += f"\n*{sym}*{role_tag} → {action_label}\n"
+        # Get company info
+        company_name = ""
+        industry = ""
+        try:
+            info = get_company_info(sym)
+            company_name = info.get('name', '')[:25] if info.get('name') else ''
+            industry = info.get('industry', '')[:20] if info.get('industry') else ''
+        except:
+            pass
+        
+        report += f"\n*{sym}*{role_tag} -> {action_label}\n"
+        if company_name:
+            report += f"  {company_name}"
+            if industry:
+                report += f" [{industry}]"
+            report += "\n"
         report += f"  Tổng: {_format_score_bar(score)} (Rank: {rank:.2f})\n"
         report += f"  RS:      {_format_score_bar(rs)}\n"
         report += f"  PA:      {_format_score_bar(pa)}\n"

@@ -445,11 +445,19 @@ def handle_command(text, chat_id, bot_token):
         cash_pct = (pf['cash'] / capital) * 100 if capital > 0 else 0
         
         text = "💼 *DANH MỤC ĐẦU TƯ*\n"
-        text += "─────────────────\n"
-        text += f"💰 Tiền mặt: *{pf['cash']:,.0f}* VND ({cash_pct:.0f}%)\n\n"
+        text += "──────────────────────\n\n"
+        text += f"� Vốn ban đầu: *{capital:,.0f}* VND\n"
+        text += f"�💰 Tiền mặt: *{pf['cash']:,.0f}* VND ({cash_pct:.0f}%)\n\n"
         
         if not pf['positions']:
-            text += "📌 Chưa có vị thế nào.\n"
+            pnl = pf['cash'] - capital
+            pnl_pct = (pnl / capital) * 100 if capital > 0 else 0
+            text += "📌 *Chưa có vị thế nào.*\n\n"
+            text += f"📈 PnL hiện tại: *{pnl:+,.0f}* VND ({pnl_pct:+.1f}%)\n\n"
+            text += "💡 *HƯỚNG DẪN:*\n"
+            text += "- Chạy `/run` để phân tích\n"
+            text += "- Dùng `/confirm_buy MA SL GIA` để mua\n"
+            text += "- VD: `/confirm_buy TCB 100 25000`\n"
         else:
             total_invested = 0
             for sym, pos in pf['positions'].items():

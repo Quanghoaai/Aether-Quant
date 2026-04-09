@@ -718,11 +718,11 @@ def handle_command(text, chat_id, bot_token):
         else:
             api_url = get_api_key_url()
             
-            msg = " *KET NOI GEMINI AI (API Key)*\n\n"
-            msg += f"[Bam day de tao API key]({api_url})\n\n"
+            msg = " *KET NOI GEMINI AI*\n\n"
+            msg += f"[Bam day de dang nhap & lay API key]({api_url})\n\n"
             msg += "Huong dan:\n"
             msg += "1. Dang nhap Google\n"
-            msg += "2. Bam 'Create API Key'\n"
+            msg += "2. Lay API key (neu chua co thi tao moi)\n"
             msg += "3. Copy API key (bat dau bang AIza...)\n"
             msg += "4. Gui vao day: `/gemini_key AIza...`\n\n"
             msg += "_Mien phi, dung ca nhan._"

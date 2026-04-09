@@ -306,7 +306,7 @@ def get_gemini_client(chat_id: int):
             if not access_token:
                 _set_last_error(chat_id, "AUTH_REQUIRED")
                 return None
-            genai.configure(credentials=access_token)
+            genai.configure(credentials=access_token, transport='rest')
         else:
             # API Key mode - use user's API key
             api_key = get_user_gemini_key(chat_id)
@@ -316,9 +316,12 @@ def get_gemini_client(chat_id: int):
             if not is_valid_gemini_api_key(api_key):
                 _set_last_error(chat_id, "API_KEY_INVALID")
                 return None
-            genai.configure(api_key=api_key)
+            genai.configure(api_key=api_key, transport='rest')
         
-        client = genai.GenerativeModel('gemini-1.5-flash')
+        
+        model_name = 'gemini-1.5-flash-latest'
+        logger.info(f"Initializing Gemini model: {model_name} for chat {chat_id}")
+        client = genai.GenerativeModel(model_name)
         _user_clients[chat_str] = client
         _set_last_error(chat_id, "")
         return client

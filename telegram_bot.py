@@ -1309,7 +1309,7 @@ def handle_command(text, chat_id, bot_token):
             # Auto-install dependencies using sys.executable to ensure correct venv
             pip_result = subprocess.run(
                 [sys.executable, "-m", "pip", "install", "-r", "requirements.txt"],
-                capture_output=True, text=True, timeout=120,
+                capture_output=True, text=True, timeout=300,
                 cwd=os.path.dirname(os.path.abspath(__file__))
             )
             

@@ -394,6 +394,7 @@ def handle_command(text, chat_id, bot_token):
             " */history* - Xem lich su giao dich\n"
             " */run* - Chay phan tich ngay\n"
             " */watchlist* - Xem watchlist\n"
+            " */info MA* - Xem thong tin cong ty\n"
             " */add MA1,MA2* - Them ma\n"
             " */remove MA1,MA2* - Xoa ma\n"
             " */confirm\\_buy MA SL GIA* - Xac nhan mua\n"
@@ -612,6 +613,43 @@ def handle_command(text, chat_id, bot_token):
         msg += "- `/add MA1,MA2` - Them nhieu ma\n"
         msg += "- `/remove MA1,MA2` - Xoa nhieu ma\n"
         msg += "- `/set_watchlist MA1,MA2,MA3` - Thay the toan bo"
+        return msg
+
+    # /info - Get company information
+    elif cmd == "/info":
+        if len(parts) < 2:
+            return "Cu phap: `/info MA`\n\nVD: `/info TCB`"
+
+        sym = parts[1].upper()
+        info = get_company_info(sym)
+
+        msg = f"?? *THONG TIN {sym}*\n"
+        msg += "-------------------\n\n"
+
+        if info.get('name'):
+            msg += f"?? Ten: {info['name']}\n"
+        else:
+            msg += f"?? Ten: (Chua co du lieu)\n"
+
+        if info.get('industry'):
+            msg += f"?? Nganh: {info['industry']}\n"
+
+        if info.get('exchange'):
+            msg += f"?? San: {info['exchange']}\n"
+
+        if info.get('price', 0) > 0:
+            msg += f"?? Gia: {info['price']:,.0f} VND\n"
+
+        if info.get('market_cap', 0) > 0:
+            cap_b = info['market_cap'] / 1e9
+            msg += f"?? Von hoa: {cap_b:.1f}B VND\n"
+
+        if info.get('description'):
+            msg += f"\n?? *Mo ta:*\n_{info['description']}\n"
+        else:
+            msg += f"\n?? *Mo ta:* (Chua co du lieu)\n"
+
+        msg += f"\n?? Dung `/add {sym}` de them vao Watchlist"
         return msg
 
     # /add - Add one or multiple symbols

@@ -247,6 +247,297 @@ _STATIC_DATA = {
         "industry": "Bat dong san",
         "description": "Cong ty ITA. Dau tu bat dong san va khu cong nghiep. Quy mo nho, thanh kho luong thap. Rui ro tai chinh lon."
     },
+    # === THEM MA MOI ===
+    "BCM": {
+        "name": "Becamex IJC",
+        "industry": "Bat dong san",
+        "description": "Cong ty Phat trien Khu cong nghiep Becamex. Phat trien khu cong nghiep va do thi tai Binh Duong. Thuoc tap doan Becamex. Von hoa lon, doanh thu on dinh."
+    },
+    "KBC": {
+        "name": "Kinh Bac",
+        "industry": "Bat dong san",
+        "description": "Cong ty Phat trien Kinh Bac. Phat trien khu cong nghiep va do thi. Thuoc tap doan Kinh Bac. Doanh thu on dinh, quy mo trung binh."
+    },
+    "VIP": {
+        "name": "VIP Land",
+        "industry": "Bat dong san",
+        "description": "Cong ty VIP Land. Phat trien bat dong san cao cap. Quy mo nho, thanh kho luong thap."
+    },
+    "VRE": {
+        "name": "Vincom Retail",
+        "industry": "Ban le",
+        "description": "Cong ty Vincom Retail. Don vi quan ly trung tam thuong mai lon nhat Viet Nam. Thuoc tap doan Vingroup. Von hoa lon, doanh thu cao."
+    },
+    "PNJ": {
+        "name": "Phu Nhuan Jewelry",
+        "industry": "Ban le",
+        "description": "Cong ty Trang suc Phu Nhuan. Ban le trang suc hang dau. Co mang luoi cua hang phu khap toan quoc. Von hoa lon, doanh thu cao."
+    },
+    "MCH": {
+        "name": "Mechanics",
+        "industry": "Cong nghiep",
+        "description": "Cong ty Co phan May Moc. San xuat may moc thiet bi. Quy mo trung binh, doanh thu on dinh."
+    },
+    "GMD": {
+        "name": "Gemadept",
+        "industry": "Van tai",
+        "description": "Cong ty Gemadept. Dich vu van tai va kho bai. Quy mo lon, doanh thu on dinh."
+    },
+    "VSC": {
+        "name": "Vietnam Steel",
+        "industry": "Thep",
+        "description": "Cong ty Thep Viet Nam. San xuat thep va sat. Quy mo trung binh, doanh thu phu thuoc nganh thep."
+    },
+    "NVS": {
+        "name": "Nam Van Son",
+        "industry": "Thuc pham",
+        "description": "Cong ty Nam Van Son. San xuat thuc pham. Quy mo nho, doanh thu on dinh."
+    },
+    "VTO": {
+        "name": "Viettel Post",
+        "industry": "Van tai",
+        "description": "Cong ty Viettel Post. Dich vu giao nhan van chuyen. Thuoc tap doan Viettel. Von hoa lon, mang luoi rong."
+    },
+    "HAG": {
+        "name": "Hoang Anh Gia Lai",
+        "industry": "Nong nghiep",
+        "description": "Cong ty Hoang Anh Gia Lai. Nuoi trong ca sua, chuoi va cao su. Quy mo lon, doanh thu phu thuoc gia nong san."
+    },
+    "HNG": {
+        "name": "Hoang Anh Gia Lai",
+        "industry": "Nong nghiep",
+        "description": "Cong ty Hoang Anh Gia Lai. Nuoi trong ca sua, chuoi va cao su. Quy mo lon, doanh thu phu thuoc gia nong san."
+    },
+    "DRC": {
+        "name": "Da Nang Rubber",
+        "industry": "Cong nghiep",
+        "description": "Cong ty Cao su Da Nang. San xuat san pham cao su. Quy mo trung binh, doanh thu on dinh."
+    },
+    "CSM": {
+        "name": "Ca Mau Fertilizer",
+        "industry": "Hoa chat",
+        "description": "Cong ty Phan bon Ca Mau. San xuat phan bon. Thuoc Petrovietnam. Von hoa lon, doanh thu on dinh."
+    },
+    "DPM": {
+        "name": "Dong Phu Fertilizer",
+        "industry": "Hoa chat",
+        "description": "Cong ty Phan bon Dong Phu. San xuat phan bon. Thuoc Petrovietnam. Doanh thu on dinh, chi tra co tuc tot."
+    },
+    "BMP": {
+        "name": "Binh Minh Plastics",
+        "industry": "Cong nghiep",
+        "description": "Cong ty Nhua Binh Minh. San xuat san pham nhua. Von hoa lon, doanh thu cao, bien lo nhuan tot."
+    },
+    "NBB": {
+        "name": "Binh Chanh",
+        "industry": "Bat dong san",
+        "description": "Cong ty Binh Chanh. Dau tu bat dong san tai TP.HCM. Quy mo nho, thanh kho luong thap."
+    },
+    "VCF": {
+        "name": "Vietnam Coffee",
+        "industry": "Thuc pham",
+        "description": "Cong ty Ca phe Viet Nam. San xuat va xuat khau ca phe. Quy mo trung binh, doanh thu phu thuoc gia ca phe."
+    },
+    "SAM": {
+        "name": "Sam Holdings",
+        "industry": "Bat dong san",
+        "description": "Cong ty Sam Holdings. Dau tu bat dong san va khu cong nghiep. Quy mo trung binh."
+    },
+    "PET": {
+        "name": "Petrovietnam",
+        "industry": "Dau khi",
+        "description": "Cong ty Petrovietnam. Dau tu va kinh doanh dau khi. Thuoc tap doan Petrovietnam. Von hoa lon."
+    },
+    "PJT": {
+        "name": "Petrovietnam Jet",
+        "industry": "Dau khi",
+        "description": "Cong ty Petrovietnam Jet. Dich vu bay lai dau khi. Thuoc Petrovietnam. Doanh thu on dinh."
+    },
+    "PGB": {
+        "name": "Petrolimex Gas",
+        "industry": "Dau khi",
+        "description": "Cong ty Khi Petrolimex. Kinh doanh khi hoa long. Thuoc Petrolimex. Doanh thu on dinh."
+    },
+    "DHC": {
+        "name": "Da Nang Housing",
+        "industry": "Bat dong san",
+        "description": "Cong ty Phat trien Nha Da Nang. Phat trien bat dong san tai Da Nang. Quy mo trung binh."
+    },
+    "DPR": {
+        "name": "Dau Tieng Rubber",
+        "industry": "Nong nghiep",
+        "description": "Cong ty Cao su Dau Tieng. Trong va che bien cao su. Quy mo lon, doanh thu on dinh."
+    },
+    "TIX": {
+        "name": "Tin Xuyen",
+        "industry": "Cong nghiep",
+        "description": "Cong ty Tin Xuyen. San xuat may moc thiet bi. Quy mo nho, thanh kho luong thap."
+    },
+    "TNA": {
+        "name": "Thien Nam",
+        "industry": "Van tai",
+        "description": "Cong ty Thien Nam. Dich vu van tai va kho bai. Quy mo trung binh, doanh thu on dinh."
+    },
+    "TRA": {
+        "name": "Traphaco",
+        "industry": "Y te",
+        "description": "Cong ty Duoc Traphaco. San xuat thuoc. Von hoa lon, doanh thu cao, bien lo nhuan tot."
+    },
+    "IMP": {
+        "name": "Imexpharm",
+        "industry": "Y te",
+        "description": "Cong ty Duoc Imexpharm. San xuat thuoc. Quy mo trung binh, doanh thu on dinh."
+    },
+    "DHG": {
+        "name": "Domesco",
+        "industry": "Y te",
+        "description": "Cong ty Duoc Domesco. San xuat thuoc. Von hoa lon, doanh thu cao, chi tra co tuc tot."
+    },
+    "BBC": {
+        "name": "Bao Binh",
+        "industry": "Bao hiem",
+        "description": "Cong ty Bao hiem Bao Binh. Dich vu bao hiem. Quy mo nho, thanh kho luong thap."
+    },
+    "BMI": {
+        "name": "Bao Minh",
+        "industry": "Bao hiem",
+        "description": "Cong ty Bao hiem Bao Minh. Dich vu bao hiem. Von hoa lon, doanh thu on dinh."
+    },
+    "VNR": {
+        "name": "Vietnam Railway",
+        "industry": "Van tai",
+        "description": "Cong ty Duong sat Viet Nam. Dich vu van tai duong sat. Thuoc nha nuoc. Doanh thu on dinh."
+    },
+    "HT1": {
+        "name": "Hai Thach",
+        "industry": "Cong nghiep",
+        "description": "Cong ty Hai Thach. San xuat vat lieu xay dung. Quy mo trung binh."
+    },
+    "VHL": {
+        "name": "Viet Hung",
+        "industry": "Thuy san",
+        "description": "Cong ty Viet Hung. Nuoi trong va che bien thuy san. Quy mo trung binh, doanh thu phu thuoc gia ca."
+    },
+    "HQC": {
+        "name": "Hoang Quan",
+        "industry": "Bat dong san",
+        "description": "Cong ty Hoang Quan. Dau tu bat dong san. Quy mo nho, dang gap kho khan tai chinh."
+    },
+    "VSI": {
+        "name": "Vietnam Steel",
+        "industry": "Thep",
+        "description": "Cong ty Thep Viet Nam. San xuat thep. Quy mo trung binh, doanh thu phu thuoc nganh thep."
+    },
+    "TMT": {
+        "name": "TMT",
+        "industry": "Cong nghiep",
+        "description": "Cong ty TMT. San xuat may moc thiet bi. Quy mo nho, thanh kho luong thap."
+    },
+    "L14": {
+        "name": "Luong 14",
+        "industry": "Xay dung",
+        "description": "Cong ty Luong 14. Thau khoi cong trinh xay dung. Quy mo nho."
+    },
+    "L35": {
+        "name": "Luong 35",
+        "industry": "Xay dung",
+        "description": "Cong ty Luong 35. Thau khoi cong trinh xay dung. Quy mo trung binh."
+    },
+    "FCN": {
+        "name": "FPT Telecom",
+        "industry": "Vien thong",
+        "description": "Cong ty FPT Telecom. Dich vu vien thong va internet. Thuoc tap doan FPT. Von hoa lon, doanh thu cao."
+    },
+    "FRT": {
+        "name": "FPT Retail",
+        "industry": "Ban le",
+        "description": "Cong ty FPT Retail. Ban le dien thoai va do dien tu. Thuoc tap doan FPT. Doanh thu tang truong nhanh."
+    },
+    "CII": {
+        "name": "Cii",
+        "industry": "Cong nghe",
+        "description": "Cong ty Cii. Cong nghe thong tin va phan mem. Quy mo trung binh, doanh thu on dinh."
+    },
+    "E1": {
+        "name": "E1",
+        "industry": "Dien",
+        "description": "Cong ty E1. San xuat va phan phoi dien. Quy mo trung binh."
+    },
+    "PGC": {
+        "name": "Petrolimex Gas",
+        "industry": "Dau khi",
+        "description": "Cong ty Khi Petrolimex. Kinh doanh khi hoa long. Doanh thu on dinh."
+    },
+    "POT": {
+        "name": "Petrovietnam Tech",
+        "industry": "Dau khi",
+        "description": "Cong ty Petrovietnam Tech. Dich vu ky thuat dau khi. Thuoc Petrovietnam."
+    },
+    "PXR": {
+        "name": "Petro Rex",
+        "industry": "Dau khi",
+        "description": "Cong ty Petro Rex. Kinh doanh dau khi. Quy mo trung binh."
+    },
+    "PVS": {
+        "name": "Petrovietnam Tech",
+        "industry": "Dau khi",
+        "description": "Cong ty Ky thuat Dau khi Petrovietnam. Cung cap dich vu ky thuat dau khi. Thuoc tap doan Petrovietnam. Doanh thu on dinh, bien lo nhuan phu thuoc gia dau."
+    },
+    "BSI": {
+        "name": "Bao Viet Securities",
+        "industry": "Chung khoan",
+        "description": "Cong ty Chung khoan Bao Viet. Dich vu chung khoan. Thuoc tap doan Bao Viet. Von hoa lon, doanh thu on dinh."
+    },
+    "VND": {
+        "name": "VNDirect",
+        "industry": "Chung khoan",
+        "description": "Cong ty Chung khoan VNDirect. Dich vu chung khoan. Von hoa lon, doanh thu cao."
+    },
+    "HCM": {
+        "name": "HCM Securities",
+        "industry": "Chung khoan",
+        "description": "Cong ty Chung khoan HCM. Dich vu chung khoan. Quy mo trung binh, doanh thu tang truong."
+    },
+    "MIG": {
+        "name": "MIG",
+        "industry": "Cong nghiep",
+        "description": "Cong ty MIG. San xuat va kinh doanh. Quy mo nho."
+    },
+    "KOS": {
+        "name": "KOS",
+        "industry": "Cong nghe",
+        "description": "Cong ty KOS. Cong nghe thong tin. Quy mo nho."
+    },
+    "AAA": {
+        "name": "An Phat",
+        "industry": "Cong nghiep",
+        "description": "Cong ty An Phat. San xuat nhua va vat lieu. Quy mo trung binh, doanh thu on dinh."
+    },
+    "AGR": {
+        "name": "Agribank",
+        "industry": "Ngan hang",
+        "description": "Ngan hang Nong nghiep va Phat trien Nong thon. Ngan hang thuong mai nha nuoc quy mo lon nhat. Phuc vu khu vuc nong thon. Mang luoi rong toan quoc."
+    },
+    "TCH": {
+        "name": "Tien Chau",
+        "industry": "Thuc pham",
+        "description": "Cong ty Tien Chau. San xuat thuc pham. Quy mo nho."
+    },
+    "TV2": {
+        "name": "TV2",
+        "industry": "Xay dung",
+        "description": "Cong ty TV2. Tu van va thau khoi cong trinh. Quy mo trung binh."
+    },
+    "TV3": {
+        "name": "TV3",
+        "industry": "Xay dung",
+        "description": "Cong ty TV3. Tu van va thau khoi cong trinh. Quy mo trung binh."
+    },
+    "TV4": {
+        "name": "TV4",
+        "industry": "Xay dung",
+        "description": "Cong ty TV4. Tu van va thau khoi cong trinh. Quy mo nho."
+    },
 }
 
 # Cache for company info to reduce API calls

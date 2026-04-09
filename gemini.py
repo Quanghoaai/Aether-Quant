@@ -318,8 +318,8 @@ def get_gemini_client(chat_id: int):
                 return None
             genai.configure(api_key=api_key, transport='rest')
         
-        
-        model_name = 'gemini-2.0-flash'
+        # By default, we use 2.5-flash which has better quota on some preview accounts
+        model_name = 'gemini-2.5-flash'
         logger.info(f"Initializing Gemini model: {model_name} for chat {chat_id}")
         client = genai.GenerativeModel(model_name)
         _user_clients[chat_str] = client
@@ -382,10 +382,25 @@ Quy tac:
         response = client.generate_content(full_prompt)
         return response.text.strip()
     except Exception as e:
-        logger.error(f"Gemini API error: {e}")
-        if "401" in str(e) or "403" in str(e) or "API_KEY" in str(e):
+        error_msg = str(e)
+        logger.error(f"Gemini API error (primary model): {error_msg}")
+        
+        # Fallback to older/more commonly available models on 429/404 errors
+        if "429" in error_msg or "404" in error_msg:
+            logger.info("Attempting fallback to gemini-1.5-flash-8b")
+            try:
+                import google.generativeai as genai
+                fallback_client = genai.GenerativeModel("gemini-1.5-flash-8b")
+                response = fallback_client.generate_content(full_prompt)
+                return response.text.strip()
+            except Exception as fallback_err:
+                logger.error(f"Fallback model also failed: {fallback_err}")
+                return "Bot dang qua tai (Too Many Requests). Vui long cho 1 phut roi thu lai."
+                
+        if "401" in error_msg or "403" in error_msg or "API_KEY" in error_msg:
             return "AUTH_REQUIRED"
-        return f"Loi AI: {str(e)[:100]}"
+            
+        return f"Loi AI: {error_msg[:100]}"
 
 
 def analyze_stock_with_gemini(symbol: str, score_data: dict, price: float, chat_id: int) -> str:

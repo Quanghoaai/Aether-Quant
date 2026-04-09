@@ -355,7 +355,7 @@ def list_available_models(chat_id: int):
         return models
     except Exception as e:
         logger.error(f"Failed to list models: {e}")
-        return []
+        return [f"Lỗi truy vấn: {str(e)}"]
 
 
 def get_api_key_url() -> str:
@@ -416,7 +416,7 @@ Quy tac:
                             pass
                     continue
                 else:
-                    return "Bot dang qua tai (Too Many Requests). Vui long thu lai sau ít phut."
+                    return f"Bot dang qua tai. Chi tiet loi: {error_msg[:300]}"
                     
             if "401" in error_msg or "403" in error_msg or "api_key" in error_msg:
                 return "AUTH_REQUIRED"

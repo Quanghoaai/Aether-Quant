@@ -332,6 +332,21 @@ def get_gemini_client(chat_id: int):
         return None
 
 
+def list_available_models(chat_id: int):
+    """List all models available for the current user's credentials."""
+    get_gemini_client(chat_id)  # Ensure configured
+    try:
+        import google.generativeai as genai
+        models = []
+        for m in genai.list_models():
+            if 'generateContent' in m.supported_generation_methods:
+                models.append(m.name.replace('models/', ''))
+        return models
+    except Exception as e:
+        logger.error(f"Failed to list models: {e}")
+        return []
+
+
 def get_api_key_url() -> str:
     """Get Google AI Studio API key URL."""
     return GEMINI_API_URL

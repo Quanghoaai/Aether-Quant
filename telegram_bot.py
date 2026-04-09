@@ -25,7 +25,11 @@ from company_info import get_company_info, format_company_info, get_company_name
 from gemini import (
     ask_gemini, has_gemini_auth, is_oauth_mode,
     get_oauth_login_url, exchange_code_for_tokens, save_user_tokens,
-    set_user_gemini_key, get_api_key_url, revoke_gemini_key, revoke_gemini_oauth,
+    get_gemini_client,
+    get_api_key_url,
+    list_available_models,
+    revoke_gemini_key,
+    revoke_gemini_oauth,
     is_valid_gemini_api_key
 )
 
@@ -1339,7 +1343,19 @@ def handle_command(text, chat_id, bot_token):
         try:
             import google.generativeai as genai
             v = getattr(genai, "__version__", "unknown")
-            return f"✅ *GEMINI STATUS: OK*\n\nLibrary: `google-generativeai`\nVersion: `{v}`\n\nDung `/ask` de hoi AI."
+            msg = f"✅ *GEMINI STATUS: OK*\n\nLibrary: `google-generativeai`\nVersion: `{v}`\n"
+            
+            # List available models
+            models = list_available_models(chat_id)
+            if models:
+                msg += "\n*Models kha dung:*\n"
+                for m in models:
+                    msg += f"- `{m}`\n"
+            else:
+                msg += "\n⚠️ *Khong tim thay model nao.* Co the do loi auth."
+                
+            msg += "\n\nDung `/ask` de hoi AI."
+            return msg
         except ImportError:
             return "❌ *GEMINI STATUS: LOI*\n\nThư viện `google-generativeai` chưa được cài đặt.\n\nHãy gõ `/update` để bot tự động cài đặt."
         except Exception as e:

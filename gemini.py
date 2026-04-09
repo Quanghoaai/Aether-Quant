@@ -81,15 +81,26 @@ def load_gemini_keys() -> dict:
 
 
 def save_gemini_keys(data: dict):
-    """Save Gemini API keys to file."""
-    with open(GEMINI_KEYS_FILE, "w", encoding="utf-8") as f:
+    """Save Gemini API keys to file with secure permissions."""
+    flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+    # 0o600 ensures only the owner can read/write the file
+    fd = os.open(GEMINI_KEYS_FILE, flags, 0o600)
+    with open(fd, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
 
 
 def get_user_gemini_key(chat_id: int) -> Optional[str]:
-    """Get Gemini API key for a user."""
+    """Get Gemini API key for a user. Fallback to global .env key."""
     keys = load_gemini_keys()
-    return keys.get(str(chat_id), {}).get("api_key")
+    user_key = keys.get(str(chat_id), {}).get("api_key")
+    if user_key:
+        return user_key
+        
+    global_key = os.environ.get("GEMINI_API_KEY", "").strip()
+    if global_key and is_valid_gemini_api_key(global_key):
+        return global_key
+        
+    return None
 
 
 def set_user_gemini_key(chat_id: int, api_key: str) -> bool:
@@ -132,8 +143,11 @@ def load_gemini_tokens() -> dict:
 
 
 def save_gemini_tokens(data: dict):
-    """Save Gemini OAuth tokens to file."""
-    with open(GEMINI_TOKENS_FILE, "w", encoding="utf-8") as f:
+    """Save Gemini OAuth tokens to file with secure permissions."""
+    flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+    # 0o600 ensures only the owner can read/write the file
+    fd = os.open(GEMINI_TOKENS_FILE, flags, 0o600)
+    with open(fd, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
 
 

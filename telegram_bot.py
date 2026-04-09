@@ -331,12 +331,15 @@ def main():
                             # Notify admin
                             admin_chat_id = os.environ.get("ADMIN_CHAT_ID", "")
                             if admin_chat_id:
-                                admin_msg = f" *ANH BIEN NHAN MOI*\n\n"
+                                admin_msg = f"🟢 *ẢNH BIÊN NHẬN MỚI*\n\n"
                                 admin_msg += f"Chat ID: `{chat_id}`\n"
-                                admin_msg += f"Ma GD: `{payment_id}`\n"
-                                admin_msg += f"Thoi gian: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
-                                admin_msg += "Dung `/payments` de xem chi tiet.\n"
-                                admin_msg += f"Dung `/approve {payment_id}` de duyet."
+                                admin_msg += f"Mã GD: `{payment_id}`\n"
+                                admin_msg += f"Thời gian: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+                                admin_msg += "⚠️ *CẢNH BÁO BẢO MẬT (VIỆT NAM)* ⚠️\n"
+                                admin_msg += "- Hãy kiểm tra ứng dụng ngân hàng/sao kê thực tế.\n"
+                                admin_msg += "- KHÔNG tin tưởng tuyệt đối vào ảnh chụp (phòng tránh rủi ro Fake Bill).\n\n"
+                                admin_msg += "Dùng `/payments` để xem chi tiết.\n"
+                                admin_msg += f"Dùng `/approve {payment_id}` để duyệt."
                                 send_msg(bot_token, int(admin_chat_id), admin_msg)
                                 # Forward photo to admin
                                 forward_photo(bot_token, int(admin_chat_id), file_id)
@@ -503,6 +506,10 @@ def handle_command(text, chat_id, bot_token):
         if len(parts) < 4:
             return " Cu phap: `/confirm_buy MA SO_CP GIA`\nVD: `/confirm_buy TCB 1000 25500`"
         sym = parts[1].upper()
+        import re
+        if not re.match(r"^[A-Z0-9]{3,5}$", sym):
+            return "❌ Mã chứng khoán không hợp lệ (Phải từ 3-5 chữ cái hoặc số. VD: TCB, FPT)."
+        
         try:
             qty = int(parts[2])
             price = float(parts[3])
@@ -553,6 +560,10 @@ def handle_command(text, chat_id, bot_token):
         if len(parts) < 3:
             return " Cu phap: `/confirm_sell MA SO_CP`\nVD: `/confirm_sell TCB 500`"
         sym = parts[1].upper()
+        import re
+        if not re.match(r"^[A-Z0-9]{3,5}$", sym):
+            return "❌ Mã chứng khoán không hợp lệ (Phải từ 3-5 chữ cái hoặc số. VD: TCB, FPT)."
+        
         try:
             qty = int(parts[2])
         except ValueError:
@@ -864,8 +875,9 @@ def handle_command(text, chat_id, bot_token):
         existed = []
 
         for sym in new_symbols:
-            # Validate: must be 2-5 letters, alphanumeric
-            if not sym.isalnum() or len(sym) < 2 or len(sym) > 5:
+            # Validate: must be 3-5 letters, alphanumeric (Vietnam context)
+            import re
+            if not re.match(r"^[A-Z0-9]{3,5}$", sym):
                 continue
 
             if sym not in cfg["watchlist"]:

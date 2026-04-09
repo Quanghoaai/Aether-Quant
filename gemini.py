@@ -2,6 +2,7 @@
 Gemini AI Integration for Aether-Quant Bot.
 """
 import os
+import json
 import logging
 from typing import Optional
 
@@ -9,17 +10,55 @@ logger = logging.getLogger(__name__)
 
 # Cache for Gemini client
 _gemini_client = None
+_user_api_keys = {}  # Cache user-specific API keys
 
-def get_gemini_client():
+GEMINI_API_URL = "https://makersuite.google.com/app/apikey"
+
+def load_user_api_keys():
+    """Load user API keys from file."""
+    try:
+        if os.path.exists("gemini_keys.json"):
+            with open("gemini_keys.json", "r") as f:
+                return json.load(f)
+    except:
+        pass
+    return {}
+
+def save_user_api_keys(keys):
+    """Save user API keys to file."""
+    try:
+        with open("gemini_keys.json", "w") as f:
+            json.dump(keys, f, indent=2)
+    except Exception as e:
+        logger.error(f"Failed to save API keys: {e}")
+
+def set_user_api_key(chat_id: str, api_key: str) -> bool:
+    """Set API key for a specific user."""
+    keys = load_user_api_keys()
+    keys[str(chat_id)] = api_key
+    save_user_api_keys(keys)
+    # Clear cached client for this user
+    global _gemini_client
+    _gemini_client = None
+    return True
+
+def get_user_api_key(chat_id: str) -> Optional[str]:
+    """Get API key for a specific user."""
+    # Check user-specific key first
+    keys = load_user_api_keys()
+    chat_str = str(chat_id)
+    if chat_str in keys:
+        return keys[chat_str]
+    # Fall back to global env var
+    return os.environ.get("GEMINI_API_KEY", "")
+
+def get_gemini_client(chat_id: str = None):
     """Get or create Gemini client."""
     global _gemini_client
     
-    if _gemini_client is not None:
-        return _gemini_client
+    api_key = get_user_api_key(chat_id) if chat_id else os.environ.get("GEMINI_API_KEY", "")
     
-    api_key = os.environ.get("GEMINI_API_KEY", "")
     if not api_key:
-        logger.warning("GEMINI_API_KEY not set in environment")
         return None
     
     try:
@@ -35,20 +74,21 @@ def get_gemini_client():
         return None
 
 
-def ask_gemini(question: str, context: Optional[str] = None) -> str:
+def ask_gemini(question: str, chat_id: str = None, context: Optional[str] = None) -> str:
     """
     Ask Gemini a question and return the response.
     
     Args:
         question: User's question
+        chat_id: User's chat ID for per-user API key
         context: Optional context (e.g., market data, portfolio info)
     
     Returns:
         Gemini's response or error message
     """
-    client = get_gemini_client()
+    client = get_gemini_client(chat_id)
     if not client:
-        return "AI chua san sang. Vui long kiem tra GEMINI_API_KEY trong .env"
+        return f"Chua cau hinh Gemini API Key.\n\nLay API key tai: {GEMINI_API_URL}\n\nDung `/setgemini <api_key>` de nhap key."
     
     # Build prompt with context
     system_prompt = """Ban la AI Assistant cua Aether-Quant - mot he thong phan tich chung khoan Viet Nam.
@@ -78,7 +118,7 @@ Quy tac:
         return f"Loi ket noi AI: {str(e)[:100]}"
 
 
-def analyze_stock_with_gemini(symbol: str, score_data: dict, price: float) -> str:
+def analyze_stock_with_gemini(symbol: str, score_data: dict, price: float, chat_id: str = None) -> str:
     """
     Get AI analysis for a specific stock.
     """
@@ -94,7 +134,7 @@ Diem tong: {score_data.get('score', 0):.2f}/5.0
 """
     
     question = f"Phan tich ngan gon {symbol}: nen mua hay cho? Vi sao?"
-    return ask_gemini(question, context)
+    return ask_gemini(question, chat_id=chat_id, context=context)
 
 
 if __name__ == "__main__":

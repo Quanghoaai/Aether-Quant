@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 from company_info import get_company_info, format_company_info, get_company_name
 
 # Gemini AI
-from gemini import ask_gemini
+from gemini import ask_gemini, set_user_api_key, GEMINI_API_URL
 
 # Subscription system
 from subscription import (
@@ -399,6 +399,7 @@ def handle_command(text, chat_id, bot_token):
             " */watchlist* - Xem watchlist\n"
             " */info MA* - Xem thong tin cong ty\n"
             " */ask <cau hoi>* - Hoi AI Gemini\n"
+            " */setgemini <api_key>* - Cau hinh Gemini API\n"
             " */add MA1,MA2* - Them ma\n"
             " */remove MA1,MA2* - Xoa ma\n"
             " */confirm\\_buy MA SL GIA* - Xac nhan mua\n"
@@ -671,10 +672,22 @@ def handle_command(text, chat_id, bot_token):
         msg = " *Dang suy nghi...*"
         send_msg(bot_token, chat_id, msg)
         
-        # Get AI response
-        response = ask_gemini(question)
+        # Get AI response with user's chat_id
+        response = ask_gemini(question, chat_id=str(chat_id))
         
         return f" *AI PHAN TICH*\n-------------------\n\n{response}\n\n_ *Luu y: Day la thong tin tham khao, khong phai loi khuyen dau tu.*_"
+    
+    # /setgemini - Set user's Gemini API key
+    elif cmd == "/setgemini":
+        if len(parts) < 2:
+            return f"Lay API key tai: {GEMINI_API_URL}\n\nCu phap: `/setgemini <api_key>`\n\nVD: `/setgemini AIzaSy...`"
+        
+        api_key = parts[1].strip()
+        if len(api_key) < 10:
+            return "API key khong hop le."
+        
+        set_user_api_key(str(chat_id), api_key)
+        return "Da luu Gemini API Key!\n\nDung `/ask <cau hoi>` de bat dau hoi AI."
 
     # /add - Add one or multiple symbols
     elif cmd == "/add":

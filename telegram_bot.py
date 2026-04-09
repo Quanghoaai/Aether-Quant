@@ -1136,8 +1136,25 @@ def handle_command(text, chat_id, bot_token):
         except Exception as e:
             return f" *LOI:* `{str(e)}`"
     
-    else:
-        return "Lenh khong nhan dang. Go */help* de xem menu."
+    # === SHORT ALIASES ===
+    # /set -> show available set commands
+    elif cmd == "/set":
+        return "Ban muon dung lenh nao?\n\n- `/set_capital SO` - Doi von\n- `/set_minscore SO` - Doi diem\n- `/set_primary MA` - Doi ma chinh\n- `/set_watchlist MA1,MA2` - Doi watchlist"
+    
+    # /reset -> show reset command
+    elif cmd == "/reset":
+        return "Ban muon dung lenh nao?\n\n- `/reset_capital SO` - Reset von & xoa vi the\n\nVD: `/reset_capital 50000000 confirm`"
+    
+    # /buy -> show buy command
+    elif cmd == "/buy":
+        return "Dung `/confirm_buy MA SL GIA` de mua.\n\nVD: `/confirm_buy TCB 100 25000`"
+    
+    # /sell -> show sell command
+    elif cmd == "/sell":
+        return "Dung `/confirm_sell MA SL [GIA]` de ban.\n\nVD: `/confirm_sell TCB 100 28000`"
+    
+    # Unknown command
+    return "Lenh khong nhan dang. Go */help* de xem menu."
 
 def send_msg(bot_token, chat_id, text):
     import requests

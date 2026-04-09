@@ -49,7 +49,8 @@ def fetch_data(tickers, start_date=None, end_date=None, period="6mo"):
     stock_engine = Vnstock().stock(symbol='VN30', source='VCI')
     
     data_dict = {}
-    max_retries = 2 # Reduced retries to save time, but keeps it robust
+    max_retries = 3
+    base_delay = 2  # Exponential backoff base
 
     for symbol in tickers:
         if symbol == "VNINDEX": continue # Handle separately
@@ -57,8 +58,7 @@ def fetch_data(tickers, start_date=None, end_date=None, period="6mo"):
         success = False
         for attempt in range(max_retries):
             try:
-                print(f"Fetching data for {symbol} (Attempt {attempt + 1})...")
-                # Increase timeout via requests if possible (vnstock uses requests)
+                print(f"Fetching data for {symbol} (Attempt {attempt + 1}/{max_retries})...")
                 df = stock_engine.quote.history(symbol=symbol, start=start_date, end=end_date)
                 
                 if df is not None and not df.empty:
@@ -80,19 +80,23 @@ def fetch_data(tickers, start_date=None, end_date=None, period="6mo"):
                         df = calculate_indicators(df)
                         
                         data_dict[symbol] = df
-                        print(f"✅ Successful: {symbol} ({len(df)} days)")
+                        print(f"Successful: {symbol} ({len(df)} days)")
                         success = True
                         break
                 
-                print(f"⚠️ No data for {symbol}, retrying...")
-                time.sleep(1)
+                # No data - exponential backoff
+                delay = base_delay * (2 ** attempt)
+                print(f"No data for {symbol}, retrying in {delay}s...")
+                time.sleep(delay)
                 
             except Exception as e:
-                print(f"❌ Error {symbol}: {e}")
-                time.sleep(2)
+                # Exponential backoff on error
+                delay = base_delay * (2 ** attempt)
+                print(f"Error {symbol}: {e}, retrying in {delay}s...")
+                time.sleep(delay)
         
         if not success:
-            print(f"🛑 Failed to fetch {symbol}")
+            print(f" Failed to fetch {symbol}")
 
     # Always fetch VNINDEX for Market Regime analysis
     try:
@@ -133,14 +137,16 @@ def calculate_indicators(df):
     try:
         indicator_atr = ta.volatility.AverageTrueRange(high=df['High'], low=df['Low'], close=df['Close'], window=14)
         df['ATR'] = indicator_atr.average_true_range()
-    except:
+    except Exception as e:
+        logging.getLogger(__name__).debug(f"ATR calculation failed: {e}")
         df['ATR'] = np.nan
     
     # RSI(14)
     try:
         indicator_rsi = ta.momentum.RSIIndicator(close=df['Close'], window=14)
         df['RSI'] = indicator_rsi.rsi()
-    except:
+    except Exception as e:
+        logging.getLogger(__name__).debug(f"RSI calculation failed: {e}")
         df['RSI'] = np.nan
     
     # MACD
@@ -149,7 +155,8 @@ def calculate_indicators(df):
         df['MACD'] = macd_ind.macd()
         df['MACD_Signal'] = macd_ind.macd_signal()
         df['MACD_Hist'] = macd_ind.macd_diff()
-    except:
+    except Exception as e:
+        logging.getLogger(__name__).debug(f"MACD calculation failed: {e}")
         df['MACD'] = np.nan
         df['MACD_Signal'] = np.nan
         df['MACD_Hist'] = np.nan
@@ -162,7 +169,8 @@ def calculate_indicators(df):
     try:
         bb = ta.volatility.BollingerBands(close=df['Close'], window=20, window_dev=2)
         df['BB_Width'] = (bb.bollinger_hband() - bb.bollinger_lband()) / df['MA20']
-    except:
+    except Exception as e:
+        logging.getLogger(__name__).debug(f"BB Width calculation failed: {e}")
         df['BB_Width'] = np.nan
         
     return df

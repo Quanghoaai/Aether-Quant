@@ -1,8 +1,16 @@
 import json
 import os
+import logging
+
+from constants import (
+    DEFAULT_CAPITAL, MIN_CASH_RESERVE_PCT, MAX_POSITIONS, MIN_SCORE_BUY,
+    HARD_STOP_PCT, TRAILING_STOP_TRIGGER_PCT, TRAILING_STOP_PCT,
+    TP1_PCT, TP2_PCT, LOT_SIZE
+)
+
+logger = logging.getLogger(__name__)
 
 PORTFOLIO_FILE = "portfolio.json"
-DEFAULT_CAPITAL = 50000000
 
 def load_all_portfolios():
     """Load all portfolios from file."""
@@ -90,29 +98,29 @@ def execute_logic(scored_data, classification, current_prices, primary="HHV", ca
         profit_pct = (current_p - avg_p) / avg_p
         drawdown_from_high = (highest_p - current_p) / highest_p if highest_p > 0 else 0
         
-        # Hard Stop -7%
-        if profit_pct <= -0.07:
-            actions.append({"symbol": sym, "action": "SELL", "reason": "Hard Stop -7%", "qty": pos["qty"]})
+        # Hard Stop
+        if profit_pct <= HARD_STOP_PCT:
+            actions.append({"symbol": sym, "action": "SELL", "reason": f"Hard Stop ({HARD_STOP_PCT*100:.0f}%)", "qty": pos["qty"]})
             portfolio["cash"] += pos["qty"] * current_p
             del portfolio["positions"][sym]
             
-        # Trailing Stop (profit ≥8% but dropped 3% from high)
-        elif profit_pct >= 0.08 and drawdown_from_high >= 0.03:
+        # Trailing Stop
+        elif profit_pct >= TRAILING_STOP_TRIGGER_PCT and drawdown_from_high >= TRAILING_STOP_PCT:
             actions.append({"symbol": sym, "action": "SELL", "reason": "Trailing Stop", "qty": pos["qty"]})
             portfolio["cash"] += pos["qty"] * current_p
             del portfolio["positions"][sym]
             
-        # Take Profit Level 2: +15-18% → sell all
-        elif profit_pct >= 0.15:
-            actions.append({"symbol": sym, "action": "SELL", "reason": "Take Profit Level 2 (+15%)", "qty": pos["qty"]})
+        # Take Profit Level 2
+        elif profit_pct >= TP2_PCT:
+            actions.append({"symbol": sym, "action": "SELL", "reason": f"Take Profit Level 2 (+{TP2_PCT*100:.0f}%)", "qty": pos["qty"]})
             portfolio["cash"] += pos["qty"] * current_p
             del portfolio["positions"][sym]
             
-        # Take Profit Level 1: +10% → sell half
-        elif profit_pct >= 0.10 and not pos.get("tp_level_1_hit"):
+        # Take Profit Level 1
+        elif profit_pct >= TP1_PCT and not pos.get("tp_level_1_hit"):
             sell_qty = pos["qty"] // 2
             if sell_qty > 0:
-                actions.append({"symbol": sym, "action": "SELL_HALF", "reason": "Take Profit Level 1 (+10%)", "qty": sell_qty})
+                actions.append({"symbol": sym, "action": "SELL_HALF", "reason": f"Take Profit Level 1 (+{TP1_PCT*100:.0f}%)", "qty": sell_qty})
                 portfolio["positions"][sym]["qty"] -= sell_qty
                 portfolio["positions"][sym]["tp_level_1_hit"] = True
                 portfolio["cash"] += sell_qty * current_p
@@ -141,22 +149,22 @@ def execute_logic(scored_data, classification, current_prices, primary="HHV", ca
             actions.append({"symbol": primary, "action": "ROTATE_TO_ALPHA", "target": alpha_sym, "reason": f"Alpha Swap: {alpha_sym} score {alpha_score:.1f} > {primary} score {primary_score:.1f}"})
 
     # ===== BUY Rules with Cash Reserve Enforcement =====
-    min_cash_reserve = capital * 0.20  # Always keep 20% cash
+    min_cash_reserve = capital * MIN_CASH_RESERVE_PCT
     
     buy_candidates = []
-    if primary not in portfolio["positions"] and not primary_weak and primary_score >= 3.8:
+    if primary not in portfolio["positions"] and not primary_weak and primary_score >= MIN_SCORE_BUY:
         buy_candidates.append(primary)
     if alpha_sym and alpha_sym not in portfolio["positions"]:
         alpha_s = scored_data.get(alpha_sym, {}).get("score", 0)
-        if alpha_s >= 3.8:
+        if alpha_s >= MIN_SCORE_BUY:
             buy_candidates.append(alpha_sym)
         
     for sym, cls in classification.items():
-        if cls == "SECONDARY" and scored_data.get(sym, {}).get("score", 0) >= 3.8:
+        if cls == "SECONDARY" and scored_data.get(sym, {}).get("score", 0) >= MIN_SCORE_BUY:
             if sym not in portfolio["positions"] and sym not in buy_candidates:
                 buy_candidates.append(sym)
                 
-    available_slots = 3 - len(portfolio["positions"])
+    available_slots = MAX_POSITIONS - len(portfolio["positions"])
     for sym in buy_candidates:
         if available_slots <= 0: break
         
@@ -168,9 +176,9 @@ def execute_logic(scored_data, classification, current_prices, primary="HHV", ca
         price = current_prices.get(sym)
         if price and price > 0:
             qty = int(invest_amount // (price * 1000)) * 1000 // int(price) if price < 100 else int(invest_amount // price)
-            # Round to lot size (100 shares for VN market)
-            qty = (qty // 100) * 100
-            if qty >= 100:
+            # Round to lot size
+            qty = (qty // LOT_SIZE) * LOT_SIZE
+            if qty >= LOT_SIZE:
                 actual_cost = qty * price
                 actions.append({
                     "symbol": sym, 

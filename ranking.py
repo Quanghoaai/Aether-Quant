@@ -1,3 +1,5 @@
+from constants import RANKING_WEIGHTS
+
 def rank_stocks(scored_data, primary="HHV", watchlist=None):
     """
     scored_data: dict of symbol -> score_dict
@@ -16,7 +18,9 @@ def rank_stocks(scored_data, primary="HHV", watchlist=None):
         rs_rank = s_data['RS_score']
         liquidity_score = s_data['Volume_Profile_score']
         
-        rank_score = (score * 0.45) + (rs_rank * 0.35) + (liquidity_score * 0.20)
+        rank_score = (score * RANKING_WEIGHTS['score'] + 
+                      rs_rank * RANKING_WEIGHTS['rs_rank'] + 
+                      liquidity_score * RANKING_WEIGHTS['liquidity'])
         s_data['rank_score'] = round(rank_score, 2)
         results[symbol] = s_data
     

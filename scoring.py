@@ -1,12 +1,27 @@
 import pandas as pd
 import numpy as np
+import logging
+
+from constants import SCORING_WEIGHTS
+
+logger = logging.getLogger(__name__)
+
+def _validate_df(df, min_len=1, required_cols=None):
+    """Validate dataframe has required columns and minimum length."""
+    if df is None or df.empty or len(df) < min_len:
+        return False
+    if required_cols:
+        return all(col in df.columns for col in required_cols)
+    return True
 
 # ===========================
 # FACTOR 1: Relative Strength (Multi-Timeframe)
 # ===========================
 def score_rs(stock_df, benchmark_df):
     """Multi-timeframe RS: 5D(20%) + 20D(50%) + 60D(30%)"""
-    if benchmark_df is None or benchmark_df.empty or len(stock_df) < 60:
+    if not _validate_df(stock_df, min_len=60, required_cols=['Close']):
+        return 2.5
+    if not _validate_df(benchmark_df, min_len=60, required_cols=['Close']):
         return 2.5
     
     def _rs_at_window(w):
@@ -35,7 +50,8 @@ def score_rs(stock_df, benchmark_df):
 # ===========================
 def score_price_action(stock_df):
     """Enhanced: MA alignment + Breakout + Pullback + Golden/Death Cross."""
-    if len(stock_df) < 50: return 2.5
+    if not _validate_df(stock_df, min_len=50, required_cols=['Close', 'MA20', 'MA50']):
+        return 2.5
     
     close = stock_df['Close'].iloc[-1]
     ma10 = stock_df['MA10'].iloc[-1] if 'MA10' in stock_df.columns else stock_df['MA20'].iloc[-1]
@@ -176,25 +192,18 @@ def score_sector_flow(stock_df):
 # COMPOSITE SCORING
 # ===========================
 def calculate_multi_factor_score(stock_df, benchmark_df):
-    weights = {
-        'RS': 0.30,
-        'Price_Action': 0.25,
-        'Volume_Profile': 0.20,
-        'Volatility': 0.10,
-        'Sector_Flow': 0.15
-    }
-    
+    """Calculate weighted multi-factor score."""
     s_rs = score_rs(stock_df, benchmark_df)
     s_pa = score_price_action(stock_df)
     s_vol = score_vol_profile(stock_df)
     s_vty = score_volatility(stock_df)
     s_sf = score_sector_flow(stock_df)
     
-    total_score = (s_rs * weights['RS'] +
-                   s_pa * weights['Price_Action'] +
-                   s_vol * weights['Volume_Profile'] +
-                   s_vty * weights['Volatility'] +
-                   s_sf * weights['Sector_Flow'])
+    total_score = (s_rs * SCORING_WEIGHTS['RS'] +
+                   s_pa * SCORING_WEIGHTS['Price_Action'] +
+                   s_vol * SCORING_WEIGHTS['Volume_Profile'] +
+                   s_vty * SCORING_WEIGHTS['Volatility'] +
+                   s_sf * SCORING_WEIGHTS['Sector_Flow'])
                    
     return {
         'score': round(total_score, 2),

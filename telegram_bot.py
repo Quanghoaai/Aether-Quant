@@ -55,7 +55,7 @@ def allowed_gai_family():
     return socket.AF_INET
 urllib3_cn.allowed_gai_family = allowed_gai_family
 
-load_dotenv()
+load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 
 CONFIG_FILE = "config.json"
 PORTFOLIO_FILE = "portfolio.json"

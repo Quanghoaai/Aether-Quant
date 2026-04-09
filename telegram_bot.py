@@ -416,7 +416,8 @@ def handle_command(text, chat_id, bot_token):
             " */confirm\\_sell MA SL [GIA]* - Xac nhan ban\n"
             " */set\\_capital SO* - Doi von\n"
             " */reset\\_capital SO* - Reset von & xoa vi the\n"
-            " */set\\_minscore SO* - Doi diem\n\n"
+            " */set\\_minscore SO* - Doi diem\n"
+            " */model <ten_model>* - Doi model AI phan tich\n\n"
             " *TUYEN BO TRACH NHIEM:*\n"
             " Day la phan tich tu du an ca nhan AI Trading. Xay dung boi AI Engineer, su dung Python + mo hinh du lieu. *Khong phai loi khuyen dau tu.* Ban chiu trach nhiem voi quyet dinh cua minh.\n"
         )
@@ -605,6 +606,16 @@ def handle_command(text, chat_id, bot_token):
         cfg["primary"] = new_primary
         save_user_config(chat_id, cfg)
         return f"Da doi ma chinh -> *{new_primary}*"
+
+    # /model
+    elif cmd == "/model":
+        if len(parts) < 2:
+            current_model = cfg.get("ai_model", "gemini-2.5-flash")
+            return f"Model hien tai: *{current_model}*\n\nDe doi model, dung `/model <ten_model>`\nVD: `/model gemini-2.0-flash-lite`\nDung `/gemini_debug` de xem danh sach model kha dung."
+        new_model = parts[1]
+        cfg["ai_model"] = new_model
+        save_user_config(chat_id, cfg)
+        return f"Da doi AI Model -> *{new_model}*"
 
     # /set_watchlist
     elif cmd == "/set_watchlist":

@@ -295,9 +295,6 @@ def get_gemini_client(chat_id: int):
     """Get or create Gemini client for a specific user."""
     chat_str = str(chat_id)
     
-    if chat_str in _user_clients:
-        return _user_clients[chat_str]
-    
     try:
         import google.generativeai as genai
         
@@ -319,8 +316,18 @@ def get_gemini_client(chat_id: int):
                 return None
             genai.configure(api_key=api_key)
         
-        # By default, we use 2.5-flash which has better quota on some preview accounts
+        # Resolve model from user configs
         model_name = 'gemini-2.5-flash'
+        config_path = "user_configs.json"
+        if os.path.exists(config_path):
+            try:
+                with open(config_path, "r") as f:
+                    cfg_data = json.load(f)
+                    if "users" in cfg_data and chat_str in cfg_data["users"]:
+                        model_name = cfg_data["users"][chat_str].get("ai_model", model_name)
+            except Exception:
+                pass
+                
         logger.info(f"Initializing Gemini model: {model_name} for chat {chat_id}")
         client = genai.GenerativeModel(model_name)
         _user_clients[chat_str] = client

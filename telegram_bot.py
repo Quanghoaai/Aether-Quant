@@ -402,7 +402,8 @@ def handle_command(text, chat_id, bot_token):
             " */run* - Chay phan tich ngay\n"
             " */watchlist* - Xem watchlist\n"
             " */info MA* - Xem thong tin cong ty\n"
-            " */gemini* - Dang nhap Google AI\n"
+            " */gemini* - Ket noi Gemini AI\n"
+            " */gemini_auth <1|2|3>* - Chon auth method\n"
             " */ask <cau hoi>* - Hoi AI\n"
             " */add MA1,MA2* - Them ma\n"
             " */remove MA1,MA2* - Xoa ma\n"
@@ -719,19 +720,56 @@ def handle_command(text, chat_id, bot_token):
             api_url = get_api_key_url()
             
             msg = " *KET NOI GEMINI AI*\n\n"
-            msg += "*Select Auth Method:*\n"
-            msg += "1. Login with Google\n"
-            msg += "2. Gemini API Key (AI Studio)\n\n"
-            msg += f"[1. Login with Google]({api_url})\n"
-            msg += f"[2. Gemini API Key]({api_url})\n\n"
+            msg += f" Bam day de dang nhap & lay API key: [Google AI Studio]({api_url})\n"
+            msg += "_(Neu chua co thi chon menu duoi day de tao moi)_\n\n"
+            msg += "? *Select Auth Method:*\n"
+            msg += " Use `/gemini_auth 1` - Login with Google (OAuth2)\n"
+            msg += " Use `/gemini_auth 2` - Gemini API Key (Google AI Studio)\n"
+            msg += " Use `/gemini_auth 3` - Vertex AI (Google Cloud Project)\n\n"
+            msg += "_Terms of Services and Privacy Notice for Gemini_"
+            return msg
+
+    # /gemini_auth - Select auth method (CLI-style)
+    elif cmd == "/gemini_auth":
+        if len(parts) < 2:
+            return "Cu phap: `/gemini_auth <so>`\n\n1 - Login with Google (OAuth2)\n2 - Gemini API Key\n3 - Vertex AI"
+        
+        choice = parts[1]
+        api_url = get_api_key_url()
+        
+        if choice == "1":
+            msg = " *DA CHON: Login with Google (OAuth2)*\n\n"
+            msg += f"[Bam day de dang nhap Google]({api_url})\n\n"
+            msg += "Sau khi dang nhap:\n"
+            msg += "1. Chap nhan quyen truy cap\n"
+            msg += "2. Copy API key hien tren man hinh\n"
+            msg += "3. Gui: `/gemini_key AIza...`\n\n"
+            msg += "_Luu y: OAuth2 yeu cau Admin cau hinh GOOGLE_CLIENT_ID/SECRET_"
+            return msg
+        
+        elif choice == "2":
+            msg = " *DA CHON: Gemini API Key (Google AI Studio)*\n\n"
+            msg += f"[Bam day de tao/lay API key]({api_url})\n\n"
             msg += "Huong dan:\n"
-            msg += "1. Dang nhap Google (bam link tren)\n"
-            msg += "2. Chon 'Gemini API Key (AI Studio)'\n"
-            msg += "3. Lay API key (neu chua co thi tao moi)\n"
-            msg += "4. Copy API key (bat dau bang AIza...)\n"
-            msg += "5. Gui vao day: `/gemini_key AIza...`\n\n"
+            msg += "1. Dang nhap Google\n"
+            msg += "2. Bam 'Create API Key' hoac copy key co san\n"
+            msg += "3. Copy API key (bat dau bang AIza...)\n"
+            msg += "4. Gui: `/gemini_key AIza...`\n\n"
             msg += "_Mien phi, dung ca nhan._"
             return msg
+        
+        elif choice == "3":
+            msg = " *DA CHON: Vertex AI (Google Cloud Project)*\n\n"
+            msg += "Yeu cau:\n"
+            msg += "1. Co Google Cloud Project\n"
+            msg += "2. Enable Vertex AI API\n"
+            msg += "3. Tao Service Account & lay credentials JSON\n\n"
+            msg += "Hien tai chua ho tro tu dong. Vui long dung cach 2.\n\n"
+            msg += "Neu ban la Admin, them `GOOGLE_APPLICATION_CREDENTIALS` vao .env"
+            return msg
+        
+        else:
+            return "Lua chon khong hop le. Dung 1, 2 hoac 3."
 
     # /gemini_code - Exchange OAuth code (Mode 1 only)
     elif cmd == "/gemini_code":

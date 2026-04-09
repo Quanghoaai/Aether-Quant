@@ -38,8 +38,8 @@ def _get_google_client_secret() -> str:
 GEMINI_API_URL = "https://aistudio.google.com/app/apikey"
 GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
-# Using 'urn:ietf:wg:oauth:2.0:oob' to display the code on screen instead of redirecting to localhost
-GOOGLE_REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob"
+# Using 'https://localhost' as redirect_uri (standard for CLI/Bots to avoid OOB deprecation block)
+GOOGLE_REDIRECT_URI = "https://localhost"
 
 # Pending OAuth states
 _pending_oauth: Dict[str, int] = {}

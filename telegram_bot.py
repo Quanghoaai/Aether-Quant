@@ -49,12 +49,55 @@ load_dotenv()
 CONFIG_FILE = "config.json"
 PORTFOLIO_FILE = "portfolio.json"
 USER_CONFIG_FILE = "user_configs.json"
+TRANSACTIONS_FILE = "transactions.json"
 DEFAULT_CAPITAL = 50000000  # 50 million VND default for new users
 DEFAULT_CONFIG = {
     "primary": "HHV",
     "watchlist": ["TOS", "NKG", "AAS"],
     "min_score": 3.8
 }
+
+def load_all_transactions():
+    """Load all transactions from file."""
+    if os.path.exists(TRANSACTIONS_FILE):
+        with open(TRANSACTIONS_FILE, "r") as f:
+            data = json.load(f)
+        if "users" not in data:
+            return {"users": {}}
+        return data
+    return {"users": {}}
+
+def save_all_transactions(data):
+    """Save all transactions to file."""
+    with open(TRANSACTIONS_FILE, "w") as f:
+        json.dump(data, f, indent=4, ensure_ascii=False)
+
+def log_transaction(chat_id: int, trans_type: str, symbol: str, qty: int, price: float, note: str = ""):
+    """Log a transaction for a user."""
+    data = load_all_transactions()
+    chat_str = str(chat_id)
+
+    if chat_str not in data["users"]:
+        data["users"][chat_str] = []
+
+    trans = {
+        "type": trans_type,  # "BUY" or "SELL"
+        "symbol": symbol,
+        "qty": qty,
+        "price": price,
+        "total": qty * price,
+        "note": note,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+    data["users"][chat_str].append(trans)
+    save_all_transactions(data)
+
+def get_user_transactions(chat_id: int, limit: int = 20):
+    """Get transactions for a user."""
+    data = load_all_transactions()
+    chat_str = str(chat_id)
+    transactions = data["users"].get(chat_str, [])
+    return transactions[-limit:] if transactions else []
 
 def load_global_config():
     """Load global config (for backward compatibility)."""
@@ -191,14 +234,14 @@ def main():
         {"command": "status", "description": "Xem cấu hình hiện tại"},
         {"command": "run", "description": "Chạy phân tích ngay lập tức"},
         {"command": "portfolio", "description": "Xem danh mục đầu tư"},
-        {"command": "set_primary", "description": "Đổi mã chính (VD: /set_primary HHV)"},
-        {"command": "watchlist", "description": "Xem watchlist hien tai"},
-        {"command": "set_watchlist", "description": "Đổi watchlist (VD: /set_watchlist TOS,NKG,AAS)"},
+        {"command": "history", "description": "Xem lịch sử giao dịch"},
+        {"command": "watchlist", "description": "Xem watchlist hiện tại"},
         {"command": "add", "description": "Thêm mã vào watchlist (VD: /add FPT)"},
         {"command": "remove", "description": "Xóa mã khỏi watchlist (VD: /remove NKG)"},
         {"command": "confirm_buy", "description": "Xác nhận mua (VD: /confirm_buy TCB 1000 25500)"},
         {"command": "confirm_sell", "description": "Xác nhận bán (VD: /confirm_sell TCB 500)"},
         {"command": "set_capital", "description": "Đổi vốn (VD: /set_capital 100000000)"},
+        {"command": "reset_capital", "description": "Reset vốn và xóa vị thế"},
         {"command": "set_minscore", "description": "Đổi điểm (VD: /set_minscore 3.5)"},
         {"command": "update", "description": "Admin: Cập nhật bot từ GitHub"},
         {"command": "help", "description": "Xem hướng dẫn sử dụng"}
@@ -345,13 +388,15 @@ def handle_command(text, chat_id, bot_token):
             "*TRADING:*\n"
             " */status* - Xem cau hinh\n"
             " */portfolio* - Xem danh muc & PnL\n"
+            " */history* - Xem lich su giao dich\n"
             " */run* - Chay phan tich ngay\n"
-            " */set\\_primary MA* - Doi ma chinh\n"
-            " */set\\_watchlist MA1,MA2* - Doi watchlist\n"
-            " */add MA* / */remove MA* - Them/Xoa ma\n"
-            " */confirm\\_buy MA SO\\_CP GIA* - Xac nhan mua\n"
-            " */confirm\\_sell MA SO\\_CP* - Xac nhan ban\n"
+            " */watchlist* - Xem watchlist\n"
+            " */add MA1,MA2* - Them ma\n"
+            " */remove MA1,MA2* - Xoa ma\n"
+            " */confirm\\_buy MA SL GIA* - Xac nhan mua\n"
+            " */confirm\\_sell MA SL [GIA]* - Xac nhan ban\n"
             " */set\\_capital SO* - Doi von\n"
+            " */reset\\_capital SO* - Reset von & xoa vi the\n"
             " */set\\_minscore SO* - Doi diem\n\n"
             " *TUYEN BO TRACH NHIEM:*\n"
             " Phan tich tu du an AI Trading ca nhan. Su dung Python + VNStock API. *Khong phai loi khuyen dau tu.*\n"
@@ -458,12 +503,15 @@ def handle_command(text, chat_id, bot_token):
         
         pf['cash'] -= cost
         save_user_portfolio(chat_id, pf)
-        
+
+        # Log transaction
+        log_transaction(chat_id, "BUY", sym, qty, price, f"Mua {qty} cp @ {price:,.0f}")
+
         return (
-            f" DA MUA {sym}\n"
+            f"✅ ĐÃ MUA {sym}\n"
             f"KL: {qty:,} cp @ {price:,.0f}\n"
-            f"Chi phi: {cost:,.0f} VND\n"
-            f"Tien mat con: {pf['cash']:,.0f} VND"
+            f"Chi phí: {cost:,.0f} VND\n"
+            f"Tiền mặt còn: {pf['cash']:,.0f} VND"
         )
     
     # /confirm_sell SYMBOL QTY
@@ -498,24 +546,27 @@ def handle_command(text, chat_id, bot_token):
         
         pf['cash'] += revenue
         save_user_portfolio(chat_id, pf)
-        
+
+        # Log transaction
+        log_transaction(chat_id, "SELL", sym, qty, sell_price, f"Bán {qty} cp @ {sell_price:,.0f}, PnL: {pnl:+,.0f}")
+
         return (
-            f" DA BAN {sym}\n"
+            f"✅ ĐÃ BÁN {sym}\n"
             f"KL: {qty:,} cp @ {sell_price:,.0f}\n"
-            f"Thu ve: {revenue:,.0f} VND\n"
+            f"Thu về: {revenue:,.0f} VND\n"
             f"PnL: {pnl:+,.0f} VND\n"
-            f"Tien mat: {pf['cash']:,.0f} VND"
+            f"Tiền mặt: {pf['cash']:,.0f} VND"
         )
-    
+
     # /set_primary
     elif cmd == "/set_primary":
         if len(parts) < 2:
-            return " Thiếu mã. VD: `/set_primary HHV`"
+            return "Thieu ma. VD: `/set_primary HHV`"
         new_primary = parts[1].upper()
         cfg["primary"] = new_primary
         save_user_config(chat_id, cfg)
-        return f" Đã đổi mã chính → *{new_primary}*"
-    
+        return f"Da doi ma chinh -> *{new_primary}*"
+
     # /set_watchlist
     elif cmd == "/set_watchlist":
         if len(parts) < 2:
@@ -634,7 +685,102 @@ def handle_command(text, chat_id, bot_token):
             return f"✅ Đã đổi Min Score → *{ms}*"
         except ValueError:
             return "⚠️ Số điểm không hợp lệ."
-    
+
+    # /history - View transaction history
+    elif cmd == "/history":
+        transactions = get_user_transactions(chat_id, limit=15)
+
+        if not transactions:
+            return "Chua co giao dich nao.\n\nDung `/confirm_buy MA SL GIA` de ghi nhan mua."
+
+        msg = "*LICH SU GIAO DICH*\n"
+        msg += "-------------------\n\n"
+
+        total_buy = 0
+        total_sell = 0
+
+        for t in transactions:
+            icon = "???" if t['type'] == 'BUY' else "???"
+            msg += f"{icon} *{t['symbol']}*\n"
+            msg += f"  {t['type']}: {t['qty']:,} cp @ {t['price']:,.0f}\n"
+            msg += f"  Thanh tien: {t['total']:,.0f} VND\n"
+            msg += f"  Thoi gian: {t['timestamp']}\n\n"
+
+            if t['type'] == 'BUY':
+                total_buy += t['total']
+            else:
+                total_sell += t['total']
+
+        msg += f"??? Tong mua: *{total_buy:,.0f}* VND\n"
+        msg += f"??? Tong ban: *{total_sell:,.0f}* VND\n"
+        msg += f"??? Chenh lech: *{total_sell - total_buy:+,.0f}* VND"
+
+        return msg
+
+    # /reset_capital - Reset capital (clear all positions)
+    elif cmd == "/reset_capital":
+        if len(parts) < 2:
+            return "Cu phap: `/reset_capital SO_VON_MOI`\n\nVD: `/reset_capital 100000000`\n\n??? *CANH BAO:* Lenh nay se xoa toan bo vi the hien tai!"
+
+        try:
+            new_capital = int(parts[1])
+        except ValueError:
+            return "So von khong hop le."
+
+        pf = get_user_portfolio(chat_id)
+
+        # Check if needs confirm
+        if len(parts) < 3 or parts[2].lower() != "confirm":
+            if pf['positions']:
+                old_pnl = pf['cash'] - pf.get('capital', DEFAULT_CAPITAL)
+                msg = "??? *CANH BAO: BAN CO VI THE!*\n\n"
+                msg += f"So vi the: {len(pf['positions'])}\n"
+                msg += f"Tien mat hien tai: {pf['cash']:,.0f} VND\n"
+                msg += f"PnL hien tai: {old_pnl:+,.0f} VND\n\n"
+                msg += f"De xac nhan reset, dung:\n`/reset_capital {new_capital} confirm`"
+                return msg
+
+        # Reset portfolio
+        pf['capital'] = new_capital
+        pf['cash'] = new_capital
+        pf['positions'] = {}
+        save_user_portfolio(chat_id, pf)
+
+        return f"??? Da reset von!\n\nVon moi: *{new_capital:,.0f}* VND\nTien mat: *{new_capital:,.0f}* VND\nChua co vi the."
+
+    # /user_history - Admin: view user's transaction history
+    elif cmd == "/user_history":
+        admin_chat_id = os.environ.get("ADMIN_CHAT_ID", "")
+        if str(chat_id) != str(admin_chat_id):
+            return "Ban khong co quyen su dung lenh nay."
+
+        if len(parts) < 2:
+            return "Cu phap: `/user_history <chat_id>`\n\nVD: `/user_history 5529264160`"
+
+        try:
+            target_chat_id = int(parts[1])
+        except ValueError:
+            return "Chat ID khong hop le."
+
+        transactions = get_user_transactions(target_chat_id, limit=20)
+        pf = get_user_portfolio(target_chat_id)
+
+        if not transactions:
+            return f"User `{target_chat_id}` chua co giao dich nao."
+
+        msg = f"??? *LICH SU USER `{target_chat_id}`*\n"
+        msg += "-------------------------\n\n"
+
+        for t in transactions[-10:]:
+            icon = "???" if t['type'] == 'BUY' else "???"
+            msg += f"{icon} {t['symbol']}: {t['qty']:,} @ {t['price']:,.0f}\n"
+            msg += f"   {t['timestamp']}\n"
+
+        msg += f"\n??? Tien mat: {pf['cash']:,.0f} VND\n"
+        msg += f"??? Vi the: {len(pf['positions'])} ma"
+
+        return msg
+
     # /plans - View subscription plans
     elif cmd == "/plans":
         return format_plans_message()

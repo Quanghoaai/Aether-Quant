@@ -1,5 +1,6 @@
 """
 Gemini AI Integration for Aether-Quant Bot.
+Uses per-user API key stored in gemini_keys.json
 """
 import os
 import json
@@ -8,100 +9,92 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-# Cache for Gemini client
-_gemini_client = None
-_user_api_keys = {}  # Cache user-specific API keys
+GEMINI_KEYS_FILE = "gemini_keys.json"
+GEMINI_LOGIN_URL = "https://aistudio.google.com/app/apikey"
 
-GEMINI_API_URL = "https://makersuite.google.com/app/apikey"
+# Per-user client cache
+_user_clients = {}
 
-def load_user_api_keys():
-    """Load user API keys from file."""
-    try:
-        if os.path.exists("gemini_keys.json"):
-            with open("gemini_keys.json", "r") as f:
-                return json.load(f)
-    except:
-        pass
+def load_gemini_keys() -> dict:
+    """Load all Gemini API keys from file."""
+    if os.path.exists(GEMINI_KEYS_FILE):
+        with open(GEMINI_KEYS_FILE, "r") as f:
+            return json.load(f)
     return {}
 
-def save_user_api_keys(keys):
-    """Save user API keys to file."""
+def save_gemini_keys(data: dict):
+    """Save Gemini API keys to file."""
+    with open(GEMINI_KEYS_FILE, "w") as f:
+        json.dump(data, f, indent=2)
+
+def get_user_gemini_key(chat_id: int) -> Optional[str]:
+    """Get Gemini API key for a user."""
+    keys = load_gemini_keys()
+    return keys.get(str(chat_id), {}).get("api_key")
+
+def set_user_gemini_key(chat_id: int, api_key: str) -> bool:
+    """Save Gemini API key for a user."""
     try:
-        with open("gemini_keys.json", "w") as f:
-            json.dump(keys, f, indent=2)
+        keys = load_gemini_keys()
+        keys[str(chat_id)] = {"api_key": api_key, "active": True}
+        save_gemini_keys(keys)
+        # Clear cached client
+        if str(chat_id) in _user_clients:
+            del _user_clients[str(chat_id)]
+        return True
     except Exception as e:
-        logger.error(f"Failed to save API keys: {e}")
+        logger.error(f"Failed to save Gemini key: {e}")
+        return False
 
-def set_user_api_key(chat_id: str, api_key: str) -> bool:
-    """Set API key for a specific user."""
-    keys = load_user_api_keys()
-    keys[str(chat_id)] = api_key
-    save_user_api_keys(keys)
-    # Clear cached client for this user
-    global _gemini_client
-    _gemini_client = None
-    return True
-
-def get_user_api_key(chat_id: str) -> Optional[str]:
-    """Get API key for a specific user."""
-    # Check user-specific key first
-    keys = load_user_api_keys()
+def get_gemini_client(chat_id: int):
+    """Get or create Gemini client for a specific user."""
     chat_str = str(chat_id)
-    if chat_str in keys:
-        return keys[chat_str]
-    # Fall back to global env var
-    return os.environ.get("GEMINI_API_KEY", "")
-
-def get_gemini_client(chat_id: str = None):
-    """Get or create Gemini client."""
-    global _gemini_client
     
-    api_key = get_user_api_key(chat_id) if chat_id else os.environ.get("GEMINI_API_KEY", "")
+    if chat_str in _user_clients:
+        return _user_clients[chat_str]
     
+    api_key = get_user_gemini_key(chat_id)
     if not api_key:
         return None
     
     try:
         import google.generativeai as genai
         genai.configure(api_key=api_key)
-        _gemini_client = genai.GenerativeModel('gemini-1.5-flash')
-        return _gemini_client
+        client = genai.GenerativeModel('gemini-1.5-flash')
+        _user_clients[chat_str] = client
+        return client
     except ImportError:
-        logger.error("google-generativeai not installed. Run: pip install google-generativeai")
+        logger.error("google-generativeai not installed")
         return None
     except Exception as e:
-        logger.error(f"Failed to initialize Gemini: {e}")
+        logger.error(f"Failed to init Gemini: {e}")
         return None
 
+def has_gemini_key(chat_id: int) -> bool:
+    """Check if user has configured Gemini API key."""
+    return get_user_gemini_key(chat_id) is not None
 
-def ask_gemini(question: str, chat_id: str = None, context: Optional[str] = None) -> str:
+def get_login_link() -> str:
+    """Get Google AI Studio login link."""
+    return GEMINI_LOGIN_URL
+
+def ask_gemini(question: str, chat_id: int, context: Optional[str] = None) -> str:
     """
-    Ask Gemini a question and return the response.
-    
-    Args:
-        question: User's question
-        chat_id: User's chat ID for per-user API key
-        context: Optional context (e.g., market data, portfolio info)
-    
-    Returns:
-        Gemini's response or error message
+    Ask Gemini a question for a specific user.
     """
     client = get_gemini_client(chat_id)
     if not client:
-        return f"Chua cau hinh Gemini API Key.\n\nLay API key tai: {GEMINI_API_URL}\n\nDung `/setgemini <api_key>` de nhap key."
+        return "NEED_LOGIN"
     
-    # Build prompt with context
-    system_prompt = """Ban la AI Assistant cua Aether-Quant - mot he thong phan tich chung khoan Viet Nam.
-    
+    system_prompt = """Ban la AI Assistant cua Aether-Quant - he thong phan tich chung khoan Viet Nam.
+
 Nhiem vu:
 - Tra loi cau hoi ve dau tu, chung khoan, phan tich ky thuat
 - Giai thich cac chi bao: RSI, MACD, MA, ATR, BB...
 - Tu van ve quan ly rui ro, danh muc dau tu
-- Phan tich xu huong thi truong
 
 Quy tac:
 - Tra loi ngan gon, de hieu (duoi 500 tu)
-- Neu khong chac, noi "Toi khong chac ve dieu nay"
 - Luon nhan manh: Day la thong tin tham khao, khong phai loi khuyen dau tu
 - Su dung tieng Viet"""
 
@@ -115,30 +108,17 @@ Quy tac:
         return response.text.strip()
     except Exception as e:
         logger.error(f"Gemini API error: {e}")
-        return f"Loi ket noi AI: {str(e)[:100]}"
+        return f"Loi AI: {str(e)[:100]}"
 
-
-def analyze_stock_with_gemini(symbol: str, score_data: dict, price: float, chat_id: str = None) -> str:
-    """
-    Get AI analysis for a specific stock.
-    """
+def analyze_stock_with_gemini(symbol: str, score_data: dict, price: float, chat_id: int) -> str:
+    """Get AI analysis for a specific stock."""
     context = f"""
 Ma chung khoan: {symbol}
 Gia hien tai: {price:,.0f} VND
 Diem tong: {score_data.get('score', 0):.2f}/5.0
-- RS (Relative Strength): {score_data.get('RS_score', 0):.1f}
+- RS: {score_data.get('RS_score', 0):.1f}
 - Price Action: {score_data.get('Price_Action_score', 0):.1f}
-- Volume: {score_data.get('Volume_Profile_score', 0):.1f}
-- Volatility: {score_data.get('Volatility_score', 0):.1f}
-- Sector Flow: {score_data.get('Sector_Flow_score', 0):.1f}
-"""
+- Volume: {score_data.get('Volume_Profile_score', 0):.1f}"""
     
-    question = f"Phan tich ngan gon {symbol}: nen mua hay cho? Vi sao?"
-    return ask_gemini(question, chat_id=chat_id, context=context)
-
-
-if __name__ == "__main__":
-    # Test
-    print("Testing Gemini...")
-    response = ask_gemini("RSI la gi? Khi nao nen mua?")
-    print(response)
+    question = f"Phan tich ngan gon {symbol}: nen mua hay cho?"
+    return ask_gemini(question, chat_id, context)

@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 from company_info import get_company_info, format_company_info, get_company_name
 
 # Gemini AI
-from gemini import ask_gemini, set_user_api_key, GEMINI_API_URL
+from gemini import ask_gemini, has_gemini_key, set_user_gemini_key, get_login_link
 
 # Subscription system
 from subscription import (
@@ -398,8 +398,8 @@ def handle_command(text, chat_id, bot_token):
             " */run* - Chay phan tich ngay\n"
             " */watchlist* - Xem watchlist\n"
             " */info MA* - Xem thong tin cong ty\n"
-            " */ask <cau hoi>* - Hoi AI Gemini\n"
-            " */setgemini <api_key>* - Cau hinh Gemini API\n"
+            " */gemini* - Ket noi AI Gemini\n"
+            " */ask <cau hoi>* - Hoi AI\n"
             " */add MA1,MA2* - Them ma\n"
             " */remove MA1,MA2* - Xoa ma\n"
             " */confirm\\_buy MA SL GIA* - Xac nhan mua\n"
@@ -660,34 +660,59 @@ def handle_command(text, chat_id, bot_token):
     # /ask - Ask Gemini AI
     elif cmd == "/ask":
         if len(parts) < 2:
-            return "Cu phap: `/ask <cau hoi>`\n\nVD: `/ask RSI la gi?`\nVD: `/ask Khi nao nen ban TCB?`"
+            return "Cu phap: `/ask <cau hoi>`\n\nVD: `/ask RSI la gi?`"
+        
+        # Check if user has Gemini key
+        if not has_gemini_key(chat_id):
+            msg = " *BAN CHUA KET NOI GEMINI AI*\n\n"
+            msg += "1. Bam link de lay API key:\n"
+            msg += f"[Google AI Studio]({get_login_link()})\n\n"
+            msg += "2. Tao API key moi\n"
+            msg += "3. Dung `/gemini_key <api_key>` de luu\n\n"
+            msg += "VD: `/gemini_key AIzaSy...`"
+            return msg
         
         question = " ".join(parts[1:])
         
-        # Check subscription
-        if not has_active_subscription(chat_id):
-            return "Ban can dang ky de su dung tinh nang AI.\n\nDung `/plans` de xem cac goi."
-        
         # Show typing indicator
-        msg = " *Dang suy nghi...*"
-        send_msg(bot_token, chat_id, msg)
+        send_msg(bot_token, chat_id, " *Dang suy nghi...*")
         
-        # Get AI response with user's chat_id
-        response = ask_gemini(question, chat_id=str(chat_id))
+        # Get AI response
+        response = ask_gemini(question, chat_id)
+        
+        if response == "NEED_LOGIN":
+            return "Loi ket noi. Vui long kiem tra lai API key.\n\nDung `/gemini` de lay link moi."
         
         return f" *AI PHAN TICH*\n-------------------\n\n{response}\n\n_ *Luu y: Day la thong tin tham khao, khong phai loi khuyen dau tu.*_"
-    
-    # /setgemini - Set user's Gemini API key
-    elif cmd == "/setgemini":
+
+    # /gemini - Get Gemini login link
+    elif cmd == "/gemini":
+        msg = " *KET NOI GEMINI AI*\n\n"
+        msg += "1. Bam link de lay API key:\n"
+        msg += f"[Google AI Studio]({get_login_link()})\n\n"
+        msg += "2. Dang nhap Google\n"
+        msg += "3. Tao API key moi (Create API Key)\n"
+        msg += "4. Copy API key\n"
+        msg += "5. Dung `/gemini_key <api_key>` de luu\n\n"
+        msg += "VD: `/gemini_key AIzaSyC...`\n\n"
+        msg += "_API key duoc luu rieng cho ban, khong chia se voi nguoi khac._"
+        return msg
+
+    # /gemini_key - Save Gemini API key
+    elif cmd == "/gemini_key":
         if len(parts) < 2:
-            return f"Lay API key tai: {GEMINI_API_URL}\n\nCu phap: `/setgemini <api_key>`\n\nVD: `/setgemini AIzaSy...`"
+            return "Cu phap: `/gemini_key <api_key>`\n\nVD: `/gemini_key AIzaSyC...`"
         
         api_key = parts[1].strip()
-        if len(api_key) < 10:
-            return "API key khong hop le."
         
-        set_user_api_key(str(chat_id), api_key)
-        return "Da luu Gemini API Key!\n\nDung `/ask <cau hoi>` de bat dau hoi AI."
+        # Validate key format (starts with AIza)
+        if not api_key.startswith("AIza"):
+            return "API key khong hop le. Key phai bat dau bang 'AIza'"
+        
+        if set_user_gemini_key(chat_id, api_key):
+            return " *KET NOI GEMINI THANH CONG!*\n\nBan co the dung `/ask` de hoi AI.\n\nVD: `/ask RSI la gi?`"
+        else:
+            return "Loi luu API key. Vui long thu lai."
 
     # /add - Add one or multiple symbols
     elif cmd == "/add":

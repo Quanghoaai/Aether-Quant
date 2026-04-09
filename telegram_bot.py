@@ -720,8 +720,6 @@ def handle_command(text, chat_id, bot_token):
             api_url = get_api_key_url()
             
             msg = " *KET NOI GEMINI AI*\n\n"
-            msg += f" Bam day de dang nhap & lay API key: [Google AI Studio]({api_url})\n"
-            msg += "_(Neu chua co thi chon menu duoi day de tao moi)_\n\n"
             msg += "? *Select Auth Method:*\n"
             msg += " Use `/gemini_auth 1` - Login with Google (OAuth2)\n"
             msg += " Use `/gemini_auth 2` - Gemini API Key (Google AI Studio)\n"
@@ -738,13 +736,29 @@ def handle_command(text, chat_id, bot_token):
         api_url = get_api_key_url()
         
         if choice == "1":
-            msg = " *DA CHON: Login with Google (OAuth2)*\n\n"
-            msg += f"[Bam day de dang nhap Google]({api_url})\n\n"
-            msg += "Sau khi dang nhap:\n"
-            msg += "1. Chap nhan quyen truy cap\n"
-            msg += "2. Copy API key hien tren man hinh\n"
-            msg += "3. Gui: `/gemini_key AIza...`\n\n"
-            msg += "_Luu y: OAuth2 yeu cau Admin cau hinh GOOGLE_CLIENT_ID/SECRET_"
+            # Check if OAuth is configured
+            if is_oauth_mode():
+                auth_url = get_oauth_login_url(chat_id)
+                msg = " *DA CHON: Login with Google (OAuth2)*\n\n"
+                msg += f"[Bam day de Sign in with Google]({auth_url})\n\n"
+                msg += "Gemini CLI se mo trinh duyet de dang nhap.\n"
+                msg += "Lam theo huong dan tren man hinh.\n"
+                msg += "Credentials se duoc cache local cho cac phien sau.\n\n"
+                msg += "Sau khi dang nhap:\n"
+                msg += "1. Copy ma xac thuc hien tren man hinh\n"
+                msg += "2. Gui: `/gemini_code <ma>`\n\n"
+                msg += "_Admin da cau hinh OAuth._"
+            else:
+                msg = " *LOGIN WITH GOOGLE (OAuth2)*\n\n"
+                msg += "Che do OAuth chua duoc Admin cau hinh.\n\n"
+                msg += "Admin can them vao .env:\n"
+                msg += "```\n"
+                msg += "GOOGLE_CLIENT_ID=xxx.apps.googleusercontent.com\n"
+                msg += "GOOGLE_CLIENT_SECRET=GOCSPX-xxx\n"
+                msg += "```\n\n"
+                msg += "Tam thoi, dung cach 2:\n"
+                msg += f"[Gemini API Key]({api_url})\n\n"
+                msg += "Gui: `/gemini_key AIza...`"
             return msg
         
         elif choice == "2":

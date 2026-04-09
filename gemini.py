@@ -9,14 +9,17 @@ import json
 import logging
 import secrets
 import urllib.parse
+import re
 from typing import Optional, Dict, Any
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
+_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 # Files
-GEMINI_KEYS_FILE = "gemini_keys.json"
-GEMINI_TOKENS_FILE = "gemini_tokens.json"
+GEMINI_KEYS_FILE = os.path.join(_BASE_DIR, "gemini_keys.json")
+GEMINI_TOKENS_FILE = os.path.join(_BASE_DIR, "gemini_tokens.json")
 
 # OAuth Config (Mode 1 - Admin configured)
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
@@ -34,10 +37,26 @@ _pending_oauth: Dict[str, int] = {}
 # Per-user client cache
 _user_clients: Dict[str, Any] = {}
 
+# Per-user last error
+_last_error: Dict[str, str] = {}
+
 
 def is_oauth_mode() -> bool:
     """Check if OAuth mode is configured by admin."""
     return bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
+
+
+def _set_last_error(chat_id: int, code: str):
+    _last_error[str(chat_id)] = code
+
+
+def get_last_error(chat_id: int) -> str:
+    return _last_error.get(str(chat_id), "")
+
+
+def is_valid_gemini_api_key(api_key: str) -> bool:
+    # Google API keys typically start with 'AIza' and are URL-safe.
+    return bool(re.match(r"^AIza[0-9A-Za-z\-_]{20,}$", api_key or ""))
 
 
 # ==================== API KEY MODE ====================
@@ -45,14 +64,14 @@ def is_oauth_mode() -> bool:
 def load_gemini_keys() -> dict:
     """Load all Gemini API keys from file."""
     if os.path.exists(GEMINI_KEYS_FILE):
-        with open(GEMINI_KEYS_FILE, "r") as f:
+        with open(GEMINI_KEYS_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
     return {}
 
 
 def save_gemini_keys(data: dict):
     """Save Gemini API keys to file."""
-    with open(GEMINI_KEYS_FILE, "w") as f:
+    with open(GEMINI_KEYS_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
 
 
@@ -96,14 +115,14 @@ def revoke_gemini_key(chat_id: int) -> bool:
 def load_gemini_tokens() -> dict:
     """Load all Gemini OAuth tokens from file."""
     if os.path.exists(GEMINI_TOKENS_FILE):
-        with open(GEMINI_TOKENS_FILE, "r") as f:
+        with open(GEMINI_TOKENS_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
     return {}
 
 
 def save_gemini_tokens(data: dict):
     """Save Gemini OAuth tokens to file."""
-    with open(GEMINI_TOKENS_FILE, "w") as f:
+    with open(GEMINI_TOKENS_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
 
 
@@ -273,23 +292,31 @@ def get_gemini_client(chat_id: int):
             # OAuth mode - use access token
             access_token = get_valid_access_token(chat_id)
             if not access_token:
+                _set_last_error(chat_id, "AUTH_REQUIRED")
                 return None
             genai.configure(credentials=access_token)
         else:
             # API Key mode - use user's API key
             api_key = get_user_gemini_key(chat_id)
             if not api_key:
+                _set_last_error(chat_id, "NO_KEY")
+                return None
+            if not is_valid_gemini_api_key(api_key):
+                _set_last_error(chat_id, "API_KEY_INVALID")
                 return None
             genai.configure(api_key=api_key)
         
         client = genai.GenerativeModel('gemini-1.5-flash')
         _user_clients[chat_str] = client
+        _set_last_error(chat_id, "")
         return client
     except ImportError:
         logger.error("google-generativeai not installed")
+        _set_last_error(chat_id, "MISSING_LIB")
         return None
     except Exception as e:
         logger.error(f"Failed to init Gemini: {e}")
+        _set_last_error(chat_id, "INIT_FAILED")
         return None
 
 
@@ -302,7 +329,7 @@ def ask_gemini(question: str, chat_id: int, context: Optional[str] = None) -> st
     """Ask Gemini a question for a specific user."""
     client = get_gemini_client(chat_id)
     if not client:
-        return "NEED_LOGIN"
+        return get_last_error(chat_id) or "AUTH_REQUIRED"
     
     system_prompt = """Ban la AI Assistant cua Aether-Quant - he thong phan tich chung khoan Viet Nam.
 
@@ -327,7 +354,7 @@ Quy tac:
     except Exception as e:
         logger.error(f"Gemini API error: {e}")
         if "401" in str(e) or "403" in str(e) or "API_KEY" in str(e):
-            return "NEED_LOGIN"
+            return "AUTH_REQUIRED"
         return f"Loi AI: {str(e)[:100]}"
 
 

@@ -25,7 +25,8 @@ from company_info import get_company_info, format_company_info, get_company_name
 from gemini import (
     ask_gemini, has_gemini_auth, is_oauth_mode,
     get_oauth_login_url, exchange_code_for_tokens, save_user_tokens,
-    set_user_gemini_key, get_api_key_url, revoke_gemini_key, revoke_gemini_oauth
+    set_user_gemini_key, get_api_key_url, revoke_gemini_key, revoke_gemini_oauth,
+    is_valid_gemini_api_key
 )
 
 # Subscription system
@@ -687,8 +688,14 @@ def handle_command(text, chat_id, bot_token):
         # Get AI response
         response = ask_gemini(question, chat_id)
         
-        if response == "NEED_LOGIN":
+        if response in ("AUTH_REQUIRED", "NO_KEY"):
             return "Can ket noi Gemini. Dung `/gemini` de bat dau."
+        if response == "API_KEY_INVALID":
+            return "API key khong hop le. Vui long dung `/gemini` -> chon Gemini API Key (AI Studio) -> tao/copy key bat dau bang 'AIza', sau do gui `/gemini_key <key>`."
+        if response == "MISSING_LIB":
+            return "Server chua cai thu vien AI. Vui long lien he Admin."
+        if response == "INIT_FAILED":
+            return "AI bi loi khoi tao. Vui long thu lai sau hoac lien he Admin."
         
         return f" *AI PHAN TICH*\n-------------------\n\n{response}\n\n_ *Luu y: Day la thong tin tham khao, khong phai loi khuyen dau tu.*_"
 
@@ -815,8 +822,8 @@ def handle_command(text, chat_id, bot_token):
         api_key = parts[1].strip()
         
         # Validate key format
-        if not api_key.startswith("AIza"):
-            return "API key khong hop le. Key phai bat dau bang 'AIza'"
+        if not is_valid_gemini_api_key(api_key):
+            return "API key khong hop le. Vui long vao Google AI Studio -> tao/copy key bat dau bang 'AIza' (dung API key, khong phai ma login/code)."
         
         if set_user_gemini_key(chat_id, api_key):
             # Mask the key for display

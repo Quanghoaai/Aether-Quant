@@ -39,8 +39,8 @@ def _get_google_client_secret() -> str:
 GEMINI_API_URL = "https://aistudio.google.com/app/apikey"
 GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
-# Using 'https://localhost' as redirect_uri (standard for CLI/Bots to avoid OOB deprecation block)
-GOOGLE_REDIRECT_URI = "https://localhost"
+# Using 127.0.0.1 for local HTTP browser-to-bot auth handoff
+GOOGLE_REDIRECT_URI = "http://127.0.0.1:8080/"
 
 # Pending OAuth states
 _pending_oauth: Dict[str, int] = {}
@@ -203,6 +203,95 @@ def get_oauth_login_url(chat_id: int) -> str:
     }
     
     return f"{GOOGLE_AUTH_URL}?{urllib.parse.urlencode(params)}"
+
+
+def start_local_oauth_server(chat_id: int, bot_token: str):
+    """Start an ephemeral local HTTP server to automatically capture the OAuth code."""
+    import threading
+    import urllib.parse
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+
+    class OAuthHandler(BaseHTTPRequestHandler):
+        def log_message(self, format, *args):
+            pass # Suppress HTTP logs
+            
+        def do_GET(self):
+            parsed_path = urllib.parse.urlparse(self.path)
+            query = urllib.parse.parse_qs(parsed_path.query)
+            
+            if 'code' in query:
+                code = query['code'][0]
+                state = query.get('state', [''])[0]
+                
+                # Check state for security
+                expected_chat_id = get_chat_id_from_state(state)
+                if expected_chat_id != chat_id:
+                    self.send_response(400)
+                    self.end_headers()
+                    self.wfile.write(b"Invalid state security token.")
+                    return
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html; charset=utf-8')
+                self.end_headers()
+                
+                html = \"\"\"
+                <html>
+                <head><title>Authentication Successful</title></head>
+                <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+                    <h2 style="color: #4CAF50;">Authentication Successful!</h2>
+                    <p>Ban da cap quyen thanh cong cho Bot. Vui long dong cua so trinh duyet nay va quay lai Telegram nhe!</p>
+                </body>
+                </html>
+                \"\"\"
+                self.wfile.write(html.encode("utf-8"))
+                
+                # Process the backend handshake autonomously
+                def process_and_notify():
+                    tokens = exchange_code_for_tokens(code)
+                    if tokens:
+                        save_user_tokens(str(chat_id), tokens)
+                        # Remove pending state
+                        for s, c in list(_pending_oauth.items()):
+                            if c == chat_id:
+                                del _pending_oauth[s]
+                        
+                        import requests
+                        url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+                        msg = "🎉 *Dang nhap OAuth thanh cong!*\n\nBan da hien ngang su dung API qua Google Code Assist (han muc tang cuong). Thu nhan `/ask` ngay nao!"
+                        requests.post(url, json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown"})
+                
+                threading.Thread(target=process_and_notify).start()
+                
+                # Shut down the local mini-server
+                threading.Thread(target=self.server.shutdown).start()
+                
+            elif 'error' in query:
+                self.send_response(400)
+                self.end_headers()
+                self.wfile.write(f"Authentication Error: {query['error'][0]}".encode('utf-8'))
+                threading.Thread(target=self.server.shutdown).start()
+            else:
+                self.send_response(404)
+                self.end_headers()
+                self.wfile.write(b"Waiting for auth...")
+
+    # Boot the server asynchronously
+    def run_server():
+        try:
+            server = HTTPServer(('127.0.0.1', 8080), OAuthHandler)
+            server.timeout = 180 # Close after 3 minutes if no traffic
+            try:
+                server.handle_request() # Wait for exactly one valid ping
+            except Exception:
+                pass
+            finally:
+                server.server_close()
+        except OSError:
+            # Port might be blocked by another attempt, that's fine
+            pass
+
+    threading.Thread(target=run_server, daemon=True).start()
 
 
 def exchange_code_for_tokens(code: str) -> Optional[dict]:

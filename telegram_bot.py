@@ -735,19 +735,20 @@ def handle_command(text, chat_id, bot_token):
             msg += "Dung `/gemini_logout` de huy ket noi."
             return msg
         
-        # Mode 1: OAuth (Admin configured)
+        # Mode 1: OAuth (Admin configured or Default)
         if is_oauth_mode():
             auth_url = get_oauth_login_url(chat_id)
             
+            # Start local server to automatically catch the code
+            from gemini import start_local_oauth_server
+            start_local_oauth_server(chat_id, bot_token)
+            
             msg = " *KET NOI GEMINI AI (OAuth)*\n\n"
             msg += f"💡 Bam day de Sign in with Google: [Login]({auth_url})\n\n"
-            msg += "Select *Sign in with Google*. Bot se mo trinh duyet de dang nhap.\n"
-            msg += "Lam theo huong dan tren man hinh. Credentials se duoc cache local cho cac phien sau.\n\n"
-            msg += " *Waiting for authentication...*\n\n"
-            msg += "Sau khi dang nhap thanh cong:\n"
-            msg += "1. Copy *ma xac thuc* (authorization code) tren man hinh\n"
-            msg += "2. Gui: `/gemini_code <ma>`\n\n"
-            msg += "_Admin da cau hinh OAuth._"
+            msg += "Select *Sign in with Google*. Trinh duyet cua ban se lap tuc mo trang xac thuc.\n"
+            msg += "Lam theo huong dan tren man hinh.\n\n"
+            msg += " ⏳ *Waiting for authentication...*\n\n"
+            msg += "Sau khi dang nhap thanh cong, bot se tu dong nhan ket qua ma khong can ban phai lam gi them!"
             return msg
         
         # Mode 2: API Key (User creates their own)

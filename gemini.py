@@ -235,7 +235,7 @@ def start_local_oauth_server(chat_id: int, bot_token: str):
                 self.send_header('Content-type', 'text/html; charset=utf-8')
                 self.end_headers()
                 
-                html = \"\"\"
+                html = """
                 <html>
                 <head><title>Authentication Successful</title></head>
                 <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
@@ -243,7 +243,7 @@ def start_local_oauth_server(chat_id: int, bot_token: str):
                     <p>Ban da cap quyen thanh cong cho Bot. Vui long dong cua so trinh duyet nay va quay lai Telegram nhe!</p>
                 </body>
                 </html>
-                \"\"\"
+                """
                 self.wfile.write(html.encode("utf-8"))
                 
                 # Process the backend handshake autonomously

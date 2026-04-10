@@ -1414,12 +1414,22 @@ def handle_command(text, chat_id, bot_token):
 
 def send_msg(bot_token, chat_id, text):
     import requests
+    import logging
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-    payload = {"chat_id": chat_id, "text": text, "parse_mode": "Markdown"}
+    
+    # Convert **bold** to *bold* for Telegram Markdown V1
+    processed_text = text.replace("**", "*")
+    
+    payload = {"chat_id": chat_id, "text": processed_text, "parse_mode": "Markdown"}
     try:
-        requests.post(url, json=payload)
-    except:
-        pass
+        resp = requests.post(url, json=payload)
+        if resp.status_code != 200:
+            logging.warning(f"Failed to send Markdown message (HTTP {resp.status_code}): {resp.text}. Retrying without formatting...")
+            payload.pop("parse_mode")
+            payload["text"] = text  # Use original text
+            requests.post(url, json=payload)
+    except Exception as e:
+        logging.error(f"Error sending message: {e}")
 
 def forward_photo(bot_token, chat_id, file_id):
     """Forward a photo to a chat."""

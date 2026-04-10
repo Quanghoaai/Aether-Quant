@@ -816,6 +816,7 @@ def handle_command(text, chat_id, bot_token):
         code = text[len("/gemini_code"):].strip()
         
         # If user pasted the full URL from their mobile browser
+        state_from_url = None
         if "code=" in code:
             import urllib.parse
             try:
@@ -823,15 +824,22 @@ def handle_command(text, chat_id, bot_token):
                 query = urllib.parse.parse_qs(parsed.query)
                 if 'code' in query:
                     code = query['code'][0]
+                if 'state' in query:
+                    state_from_url = query['state'][0]
             except Exception:
                 pass
                 
-        from gemini import exchange_code_for_tokens, save_user_tokens
+        from gemini import exchange_code_for_tokens, save_user_tokens, _pending_oauth
         
         if code.startswith("https://accounts.google.com/"):
-            return "❌ *SAI LINK ROI BẠN CHU KHOANG NGUYEN!* ❌\n\nLink ban dien la Link Đăng Nhập, khong phai Link Lỗi Mạng chứa mã code.\nBan phai click vao Link do, dang nhap bang Google. Khuc cuoi cung no xoay nhe vao 1 trang trang boc loi `Site cannot be reached` -> Thi luc nay URL tren thanh dia chi se la `http://127.0.0.1...`. COPY CAI LINK ĐÓ cơ!"
+            return "❌ *SAI LINK ROI BẠN CHU KHOANG NGUYEN!* ❌\n\nLink ban dien la Link Đăng Nhập, khong phai Link Lỗi Mạng chứa mã code.\nBan phai click vao Link do, dang nhap bang Google. Khúc cuối cùng no xoay nhe vao 1 trang trang bóc lỗi `Site cannot be reached` -> Thi lúc này URL trên thanh địa chỉ sẽ là `http://127.0.0.1...`. COPY CAI LINK ĐÓ cơ!"
             
-        tokens = exchange_code_for_tokens(code)
+        # Retrieve PKCE verifier using state lookup (Gemini CLI method)
+        verifier = None
+        if state_from_url and state_from_url in _pending_oauth:
+            verifier = _pending_oauth[state_from_url][1]
+            
+        tokens = exchange_code_for_tokens(code, verifier)
         
         if tokens:
             save_user_tokens(chat_id, tokens)

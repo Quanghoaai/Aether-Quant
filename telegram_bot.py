@@ -1418,6 +1418,10 @@ def handle_command(text, chat_id, bot_token):
     elif cmd == "/sell":
         return "Dung `/confirm_sell MA SL [GIA]` de ban.\n\nVD: `/confirm_sell TCB 100 28000`"
     
+    # If it's pure text (no slash), treat it as an AI question
+    if not text.startswith("/"):
+        return handle_command(f"/ask {text}", chat_id, bot_token)
+        
     # Unknown command
     return "Lenh khong nhan dang. Go */help* de xem menu."
 

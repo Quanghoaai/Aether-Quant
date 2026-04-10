@@ -11,6 +11,8 @@ import secrets
 import urllib.parse
 import re
 import time
+import base64
+import hashlib
 from typing import Optional, Dict, Any
 from datetime import datetime
 
@@ -25,18 +27,12 @@ GEMINI_TOKENS_FILE = os.path.join(_BASE_DIR, "gemini_tokens.json")
 # OAuth Config (Mode 1 - Admin configured)
 # NOTE: do not read env at import time because .env may be loaded after imports.
 def _get_google_client_id() -> str:
-    # Use standard Desktop Auth Client ID
-    cid = os.environ.get("GOOGLE_CLIENT_ID", "")
-    if not cid or cid.startswith("your_client"):
-        return "32555940559.apps.googleusercontent.com"
-    return cid
+    # Official Gemini CLI Client ID
+    return os.environ.get("GOOGLE_CLIENT_ID", "681255809395-oo8ft2oprdrnp9e3aqf6av3hmdib135j.apps.googleusercontent.com")
 
 def _get_google_client_secret() -> str:
-    # Secret is paired with the default Desktop Auth Client ID above
-    csec = os.environ.get("GOOGLE_CLIENT_SECRET", "")
-    if not csec or csec.startswith("your_client"):
-        return "ZmssLNjJy2998hD4CTg2ejr2"
-    return csec
+    # PKCE doesn't use a client secret
+    return os.environ.get("GOOGLE_CLIENT_SECRET", "")
 
 
 # URLs
@@ -46,8 +42,8 @@ GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 # Using 127.0.0.1 for local HTTP browser-to-bot auth handoff
 GOOGLE_REDIRECT_URI = "http://127.0.0.1:8080/"
 
-# Pending OAuth states
-_pending_oauth: Dict[str, int] = {}
+# Pending OAuth states: state_token -> (chat_id, code_verifier)
+_pending_oauth: Dict[str, tuple] = {}
 
 # Per-user client cache
 _user_clients: Dict[str, Any] = {}
@@ -192,9 +188,20 @@ def get_chat_id_from_state(state: str) -> Optional[int]:
     return _pending_oauth.pop(state, None)
 
 
+def _generate_pkce_pair():
+    """Generate a code_verifier and code_challenge for PKCE."""
+    verifier = base64.urlsafe_b64encode(os.urandom(32)).decode('utf-8').rstrip('=')
+    challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode('utf-8')).digest()).decode('utf-8').rstrip('=')
+    return verifier, challenge
+
+
 def get_oauth_login_url(chat_id: int) -> str:
-    """Generate Google OAuth login URL."""
+    """Generate Google OAuth login URL with PKCE (Gemini CLI method)."""
     state = generate_oauth_state(chat_id)
+    verifier, challenge = _generate_pkce_pair()
+    
+    # Store verifier to use during token exchange
+    _pending_oauth[state] = (chat_id, verifier)
     
     params = {
         "client_id": _get_google_client_id(),
@@ -203,7 +210,9 @@ def get_oauth_login_url(chat_id: int) -> str:
         "scope": "https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile",
         "state": state,
         "access_type": "offline",
-        "prompt": "consent"
+        "prompt": "consent",
+        "code_challenge": challenge,
+        "code_challenge_method": "S256"
     }
     
     return f"{GOOGLE_AUTH_URL}?{urllib.parse.urlencode(params)}"
@@ -228,12 +237,14 @@ def start_local_oauth_server(chat_id: int, bot_token: str):
                 state = query.get('state', [''])[0]
                 
                 # Check state for security
-                expected_chat_id = get_chat_id_from_state(state)
-                if expected_chat_id != chat_id:
+                payload = _pending_oauth.get(state)
+                if not payload or payload[0] != chat_id:
                     self.send_response(400)
                     self.end_headers()
                     self.wfile.write(b"Invalid state security token.")
                     return
+                
+                verifier = payload[1]
                 
                 self.send_response(200)
                 self.send_header('Content-type', 'text/html; charset=utf-8')
@@ -252,13 +263,11 @@ def start_local_oauth_server(chat_id: int, bot_token: str):
                 
                 # Process the backend handshake autonomously
                 def process_and_notify():
-                    tokens = exchange_code_for_tokens(code)
+                    tokens = exchange_code_for_tokens(code, verifier)
                     if tokens:
                         save_user_tokens(str(chat_id), tokens)
-                        # Remove pending state
-                        for s, c in list(_pending_oauth.items()):
-                            if c == chat_id:
-                                del _pending_oauth[s]
+                        if state in _pending_oauth:
+                            del _pending_oauth[state]
                         
                         import requests
                         url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
@@ -298,17 +307,19 @@ def start_local_oauth_server(chat_id: int, bot_token: str):
     threading.Thread(target=run_server, daemon=True).start()
 
 
-def exchange_code_for_tokens(code: str) -> Optional[dict]:
-    """Exchange OAuth code for access tokens."""
+def exchange_code_for_tokens(code: str, verifier: Optional[str] = None) -> Optional[dict]:
+    """Exchange OAuth code for access tokens using PKCE (Gemini CLI method)."""
     import requests
     
     data = {
         "client_id": _get_google_client_id(),
-        "client_secret": _get_google_client_secret(),
         "code": code,
+        "grant_type": "authorization_code",
         "redirect_uri": GOOGLE_REDIRECT_URI,
-        "grant_type": "authorization_code"
     }
+    
+    if verifier:
+        data["code_verifier"] = verifier
     
     try:
         logger.info(f"Attempting token exchange with code: {code[:10]}...")

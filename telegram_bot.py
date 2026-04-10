@@ -849,13 +849,11 @@ def handle_command(text, chat_id, bot_token):
         if not has_gemini_auth(chat_id):
             return "Ban chua ket noi Gemini AI."
         
-        # Revoke based on mode
-        if is_oauth_mode():
-            success = revoke_gemini_oauth(chat_id)
-        else:
-            success = revoke_gemini_key(chat_id)
+        # Revoke both modes to ensure complete logout
+        success1 = revoke_gemini_oauth(chat_id)
+        success2 = revoke_gemini_key(chat_id)
         
-        if success:
+        if success1 or success2 or not has_gemini_auth(chat_id):
             return " *Da huy ket noi Gemini AI.*\n\nDung `/gemini` de ket noi lai neu can."
         else:
             return "Loi huy ket noi."

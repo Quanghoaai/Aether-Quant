@@ -30,7 +30,8 @@ from gemini import (
     list_available_models,
     revoke_gemini_key,
     revoke_gemini_oauth,
-    is_valid_gemini_api_key
+    is_valid_gemini_api_key,
+    set_user_gemini_key
 )
 
 # Subscription system

@@ -748,7 +748,9 @@ def handle_command(text, chat_id, bot_token):
             msg += "Select *Sign in with Google*. Trinh duyet cua ban se lap tuc mo trang xac thuc.\n"
             msg += "Lam theo huong dan tren man hinh.\n\n"
             msg += " ⏳ *Waiting for authentication...*\n\n"
-            msg += "Sau khi dang nhap thanh cong, bot se tu dong nhan ket qua ma khong can ban phai lam gi them!"
+            msg += "Sau khi dang nhap thanh cong, bot se tu dong nhan ma neu ban dung may tinh.\n\n"
+            msg += "⚠️ *Neu ban dung Dien thoai*: URL se bi loi 'Site cannot be reached' (do khong cung mang LAN voi bot). Ban chi viec COPY nguyen cai duong link bi loi tren trinh duyet roi gui:\n"
+            msg += "`/gemini_code <Link URL do>`"
             return msg
         
         # Mode 2: API Key (User creates their own)
@@ -805,13 +807,27 @@ def handle_command(text, chat_id, bot_token):
             msg += "3. Tao Service Account & lay credentials JSON\n\n"
             msg += "Hien tai chua ho tro tu dong. Vui long dung cach 2.\n\n"
             msg += "Neu ban la Admin, them `GOOGLE_APPLICATION_CREDENTIALS` vao .env"
+
+    # /gemini_code - Enter OAuth code or URL
     elif cmd == "/gemini_code":
-        # We always allow this now because we have default credentials in gemini.py
         if len(parts) < 2:
-            return "Cu phap: `/gemini_code <ma_xac_thuc>`"
+            return "Cu phap: `/gemini_code <ma_xac_thuc_hoac_link_loi>`"
         
-        auth_code = parts[1].strip()
-        tokens = exchange_code_for_tokens(auth_code)
+        code = text[len("/gemini_code"):].strip()
+        
+        # If user pasted the full URL from their mobile browser
+        if "code=" in code:
+            import urllib.parse
+            try:
+                parsed = urllib.parse.urlparse(code)
+                query = urllib.parse.parse_qs(parsed.query)
+                if 'code' in query:
+                    code = query['code'][0]
+            except Exception:
+                pass
+                
+        from gemini import exchange_code_for_tokens, save_user_tokens
+        tokens = exchange_code_for_tokens(code)
         
         if tokens:
             save_user_tokens(chat_id, tokens)

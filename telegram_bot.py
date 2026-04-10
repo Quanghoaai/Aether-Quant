@@ -827,6 +827,10 @@ def handle_command(text, chat_id, bot_token):
                 pass
                 
         from gemini import exchange_code_for_tokens, save_user_tokens
+        
+        if code.startswith("https://accounts.google.com/"):
+            return "❌ *SAI LINK ROI BẠN CHU KHOANG NGUYEN!* ❌\n\nLink ban dien la Link Đăng Nhập, khong phai Link Lỗi Mạng chứa mã code.\nBan phai click vao Link do, dang nhap bang Google. Khuc cuoi cung no xoay nhe vao 1 trang trang boc loi `Site cannot be reached` -> Thi luc nay URL tren thanh dia chi se la `http://127.0.0.1...`. COPY CAI LINK ĐÓ cơ!"
+            
         tokens = exchange_code_for_tokens(code)
         
         if tokens:

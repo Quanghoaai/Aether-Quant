@@ -25,14 +25,12 @@ GEMINI_TOKENS_FILE = os.path.join(_BASE_DIR, "gemini_tokens.json")
 # OAuth Config (Mode 1 - Admin configured)
 # NOTE: do not read env at import time because .env may be loaded after imports.
 def _get_google_client_id() -> str:
-    # Use exact Client ID from user's Gemini CLI example
-    return os.environ.get("GOOGLE_CLIENT_ID", "681255809395-oo8ft2oprdrnp9e3aqf6av3hmdib135j.apps.googleusercontent.com")
-
+    # Use standard Desktop Auth Client ID
+    return os.environ.get("GOOGLE_CLIENT_ID", "32555940559.apps.googleusercontent.com")
 
 def _get_google_client_secret() -> str:
-    # Secret is usually not needed for this specific public client ID in this flow,
-    # but we keep the env override just in case.
-    return os.environ.get("GOOGLE_CLIENT_SECRET", "")
+    # Secret is paired with the default Desktop Auth Client ID above
+    return os.environ.get("GOOGLE_CLIENT_SECRET", "ZmssLNjJy2998hD4CTg2ejr2")
 
 
 # URLs

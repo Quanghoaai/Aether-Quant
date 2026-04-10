@@ -26,11 +26,17 @@ GEMINI_TOKENS_FILE = os.path.join(_BASE_DIR, "gemini_tokens.json")
 # NOTE: do not read env at import time because .env may be loaded after imports.
 def _get_google_client_id() -> str:
     # Use standard Desktop Auth Client ID
-    return os.environ.get("GOOGLE_CLIENT_ID", "32555940559.apps.googleusercontent.com")
+    cid = os.environ.get("GOOGLE_CLIENT_ID", "")
+    if not cid or cid.startswith("your_client"):
+        return "32555940559.apps.googleusercontent.com"
+    return cid
 
 def _get_google_client_secret() -> str:
     # Secret is paired with the default Desktop Auth Client ID above
-    return os.environ.get("GOOGLE_CLIENT_SECRET", "ZmssLNjJy2998hD4CTg2ejr2")
+    csec = os.environ.get("GOOGLE_CLIENT_SECRET", "")
+    if not csec or csec.startswith("your_client"):
+        return "ZmssLNjJy2998hD4CTg2ejr2"
+    return csec
 
 
 # URLs

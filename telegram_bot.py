@@ -1423,7 +1423,6 @@ def handle_command(text, chat_id, bot_token):
         return "Lenh khong nhan dang. Go */help* de xem menu."
     
     # Treat normal text as /ask (Conversational Chat)
-    from gemini import ask_gemini, has_gemini_auth, is_oauth_mode
     if not has_gemini_auth(chat_id):
         if is_oauth_mode():
             return " *BAN CHUA DANG NHAP GEMINI AI*\n\nTin nhan cua ban dang duoc chuyen cho AI. Dung `/gemini` de dang nhap Google."

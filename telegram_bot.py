@@ -1418,37 +1418,31 @@ def handle_command(text, chat_id, bot_token):
     elif cmd == "/sell":
         return "Dung `/confirm_sell MA SL [GIA]` de ban.\n\nVD: `/confirm_sell TCB 100 28000`"
     
-    # Handle normal text (conversational chat) without /ask
-    if not text.startswith('/'):
-        if not has_gemini_auth(chat_id):
-            if is_oauth_mode():
-                msg = " *BẠN CHƯA ĐĂNG NHẬP GEMINI AI*\n\n"
-                msg += "Dùng `/gemini` để đăng nhập Google.\n\n"
-                msg += "_Chỉ cần đăng nhập 1 lần._"
-            else:
-                msg = " *BẠN CHƯA KẾT NỐI GEMINI AI*\n\n"
-                msg += "Dùng `/gemini` để lấy link tạo API key hoặc nhập API key của bạn.\n\n"
-                msg += "_Miễn phí 100%, dùng tài khoản Google._"
-            return msg
-        
-        # Show typing indicator
-        send_msg(bot_token, chat_id, " *Đang suy nghĩ...*")
-        
-        response = ask_gemini(text, chat_id)
-        
-        if response in ("AUTH_REQUIRED", "NO_KEY"):
-            return "Cần kết nối Gemini. Dùng `/gemini` để bắt đầu."
-        if response == "API_KEY_INVALID":
-            return "API key không hợp lệ. Vui lòng kiểm tra lại."
-        if response == "MISSING_LIB":
-            return "Server chưa cài thư viện AI."
-        if response == "INIT_FAILED":
-            return "AI bị lỗi khởi tạo."
+    # Unknown command / Conversational Fallback
+    if text.startswith("/"):
+        return "Lenh khong nhan dang. Go */help* de xem menu."
+    
+    # Treat normal text as /ask (Conversational Chat)
+    from gemini import ask_gemini, has_gemini_auth, is_oauth_mode
+    if not has_gemini_auth(chat_id):
+        if is_oauth_mode():
+            return " *BAN CHUA DANG NHAP GEMINI AI*\n\nTin nhan cua ban dang duoc chuyen cho AI. Dung `/gemini` de dang nhap Google."
+        else:
+            return " *BAN CHUA KET NOI GEMINI AI*\n\nTin nhan cua ban dang duoc chuyen cho AI nhung ban chua co API Key. Dung `/gemini` de ket noi nhe!"
             
-        return response
-
-    # Unknown command
-    return "Lệnh không nhận dạng. Gõ */help* để xem menu."
+    send_msg(bot_token, chat_id, " *Dang suy nghi...*")
+    response = ask_gemini(text, chat_id)
+    
+    if response in ("AUTH_REQUIRED", "NO_KEY"):
+        return "Can ket noi Gemini. Dung `/gemini` de bat dau."
+    if response == "API_KEY_INVALID":
+        return "API key khong hop le hoac da het quota."
+    if response == "MISSING_LIB":
+        return "Server chua cai thu vien AI."
+    if response == "INIT_FAILED":
+        return "AI bi loi khoi tao."
+        
+    return f"{response}"
 
 def send_msg(bot_token, chat_id, text):
     import requests

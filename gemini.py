@@ -53,8 +53,8 @@ _last_error: Dict[str, str] = {}
 
 
 def is_oauth_mode() -> bool:
-    """Check if OAuth mode is configured by admin."""
-    return bool(_get_google_client_id() and _get_google_client_secret())
+    """Check if OAuth mode is enabled."""
+    return True
 
 
 def _set_last_error(chat_id: int, code: str):
@@ -298,11 +298,10 @@ def revoke_gemini_oauth(chat_id: int) -> bool:
 
 def has_gemini_auth(chat_id: int) -> bool:
     """Check if user has Gemini auth (OAuth or API key)."""
-    if is_oauth_mode():
-        tokens = get_user_tokens(chat_id)
-        return tokens is not None and tokens.get("refresh_token") is not None
-    else:
-        return get_user_gemini_key(chat_id) is not None
+    tokens = get_user_tokens(chat_id)
+    if tokens is not None and tokens.get("refresh_token") is not None:
+        return True
+    return get_user_gemini_key(chat_id) is not None
 
 
 def get_gemini_client(chat_id: int):
@@ -312,13 +311,23 @@ def get_gemini_client(chat_id: int):
     try:
         import google.generativeai as genai
         
-        if is_oauth_mode():
-            # OAuth mode - use access token
+        # Check OAuth mode first
+        tokens = get_user_tokens(chat_id)
+        if tokens and tokens.get("refresh_token"):
             access_token = get_valid_access_token(chat_id)
             if not access_token:
                 _set_last_error(chat_id, "AUTH_REQUIRED")
                 return None
-            genai.configure(credentials=access_token)
+            
+            from google.oauth2.credentials import Credentials
+            creds = Credentials(
+                token=access_token,
+                refresh_token=tokens.get("refresh_token"),
+                token_uri="https://oauth2.googleapis.com/token",
+                client_id=_get_google_client_id(),
+                client_secret=_get_google_client_secret()
+            )
+            genai.configure(credentials=creds)
         else:
             # API Key mode - use user's API key
             api_key = get_user_gemini_key(chat_id)

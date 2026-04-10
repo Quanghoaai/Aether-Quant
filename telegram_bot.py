@@ -1359,11 +1359,20 @@ def handle_command(text, chat_id, bot_token):
             
             send_msg(bot_token, chat_id, msg)
             
-            # Restart service
-            subprocess.Popen(
-                ["sudo", "systemctl", "restart", "hca-bot"],
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-            )
+            # Restart script cross-platform
+            def restart_bot():
+                import time
+                import os
+                import sys
+                time.sleep(2)
+                try:
+                    os.execv(sys.executable, [sys.executable] + sys.argv)
+                except Exception as e:
+                    logging.error(f"Failed to restart via execv: {e}")
+                    os._exit(0)
+                    
+            import threading
+            threading.Thread(target=restart_bot).start()
             return None
             
         except Exception as e:

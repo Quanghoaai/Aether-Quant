@@ -1,1 +1,18 @@
-[]
+[
+    {
+        "symbol": "HHV",
+        "action": "BUY",
+        "amount": 1024100.0,
+        "reason": "New Position",
+        "qty": 77000,
+        "price": 13.3
+    },
+    {
+        "symbol": "TOS",
+        "action": "BUY",
+        "amount": 19472340.0,
+        "reason": "New Position",
+        "qty": 108300,
+        "price": 179.8
+    }
+]

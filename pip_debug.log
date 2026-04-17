@@ -138,9 +138,9 @@ Collecting kiwisolver>=1.3.1 (from matplotlib!=3.6.1,>=3.4->seaborn->vnstock>=1.
 Collecting pillow>=8 (from matplotlib!=3.6.1,>=3.4->seaborn->vnstock>=1.0.0->-r requirements.txt (line 3))
   Downloading pillow-12.2.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (8.8 kB)
 Downloading pandas-2.3.3-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (12.8 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 12.8/12.8 MB 21.2 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 12.8/12.8 MB 223.1 MB/s  0:00:00
 Downloading numpy-1.26.4-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (18.3 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 18.3/18.3 MB 71.1 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 18.3/18.3 MB 244.6 MB/s  0:00:00
 Downloading vnstock-3.5.1-py3-none-any.whl (268 kB)
 Downloading python_dotenv-1.2.2-py3-none-any.whl (22 kB)
 Downloading requests-2.33.1-py3-none-any.whl (64 kB)
@@ -149,19 +149,19 @@ Downloading idna-3.11-py3-none-any.whl (71 kB)
 Downloading urllib3-2.6.3-py3-none-any.whl (131 kB)
 Downloading google_generativeai-0.8.6-py3-none-any.whl (155 kB)
 Downloading google_ai_generativelanguage-0.6.15-py3-none-any.whl (1.3 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 102.3 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 173.4 MB/s  0:00:00
 Downloading google_api_core-2.30.3-py3-none-any.whl (173 kB)
 Downloading google_auth-2.49.2-py3-none-any.whl (240 kB)
 Downloading googleapis_common_protos-1.74.0-py3-none-any.whl (300 kB)
 Downloading grpcio-1.80.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (6.8 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.8/6.8 MB 109.8 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.8/6.8 MB 255.9 MB/s  0:00:00
 Downloading grpcio_status-1.71.2-py3-none-any.whl (14 kB)
 Downloading proto_plus-1.27.2-py3-none-any.whl (50 kB)
 Downloading protobuf-5.29.6-cp38-abi3-manylinux2014_x86_64.whl (320 kB)
 Downloading typing_extensions-4.15.0-py3-none-any.whl (44 kB)
 Downloading certifi-2026.2.25-py3-none-any.whl (153 kB)
 Downloading cryptography-46.0.7-cp311-abi3-manylinux_2_34_x86_64.whl (4.5 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.5/4.5 MB 120.1 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.5/4.5 MB 366.0 MB/s  0:00:00
 Downloading cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (215 kB)
 Downloading importlib_metadata-9.0.0-py3-none-any.whl (27 kB)
 Downloading packaging-26.1-py3-none-any.whl (95 kB)
@@ -178,7 +178,7 @@ Downloading zipp-3.23.1-py3-none-any.whl (10 kB)
 Downloading beautifulsoup4-4.14.3-py3-none-any.whl (107 kB)
 Downloading soupsieve-2.8.3-py3-none-any.whl (37 kB)
 Downloading google_api_python_client-2.194.0-py3-none-any.whl (15.0 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 15.0/15.0 MB 146.9 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 15.0/15.0 MB 252.4 MB/s  0:00:00
 Downloading google_auth_httplib2-0.3.1-py3-none-any.whl (9.5 kB)
 Downloading httplib2-0.31.2-py3-none-any.whl (91 kB)
 Downloading pyparsing-3.3.2-py3-none-any.whl (122 kB)
@@ -188,29 +188,29 @@ Downloading et_xmlfile-2.0.0-py3-none-any.whl (18 kB)
 Downloading pycparser-3.0-py3-none-any.whl (48 kB)
 Downloading pydantic-2.13.1-py3-none-any.whl (471 kB)
 Downloading pydantic_core-2.46.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.1 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 181.7 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 260.9 MB/s  0:00:00
 Downloading annotated_types-0.7.0-py3-none-any.whl (13 kB)
 Downloading typing_inspection-0.4.2-py3-none-any.whl (14 kB)
 Downloading seaborn-0.13.2-py3-none-any.whl (294 kB)
 Downloading matplotlib-3.10.8-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (8.7 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.7/8.7 MB 174.6 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.7/8.7 MB 245.0 MB/s  0:00:00
 Downloading contourpy-1.3.3-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (355 kB)
 Downloading cycler-0.12.1-py3-none-any.whl (8.3 kB)
 Downloading fonttools-4.62.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (5.1 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.1/5.1 MB 180.4 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.1/5.1 MB 185.9 MB/s  0:00:00
 Downloading kiwisolver-1.5.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (1.4 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.4/1.4 MB 118.7 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.4/1.4 MB 236.7 MB/s  0:00:00
 Downloading pillow-12.2.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (7.1 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.1/7.1 MB 210.2 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.1/7.1 MB 162.8 MB/s  0:00:00
 Downloading squarify-0.4.4-py3-none-any.whl (4.1 kB)
 Downloading tenacity-9.1.4-py3-none-any.whl (28 kB)
 Downloading tqdm-4.67.3-py3-none-any.whl (78 kB)
 Downloading wordcloud-1.9.6-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (551 kB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 551.3/551.3 kB 68.3 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 551.3/551.3 kB 106.2 MB/s  0:00:00
 Building wheels for collected packages: ta
   Building wheel for ta (pyproject.toml): started
   Building wheel for ta (pyproject.toml): finished with status 'done'
-  Created wheel for ta: filename=ta-0.11.0-py3-none-any.whl size=29481 sha256=3c38d908b35782625c2040272d57daa43e65784734b2bd5afbe4589280c3b6b1
+  Created wheel for ta: filename=ta-0.11.0-py3-none-any.whl size=29481 sha256=cbbf1f1d6776ff98bb9ea5c624747de058f1b95dbfea5feafd07fc67b0895250
   Stored in directory: /home/runner/.cache/pip/wheels/a1/d7/29/7781cc5eb9a3659d032d7d15bdd0f49d07d2b24fec29f44bc4
 Successfully built ta
 Installing collected packages: squarify, pytz, zipp, urllib3, uritemplate, tzdata, typing-extensions, tqdm, tenacity, soupsieve, six, python-dotenv, pyparsing, pycparser, pyasn1, psutil, protobuf, pillow, packaging, numpy, kiwisolver, idna, fonttools, et-xmlfile, cycler, charset_normalizer, certifi, annotated-types, typing-inspection, requests, python-dateutil, pydantic-core, pyasn1-modules, proto-plus, openpyxl, importlib-metadata, httplib2, grpcio, googleapis-common-protos, contourpy, cffi, beautifulsoup4, vnai, pydantic, pandas, matplotlib, grpcio-status, cryptography, wordcloud, ta, seaborn, google-auth, google-auth-httplib2, google-api-core, google-api-python-client, google-ai-generativelanguage, google-generativeai, vnstock_ezchart, vnstock

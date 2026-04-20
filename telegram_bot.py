@@ -441,6 +441,7 @@ def handle_command(text, chat_id, bot_token):
         plan = PLANS[plan_id]
         add_info = f"AQ_{chat_id}_{plan_id}"
         
+        # Lấy ảnh tĩnh qr.png nếu có
         import os
         qr_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "qr.png")
         if os.path.exists(qr_path):
@@ -449,14 +450,7 @@ def handle_command(text, chat_id, bot_token):
             ))
             return None
         
-        qr_url = build_vietqr_image_url(plan["price"], add_info)
-        if not qr_url:
-            return "Chua cau hinh VietQR (BANK_BIN/BANK_ACCOUNT)."
-
-        send_photo_url(bot_token, chat_id, qr_url, caption=(
-            f"*QR THANH TOAN*\n\nGoi: {plan['name']}\nSo tien: *{plan['price']:,.0f}* VND\nNoi dung: `{add_info}`"
-        ))
-        return None
+        return "He thong dang su dung anh tĩnh. Vui long kiem tra file qr.png tren server."
     
     # /status
     elif cmd == "/status":
@@ -1158,10 +1152,6 @@ def handle_command(text, chat_id, bot_token):
                 send_photo_local(bot_token, chat_id, qr_path, caption=msg + "\n\n_Vui long nhap dung So Tien va Noi Dung o tren khi quet QR!_")
                 return None
             
-            qr_url = build_vietqr_image_url(data["final_price"], payment_id)
-            if qr_url:
-                send_photo_url(bot_token, chat_id, qr_url, caption=msg)
-                return None
             return msg
         else:
             return f"{result['message']}"

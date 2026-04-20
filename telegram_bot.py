@@ -440,6 +440,15 @@ def handle_command(text, chat_id, bot_token):
 
         plan = PLANS[plan_id]
         add_info = f"AQ_{chat_id}_{plan_id}"
+        
+        import os
+        qr_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "qr.png")
+        if os.path.exists(qr_path):
+            send_photo_local(bot_token, chat_id, qr_path, caption=(
+                f"*QR THANH TOAN*\n\nGoi: {plan['name']}\nSo tien: *{plan['price']:,.0f}* VND\nNoi dung: `{add_info}`\n\n_Vui long nhap dung So Tien va Noi Dung o tren khi quet QR!_"
+            ))
+            return None
+        
         qr_url = build_vietqr_image_url(plan["price"], add_info)
         if not qr_url:
             return "Chua cau hinh VietQR (BANK_BIN/BANK_ACCOUNT)."
@@ -1143,6 +1152,12 @@ def handle_command(text, chat_id, bot_token):
             msg += f"4. Cho admin duyet\n\n"
             msg += f"Ma GD: `{payment_id}`"
             
+            import os
+            qr_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "qr.png")
+            if os.path.exists(qr_path):
+                send_photo_local(bot_token, chat_id, qr_path, caption=msg + "\n\n_Vui long nhap dung So Tien va Noi Dung o tren khi quet QR!_")
+                return None
+            
             qr_url = build_vietqr_image_url(data["final_price"], payment_id)
             if qr_url:
                 send_photo_url(bot_token, chat_id, qr_url, caption=msg)
@@ -1516,6 +1531,23 @@ def send_photo_url(bot_token, chat_id, photo_url, caption=None):
         requests.post(url, json=payload)
     except:
         pass
+
+def send_photo_local(bot_token, chat_id, file_path, caption=None):
+    import requests
+    import logging
+    url = f"https://api.telegram.org/bot{bot_token}/sendPhoto"
+    payload = {"chat_id": chat_id}
+    if caption:
+        payload["caption"] = caption
+        payload["parse_mode"] = "Markdown"
+    try:
+        with open(file_path, "rb") as f:
+            files = {"photo": f}
+            resp = requests.post(url, data=payload, files=files)
+            if resp.status_code != 200:
+                logging.warning(f"Failed to send local photo (HTTP {resp.status_code}): {resp.text}")
+    except Exception as e:
+        logging.error(f"Error sending local photo: {e}")
 
 if __name__ == "__main__":
     main()

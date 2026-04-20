@@ -442,7 +442,6 @@ def handle_command(text, chat_id, bot_token):
         add_info = f"AQ_{chat_id}_{plan_id}"
         
         # Lấy ảnh tĩnh qr.png nếu có
-        import os
         qr_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "qr.png")
         if os.path.exists(qr_path):
             send_photo_local(bot_token, chat_id, qr_path, caption=(
@@ -1146,7 +1145,6 @@ def handle_command(text, chat_id, bot_token):
             msg += f"4. Cho admin duyet\n\n"
             msg += f"Ma GD: `{payment_id}`"
             
-            import os
             qr_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "qr.png")
             if os.path.exists(qr_path):
                 send_photo_local(bot_token, chat_id, qr_path, caption=msg + "\n\n_Vui long nhap dung So Tien va Noi Dung o tren khi quet QR!_")

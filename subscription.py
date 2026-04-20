@@ -23,9 +23,9 @@ def build_vietqr_image_url(amount: int, add_info: str) -> str:
     - BANK_ACCOUNT
     - BANK_OWNER
     """
-    bank_bin = os.environ.get("BANK_BIN", "")
-    bank_account = os.environ.get("BANK_ACCOUNT", "")
-    bank_owner = os.environ.get("BANK_OWNER", "")
+    bank_bin = os.environ.get("BANK_BIN", "970423")
+    bank_account = os.environ.get("BANK_ACCOUNT", "88998886666")
+    bank_owner = os.environ.get("BANK_OWNER", "NGUYEN QUANG HOA")
     if not bank_bin or not bank_account:
         return ""
     # compact2 has nicer layout for Telegram

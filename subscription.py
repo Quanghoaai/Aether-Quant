@@ -373,7 +373,7 @@ def create_pending_payment(chat_id: int, plan_id: str, coupon_code: str = None) 
             "original_price": price,
             "discount": discount,
             "final_price": final_price,
-            "bank_info": f"Ngan hang: {os.environ.get('BANK_NAME', 'Vietcombank')}\nSo TK: {os.environ.get('BANK_ACCOUNT', '1234567890')}\nChu TK: {os.environ.get('BANK_OWNER', 'NGUYEN VAN A')}\nNoi dung: AQ_{payment_id}"
+            "bank_info": f"Ngan hang: {os.environ.get('BANK_NAME', 'TPBank')}\nSo TK: {os.environ.get('BANK_ACCOUNT', '88998886666')}\nChu TK: {os.environ.get('BANK_OWNER', 'NGUYEN QUANG HOA')}\nNoi dung: AQ_{payment_id}"
         }
     }
 
@@ -507,7 +507,7 @@ def grant_subscription(chat_id: int, plan_id: str, days: Optional[int] = None) -
     
     # Update user
     user["subscription"] = subscription
-    user["subscriptions_history"].append(subscription)
+    user.setdefault("subscriptions_history", []).append(subscription)
     
     # Record transaction
     data["transactions"].append({
@@ -588,9 +588,9 @@ def subscribe_user(chat_id: int, plan_id: str, coupon_code: Optional[str] = None
     
     # Update user
     user["subscription"] = subscription
-    user["subscriptions_history"].append(subscription)
+    user.setdefault("subscriptions_history", []).append(subscription)
     if coupon_code and discount > 0:
-        user["applied_coupons"].append(coupon_code)
+        user.setdefault("applied_coupons", []).append(coupon_code)
     
     # Record transaction
     data["transactions"].append({

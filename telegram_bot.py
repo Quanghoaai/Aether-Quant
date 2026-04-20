@@ -307,7 +307,7 @@ def main():
                     
                     # Check if it's a reply to payment request
                     reply_to = msg.get("reply_to_message", {})
-                    reply_text = reply_to.get("text", "")
+                    reply_text = reply_to.get("text", reply_to.get("caption", ""))
                     
                     # Extract payment_id from reply
                     payment_id = None
@@ -1142,6 +1142,11 @@ def handle_command(text, chat_id, bot_token):
             msg += f"3. Gui anh cho bot (reply tin nhan nay)\n"
             msg += f"4. Cho admin duyet\n\n"
             msg += f"Ma GD: `{payment_id}`"
+            
+            qr_url = build_vietqr_image_url(data["final_price"], payment_id)
+            if qr_url:
+                send_photo_url(bot_token, chat_id, qr_url, caption=msg)
+                return None
             return msg
         else:
             return f"{result['message']}"

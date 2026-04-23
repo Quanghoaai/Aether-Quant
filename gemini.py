@@ -315,7 +315,7 @@ def ask_gemini(question: str, chat_id: int, context: Optional[str] = None) -> st
     if not client:
         return get_last_error(chat_id) or "AUTH_REQUIRED"
     
-    system_prompt = \"\"\"Ban la AI Assistant cua Aether-Quant - he thong phan tich chung khoan Viet Nam.
+    system_prompt = """Ban la AI Assistant cua Aether-Quant - he thong phan tich chung khoan Viet Nam.
 
 Nhiem vu:
 - Tra loi cau hoi ve dau tu, chung khoan, phan tich ky thuat
@@ -325,7 +325,7 @@ Nhiem vu:
 Quy tac:
 - Tra loi ngan gon, de hieu (duoi 500 tu)
 - Luon nhan manh: Day la thong tin tham khao, khong phai loi khuyen dau tu
-- Su dung tieng Viet\"\"\"
+- Su dung tieng Viet"""
 
     full_prompt = f"{system_prompt}\n\n"
     if context:
@@ -374,13 +374,13 @@ Quy tac:
 
 def analyze_stock_with_gemini(symbol: str, score_data: dict, price: float, chat_id: int) -> str:
     """Get AI analysis for a specific stock."""
-    context = f\"\"\"
+    context = f"""
 Ma chung khoan: {symbol}
 Gia hien tai: {price:,.0f} VND
 Diem tong: {score_data.get('score', 0):.2f}/5.0
 - RS: {score_data.get('RS_score', 0):.1f}
 - Price Action: {score_data.get('Price_Action_score', 0):.1f}
-- Volume: {score_data.get('Volume_Profile_score', 0):.1f}\"\"\"
+- Volume: {score_data.get('Volume_Profile_score', 0):.1f}"""
     
     question = f"Phan tich ngan gon {symbol}: nen mua hay cho?"
     return ask_gemini(question, chat_id, context)

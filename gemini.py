@@ -1,7 +1,7 @@
 """
 Gemini AI Integration for Aether-Quant Bot.
 Supports 2 modes:
-1. OAuth 2.0 (Admin configures GOOGLE_CLIENT_ID/SECRET) - click to login
+1. OAuth 2.0 (Admin configures GOOGLE_CLIENT_ID/SECRET) - modular PKCE implementation
 2. API Key (User creates their own key) - paste key
 """
 import os
@@ -22,16 +22,20 @@ _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Files
 GEMINI_KEYS_FILE = os.path.join(_BASE_DIR, "gemini_keys.json")
-GEMINI_TOKENS_FILE = os.path.join(_BASE_DIR, "gemini_tokens.json")
+
+# Import new modular components
+from secure_storage import save_user_token as secure_save_token, get_user_token as secure_get_token, delete_user_token as secure_delete_token, TOKENS_FILE
+from oauth_service import GoogleOAuthService
+from telegram_oauth_handler import initiate_login, REDIRECT_URI, _active_sessions
+from oauth_middleware import get_valid_token as middleware_get_token, require_auth as middleware_require_auth
 
 # OAuth Config (Mode 1 - Admin configured)
-# NOTE: do not read env at import time because .env may be loaded after imports.
 def _get_google_client_id() -> str:
     # Official Gemini CLI Client ID
     return os.environ.get("GOOGLE_CLIENT_ID", "681255809395-oo8ft2oprdrnp9e3aqf6av3hmdib135j.apps.googleusercontent.com")
 
 def _get_google_client_secret() -> str:
-    # PKCE doesn't use a client secret
+    # PKCE doesn't strictly require a client secret for public clients
     return os.environ.get("GOOGLE_CLIENT_SECRET", "")
 
 
@@ -39,11 +43,9 @@ def _get_google_client_secret() -> str:
 GEMINI_API_URL = "https://aistudio.google.com/app/apikey"
 GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
-# Using 127.0.0.1 for local HTTP browser-to-bot auth handoff
-GOOGLE_REDIRECT_URI = "http://127.0.0.1:8080/"
 
 # Pending OAuth states: state_token -> (chat_id, code_verifier)
-_pending_oauth: Dict[str, tuple] = {}
+_pending_oauth = _active_sessions
 
 # Per-user client cache
 _user_clients: Dict[str, Any] = {}
@@ -135,39 +137,30 @@ def revoke_gemini_key(chat_id: int) -> bool:
 # ==================== OAUTH MODE ====================
 
 def load_gemini_tokens() -> dict:
-    """Load all Gemini OAuth tokens from file."""
-    if os.path.exists(GEMINI_TOKENS_FILE):
-        with open(GEMINI_TOKENS_FILE, "r", encoding="utf-8") as f:
+    """Delegated to secure_storage."""
+    if os.path.exists(TOKENS_FILE):
+        with open(TOKENS_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
     return {}
 
 
 def save_gemini_tokens(data: dict):
-    """Save Gemini OAuth tokens to file with secure permissions."""
+    """Delegated to secure_storage."""
     flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
-    # 0o600 ensures only the owner can read/write the file
-    fd = os.open(GEMINI_TOKENS_FILE, flags, 0o600)
+    fd = os.open(TOKENS_FILE, flags, 0o600)
     with open(fd, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
 
 
 def get_user_tokens(chat_id: int) -> Optional[dict]:
-    """Get Gemini OAuth tokens for a user."""
-    tokens = load_gemini_tokens()
-    return tokens.get(str(chat_id))
+    """Get Gemini OAuth tokens for a user using secure_storage."""
+    return secure_get_token(chat_id)
 
 
 def save_user_tokens(chat_id: int, tokens: dict) -> bool:
-    """Save Gemini OAuth tokens for a user."""
+    """Save Gemini OAuth tokens for a user using secure_storage."""
     try:
-        data = load_gemini_tokens()
-        data[str(chat_id)] = {
-            "access_token": tokens.get("access_token"),
-            "refresh_token": tokens.get("refresh_token"),
-            "expires_at": tokens.get("expires_at"),
-            "created_at": datetime.now().isoformat()
-        }
-        save_gemini_tokens(data)
+        secure_save_token(chat_id, tokens)
         if str(chat_id) in _user_clients:
             del _user_clients[str(chat_id)]
         return True
@@ -176,220 +169,46 @@ def save_user_tokens(chat_id: int, tokens: dict) -> bool:
         return False
 
 
-def generate_oauth_state(chat_id: int) -> str:
-    """Generate a secure OAuth state parameter."""
-    state = secrets.token_urlsafe(32)
-    _pending_oauth[state] = chat_id
-    return state
-
-
-def get_chat_id_from_state(state: str) -> Optional[int]:
-    """Get chat_id from OAuth state."""
-    return _pending_oauth.pop(state, None)
-
-
-def _generate_pkce_pair():
-    """Generate a code_verifier and code_challenge for PKCE."""
-    verifier = base64.urlsafe_b64encode(os.urandom(32)).decode('utf-8').rstrip('=')
-    challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode('utf-8')).digest()).decode('utf-8').rstrip('=')
-    return verifier, challenge
-
-
 def get_oauth_login_url(chat_id: int) -> str:
-    """Generate Google OAuth login URL with PKCE (Gemini CLI method)."""
-    state = generate_oauth_state(chat_id)
-    verifier, challenge = _generate_pkce_pair()
-    
-    # Store verifier to use during token exchange
-    _pending_oauth[state] = (chat_id, verifier)
-    
-    params = {
-        "client_id": _get_google_client_id(),
-        "redirect_uri": GOOGLE_REDIRECT_URI,
-        "response_type": "code",
-        "scope": "https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile",
-        "state": state,
-        "access_type": "offline",
-        "prompt": "consent",
-        "code_challenge": challenge,
-        "code_challenge_method": "S256"
-    }
-    
-    return f"{GOOGLE_AUTH_URL}?{urllib.parse.urlencode(params)}"
+    """Generate Google OAuth login URL with PKCE (using telegram_oauth_handler)."""
+    client_id = _get_google_client_id()
+    return initiate_login(chat_id, os.environ.get("TELEGRAM_BOT_TOKEN", ""), client_id)
 
 
 def start_local_oauth_server(chat_id: int, bot_token: str):
-    """Start an ephemeral local HTTP server to automatically capture the OAuth code."""
-    import threading
-    import urllib.parse
-    from http.server import BaseHTTPRequestHandler, HTTPServer
-
-    class OAuthHandler(BaseHTTPRequestHandler):
-        def log_message(self, format, *args):
-            pass # Suppress HTTP logs
-            
-        def do_GET(self):
-            parsed_path = urllib.parse.urlparse(self.path)
-            query = urllib.parse.parse_qs(parsed_path.query)
-            
-            if 'code' in query:
-                code = query['code'][0]
-                state = query.get('state', [''])[0]
-                
-                # Check state for security
-                payload = _pending_oauth.get(state)
-                if not payload or payload[0] != chat_id:
-                    self.send_response(400)
-                    self.end_headers()
-                    self.wfile.write(b"Invalid state security token.")
-                    return
-                
-                verifier = payload[1]
-                
-                self.send_response(200)
-                self.send_header('Content-type', 'text/html; charset=utf-8')
-                self.end_headers()
-                
-                html = """
-                <html>
-                <head><title>Authentication Successful</title></head>
-                <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
-                    <h2 style="color: #4CAF50;">Authentication Successful!</h2>
-                    <p>Ban da cap quyen thanh cong cho Bot. Vui long dong cua so trinh duyet nay va quay lai Telegram nhe!</p>
-                </body>
-                </html>
-                """
-                self.wfile.write(html.encode("utf-8"))
-                
-                # Process the backend handshake autonomously
-                def process_and_notify():
-                    tokens = exchange_code_for_tokens(code, verifier)
-                    if tokens:
-                        save_user_tokens(str(chat_id), tokens)
-                        if state in _pending_oauth:
-                            del _pending_oauth[state]
-                        
-                        import requests
-                        url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-                        msg = "🎉 *Dang nhap OAuth thanh cong!*\n\nBan da hien ngang su dung API qua Google Code Assist (han muc tang cuong). Thu nhan `/ask` ngay nao!"
-                        requests.post(url, json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown"})
-                
-                threading.Thread(target=process_and_notify).start()
-                
-                # Shut down the local mini-server
-                threading.Thread(target=self.server.shutdown).start()
-                
-            elif 'error' in query:
-                self.send_response(400)
-                self.end_headers()
-                self.wfile.write(f"Authentication Error: {query['error'][0]}".encode('utf-8'))
-                threading.Thread(target=self.server.shutdown).start()
-            else:
-                self.send_response(404)
-                self.end_headers()
-                self.wfile.write(b"Waiting for auth...")
-
-    # Boot the server asynchronously
-    def run_server():
-        try:
-            server = HTTPServer(('127.0.0.1', 8080), OAuthHandler)
-            server.timeout = 180 # Close after 3 minutes if no traffic
-            try:
-                server.handle_request() # Wait for exactly one valid ping
-            except Exception:
-                pass
-            finally:
-                server.server_close()
-        except OSError:
-            # Port might be blocked by another attempt, that's fine
-            pass
-
-    threading.Thread(target=run_server, daemon=True).start()
+    """Already handled by initiate_login."""
+    pass
 
 
 def exchange_code_for_tokens(code: str, verifier: Optional[str] = None) -> Optional[dict]:
-    """Exchange OAuth code for access tokens using PKCE (Gemini CLI method)."""
-    import requests
-    
-    data = {
-        "client_id": _get_google_client_id(),
-        "code": code,
-        "grant_type": "authorization_code",
-        "redirect_uri": GOOGLE_REDIRECT_URI,
-    }
-    
-    if verifier:
-        data["code_verifier"] = verifier
-    
-    try:
-        logger.info(f"Attempting token exchange with code: {code[:10]}...")
-        resp = requests.post(GOOGLE_TOKEN_URL, data=data)
-        if resp.status_code == 200:
-            token_data = resp.json()
-            expires_in = token_data.get("expires_in", 3600)
-            token_data["expires_at"] = datetime.now().timestamp() + expires_in
-            logger.info("Token exchange successful")
-            return token_data
-        else:
-            logger.error(f"Token exchange failed (HTTP {resp.status_code}): {resp.text}")
-            return None
-    except Exception as e:
-        logger.error(f"Token exchange error: {e}")
-        return None
+    """Exchange OAuth code for access tokens (delegated to oauth_service)."""
+    service = GoogleOAuthService(_get_google_client_id())
+    return service.exchange_code_for_token(code, verifier, REDIRECT_URI)
 
 
 def refresh_access_token(chat_id: int) -> Optional[str]:
-    """Refresh expired access token."""
-    import requests
-    
+    """Refresh access token (delegated to oauth_service via middleware)."""
     tokens = get_user_tokens(chat_id)
     if not tokens or not tokens.get("refresh_token"):
         return None
     
-    data = {
-        "client_id": _get_google_client_id(),
-        "client_secret": _get_google_client_secret(),
-        "refresh_token": tokens["refresh_token"],
-        "grant_type": "refresh_token"
-    }
-    
-    try:
-        resp = requests.post(GOOGLE_TOKEN_URL, data=data)
-        if resp.status_code == 200:
-            token_data = resp.json()
-            expires_in = token_data.get("expires_in", 3600)
-            token_data["expires_at"] = datetime.now().timestamp() + expires_in
-            token_data["refresh_token"] = tokens["refresh_token"]
-            save_user_tokens(chat_id, token_data)
-            return token_data.get("access_token")
-        else:
-            logger.error(f"Token refresh failed: {resp.text}")
-            return None
-    except Exception as e:
-        logger.error(f"Token refresh error: {e}")
-        return None
+    service = GoogleOAuthService(_get_google_client_id())
+    new_tokens = service.refresh_access_token(tokens["refresh_token"])
+    if new_tokens:
+        save_user_tokens(chat_id, new_tokens)
+        return new_tokens.get("access_token")
+    return None
 
 
 def get_valid_access_token(chat_id: int) -> Optional[str]:
-    """Get valid access token, refresh if needed."""
-    tokens = get_user_tokens(chat_id)
-    if not tokens:
-        return None
-    
-    expires_at = tokens.get("expires_at", 0)
-    if datetime.now().timestamp() >= expires_at - 60:
-        return refresh_access_token(chat_id)
-    
-    return tokens.get("access_token")
+    """Get valid access token using middleware."""
+    return middleware_get_token(chat_id)
 
 
 def revoke_gemini_oauth(chat_id: int) -> bool:
-    """Revoke user's Gemini OAuth tokens."""
+    """Revoke user's Gemini OAuth tokens using secure_storage."""
     try:
-        data = load_gemini_tokens()
-        if str(chat_id) in data:
-            del data[str(chat_id)]
-            save_gemini_tokens(data)
+        secure_delete_token(chat_id)
         if str(chat_id) in _user_clients:
             del _user_clients[str(chat_id)]
         return True
@@ -444,7 +263,7 @@ def get_gemini_client(chat_id: int):
             genai.configure(api_key=api_key)
         
         # Resolve model from user configs
-        model_name = 'gemini-2.5-flash'
+        model_name = 'gemini-2.0-flash'
         config_path = "user_configs.json"
         if os.path.exists(config_path):
             try:
@@ -496,7 +315,7 @@ def ask_gemini(question: str, chat_id: int, context: Optional[str] = None) -> st
     if not client:
         return get_last_error(chat_id) or "AUTH_REQUIRED"
     
-    system_prompt = """Ban la AI Assistant cua Aether-Quant - he thong phan tich chung khoan Viet Nam.
+    system_prompt = \"\"\"Ban la AI Assistant cua Aether-Quant - he thong phan tich chung khoan Viet Nam.
 
 Nhiem vu:
 - Tra loi cau hoi ve dau tu, chung khoan, phan tich ky thuat
@@ -506,7 +325,7 @@ Nhiem vu:
 Quy tac:
 - Tra loi ngan gon, de hieu (duoi 500 tu)
 - Luon nhan manh: Day la thong tin tham khao, khong phai loi khuyen dau tu
-- Su dung tieng Viet"""
+- Su dung tieng Viet\"\"\"
 
     full_prompt = f"{system_prompt}\n\n"
     if context:
@@ -555,13 +374,13 @@ Quy tac:
 
 def analyze_stock_with_gemini(symbol: str, score_data: dict, price: float, chat_id: int) -> str:
     """Get AI analysis for a specific stock."""
-    context = f"""
+    context = f\"\"\"
 Ma chung khoan: {symbol}
 Gia hien tai: {price:,.0f} VND
 Diem tong: {score_data.get('score', 0):.2f}/5.0
 - RS: {score_data.get('RS_score', 0):.1f}
 - Price Action: {score_data.get('Price_Action_score', 0):.1f}
-- Volume: {score_data.get('Volume_Profile_score', 0):.1f}"""
+- Volume: {score_data.get('Volume_Profile_score', 0):.1f}\"\"\"
     
     question = f"Phan tich ngan gon {symbol}: nen mua hay cho?"
     return ask_gemini(question, chat_id, context)

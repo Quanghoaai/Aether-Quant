@@ -850,9 +850,36 @@ def handle_command(text, chat_id, bot_token):
         
         if tokens:
             save_user_tokens(chat_id, tokens)
-            return " *KET NOI GEMINI THANH CONG!*\n\nBan co the dung `/ask` de hoi AI.\n\nVD: `/ask RSI la gi?`"
+            return "✅ *KET NOI GEMINI THANH CONG!*\n\nBan co the dung `/ask` de hoi AI ngay bay gio."
         else:
-            return "Loi xac thuc. Ma khong hop le hoac da het han.\n\nDung `/gemini` de lay link moi."
+            return "❌ Loi xac thuc. Vui long dung `/gemini` de lay link moi."
+
+    # /logout - Logout from Gemini AI
+    elif cmd == "/logout":
+        from gemini import revoke_gemini_oauth, revoke_gemini_key
+        revoke_gemini_oauth(chat_id)
+        revoke_gemini_key(chat_id)
+        return "✅ *DA DANG XUAT!*\n\nMoi du lieu ket noi Gemini AI cua ban da duoc xoa."
+
+    # /status - Check Gemini AI connection status
+    elif cmd == "/status":
+        from gemini import get_user_tokens, get_user_gemini_key
+        from src.token_storage import is_token_expired
+        
+        token = get_user_tokens(chat_id)
+        api_key = get_user_gemini_key(chat_id)
+        
+        msg = "📊 *TRANG THAI KET NOI AI*\n-------------------\n"
+        if token:
+            status = "❌ Het han (Can refresh)" if is_token_expired(token) else "✅ Dang hoat dong"
+            msg += f"🔹 *OAuth (Google):* {status}\n"
+        elif api_key:
+            msg += f"🔹 *API Key:* ✅ Dang hoat dong\n"
+        else:
+            msg += "🔹 *Trang thai:* ❌ Chua ket noi\n"
+            msg += "\nDung `/gemini` de bat dau."
+            
+        return msg
 
     # /gemini_key - Save API key (Mode 2 only)
     elif cmd == "/gemini_key":

@@ -20,6 +20,7 @@ class GoogleOAuthService:
             "openid",
             "email",
             "profile",
+            "https://www.googleapis.com/auth/generative-language",
             "https://www.googleapis.com/auth/cloud-platform"
         ]
 
@@ -61,14 +62,12 @@ class GoogleOAuthService:
         """Exchange authorization code for access and refresh tokens."""
         data = {
             "client_id": self.client_id,
+            "client_secret": self.client_secret,
             "code": code,
             "code_verifier": code_verifier,
             "grant_type": "authorization_code",
             "redirect_uri": redirect_uri
         }
-        
-        if self.client_secret:
-            data["client_secret"] = self.client_secret
         
         try:
             response = requests.post(self.token_url, data=data)
@@ -89,12 +88,10 @@ class GoogleOAuthService:
         """Refresh an expired access token using the refresh token."""
         data = {
             "client_id": self.client_id,
+            "client_secret": self.client_secret,
             "refresh_token": refresh_token,
             "grant_type": "refresh_token"
         }
-        
-        if self.client_secret:
-            data["client_secret"] = self.client_secret
         
         try:
             response = requests.post(self.token_url, data=data)

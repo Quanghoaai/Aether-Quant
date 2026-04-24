@@ -90,7 +90,7 @@ class OAuthCallbackHandler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header('Content-Type', 'text/html; charset=utf-8')
             self.end_headers()
-            self.wfile.write(b"""
+            self.wfile.write("""
             <html>
                 <body style="font-family: Arial; text-align: center; padding: 50px;">
                     <h1>✅ Xác thực thành công!</h1>
@@ -98,7 +98,7 @@ class OAuthCallbackHandler(BaseHTTPRequestHandler):
                     <script>setTimeout(() => { window.close(); }, 2000);</script>
                 </body>
             </html>
-            """)
+            """.encode('utf-8'))
             
             _callback_result['code'] = code
             _callback_result['state'] = state

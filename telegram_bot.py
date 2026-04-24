@@ -839,7 +839,12 @@ def handle_command(text, chat_id, bot_token):
         # Retrieve PKCE verifier using state lookup (Gemini CLI method)
         verifier = None
         if state_from_url and state_from_url in _pending_oauth:
-            verifier = _pending_oauth[state_from_url][1]
+            # New modular system uses a dict, old one used a tuple
+            session = _pending_oauth[state_from_url]
+            if isinstance(session, dict):
+                verifier = session.get("verifier")
+            else:
+                verifier = session[1]
             
         tokens = exchange_code_for_tokens(code, verifier)
         

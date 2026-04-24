@@ -96,6 +96,7 @@ def initiate_login(chat_id: int, bot_token: str, client_id: str) -> str:
     def run_server():
         try:
             server = HTTPServer(('127.0.0.1', REDIRECT_PORT), OAuthCallbackHandler)
+            server.allow_reuse_address = True
             server.timeout = 300
             server.handle_request()
             server.server_close()

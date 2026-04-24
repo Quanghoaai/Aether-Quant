@@ -27,6 +27,9 @@ _callback_result = {}
 class OAuthCallbackHandler(BaseHTTPRequestHandler):
     """HTTP request handler for OAuth callback"""
     
+    # Allow port reuse to avoid 'Address already in use' errors
+    allow_reuse_address = True
+    
     def do_GET(self):
         global _callback_result
         

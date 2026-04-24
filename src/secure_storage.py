@@ -87,12 +87,6 @@ def get_user_token(chat_id):
         token_data = tokens.get(str(chat_id))
         
         if token_data:
-            # Check if token is expired
-            expires_at = token_data.get('expires_at', 0)
-            if datetime.now().timestamp() > expires_at:
-                logger.warning(f"⚠️ Token expired for user {chat_id}")
-                return None
-            
             logger.info(f"✅ Token found for user {chat_id}")
             return token_data
         

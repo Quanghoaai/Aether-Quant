@@ -20,7 +20,6 @@ class GoogleOAuthService:
             "openid",
             "email",
             "profile",
-            "https://www.googleapis.com/auth/generative-language",
             "https://www.googleapis.com/auth/cloud-platform"
         ]
 

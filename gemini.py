@@ -182,7 +182,7 @@ def start_local_oauth_server(chat_id: int, bot_token: str):
 
 def exchange_code_for_tokens(code: str, verifier: Optional[str] = None) -> Optional[dict]:
     """Exchange OAuth code for access tokens (delegated to oauth_service)."""
-    service = GoogleOAuthService(_get_google_client_id())
+    service = GoogleOAuthService(_get_google_client_id(), _get_google_client_secret())
     return service.exchange_code_for_token(code, verifier, REDIRECT_URI)
 
 
@@ -192,7 +192,7 @@ def refresh_access_token(chat_id: int) -> Optional[str]:
     if not tokens or not tokens.get("refresh_token"):
         return None
     
-    service = GoogleOAuthService(_get_google_client_id())
+    service = GoogleOAuthService(_get_google_client_id(), _get_google_client_secret())
     new_tokens = service.refresh_access_token(tokens["refresh_token"])
     if new_tokens:
         save_user_tokens(chat_id, new_tokens)

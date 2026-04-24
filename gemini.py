@@ -23,11 +23,11 @@ _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Files
 GEMINI_KEYS_FILE = os.path.join(_BASE_DIR, "gemini_keys.json")
 
-# Import new modular components
-from secure_storage import save_user_token as secure_save_token, get_user_token as secure_get_token, delete_user_token as secure_delete_token, TOKENS_FILE
-from oauth_service import GoogleOAuthService
-from telegram_oauth_handler import initiate_login, REDIRECT_URI, _active_sessions
-from oauth_middleware import get_valid_token as middleware_get_token, require_auth as middleware_require_auth
+# Import new modular components from src package
+from src.secure_storage import save_user_token as secure_save_token, get_user_token as secure_get_token, delete_user_token as secure_delete_token, TOKENS_FILE
+from src.oauth_service import GoogleOAuthService
+from src.telegram_oauth_handler import initiate_login, REDIRECT_URI, _active_sessions
+from src.oauth_middleware import get_valid_token as middleware_get_token, require_auth as middleware_require_auth
 
 # OAuth Config (Mode 1 - Admin configured)
 def _get_google_client_id() -> str:

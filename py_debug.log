@@ -1,4 +1,4 @@
-2026-04-24 03:33:13 - vnstock.common.data - INFO - Not a stock. Company and finance data unavailable.
+2026-04-27 03:44:29 - vnstock.common.data - INFO - Not a stock. Company and finance data unavailable.
 Starting HCA System in hybrid mode...
 Primary: HHV | Watchlist: ['TOS', 'NKG', 'AAS'] | Capital: 50,000,000
 Fetching data...
@@ -29,10 +29,10 @@ Fetching data for NKG (Attempt 1/3)...
 ┃  🔗 Tham gia ngay: https://vnstocks.com/insiders-program#tiers                  ┃
 ┃                                                                                 ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-✅ Successful: AAS (131 days)
-✅ Successful: HHV (131 days)
-✅ Successful: TOS (131 days)
 ✅ Successful: NKG (131 days)
+✅ Successful: AAS (131 days)
+✅ Successful: TOS (131 days)
+✅ Successful: HHV (131 days)
 Fetching data for VNINDEX...
 ✅ VNINDEX fetched.
 Running Multi-Factor Scoring...

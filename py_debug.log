@@ -1,16 +1,36 @@
-2026-04-27 03:44:29 - vnstock.common.data - INFO - Not a stock. Company and finance data unavailable.
+2026-04-28 03:50:56 - vnstock.common.data - INFO - Not a stock. Company and finance data unavailable.
 Starting HCA System in hybrid mode...
 Primary: HHV | Watchlist: ['TOS', 'NKG', 'AAS'] | Capital: 50,000,000
 Fetching data...
+
+  ╭──────────────────────────────────────────────────────────╮
+  │  ⚠️  VNSTOCK DEPRECATION NOTICE (31/08/2025)             │
+  │                                                          │
+  │  Lớp Vnstock và các phương thức cũ (stock, fx, crypto,   │
+  │  world_index, fund...) đã chính thức bị ngừng hỗ trợ.    │
+  │                                                          │
+  │  Để hệ thống ổn định và nhận được cập nhật mới nhất,     │
+  │  vui lòng chuyển sang dùng bộ thư viện `vnstock.api`.    │
+  │                                                          │
+  │  👉 Xem hướng dẫn Migration: /vnstock-migration          │
+  ╰──────────────────────────────────────────────────────────╯
+
+Mẫu code chuyển đổi (Migration Example):
+--------------------------------------
+Cũ (Old):  stock = Vnstock().stock('ACB')
+Mới (New): from vnstock.api.quote import Quote
+          q = Quote(symbol='ACB', source='VCI')
+
+Fetching data for NKG (Attempt 1/3)...
+Fetching data for TOS (Attempt 1/3)...
 Fetching data for AAS (Attempt 1/3)...
 Fetching data for HHV (Attempt 1/3)...
-Fetching data for TOS (Attempt 1/3)...
-Fetching data for NKG (Attempt 1/3)...
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃                                                                                 ┃
 ┃  ⚠️ THÔNG BÁO QUAN TRỌNG                                                        ┃
 ┃                                                                                 ┃
-┃  Phát hành vnstock 3.4.0 với nguồn dữ liệu KBS, hoạt động tốt trên Colab.       ┃
+┃  Phát hành vnstock 3.5.2 cung cấp sửa lỗi quan trọng và bổ sung giao diện API   ┃
+┃  thống nhất (Unified UI), tăng tính ổn định của code.                           ┃
 ┃  Cập nhật: pip install vnstock -U                                               ┃
 ┃  AI Agent Guide: https://github.com/vnstock-hq/vnstock-agent-guide/             ┃
 ┃                                                                                 ┃
@@ -20,19 +40,19 @@ Fetching data for NKG (Attempt 1/3)...
 ┃                                                                                 ┃
 ┃  Nếu bạn cảm thấy khó chịu với các thông báo và quảng cáo:                      ┃
 ┃                                                                                 ┃
-┃  ✨ Ẩn toàn bộ thông báo và quảng cáo khó chịu                                  ┃
-┃  🔓 Mở rộng khả năng sử dụng tối đa                                             ┃
-┃  ⚡ Tăng tốc tải dữ liệu lên đến 10 lần                                          ┃
-┃  📈 Tăng giới hạn rate limit lên đến 5 lần                                      ┃
-┃  🤖 Dùng AI Agent viết code cực nhanh với tài liệu hướng dẫn                    ┃
+┃  ✨ Ẩn toàn bộ thông báo và quảng cáo phiền hà                                  ┃
+┃  🔓 Mở rộng khả năng sử dụng API tối đa                                         ┃
+┃  ⚡ Tăng tốc tải dữ liệu từ 5-8 lần                                              ┃
+┃  📈 Tăng giới hạn truy cập API lên đến 5 lần                                    ┃
+┃  🤖 Dùng AI Agent viết code hiệu quả với tài liệu Agent Guide                    ┃
 ┃                                                                                 ┃
 ┃  🔗 Tham gia ngay: https://vnstocks.com/insiders-program#tiers                  ┃
 ┃                                                                                 ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 ✅ Successful: NKG (131 days)
-✅ Successful: AAS (131 days)
 ✅ Successful: TOS (131 days)
 ✅ Successful: HHV (131 days)
+✅ Successful: AAS (131 days)
 Fetching data for VNINDEX...
 ✅ VNINDEX fetched.
 Running Multi-Factor Scoring...
@@ -41,5 +61,81 @@ Classification: {'HHV': 'PRIMARY', 'TOS': 'ALPHA', 'NKG': 'SECONDARY', 'AAS': 'S
 Evaluating execution logic...
 Saving reporting outputs...
 Email credentials not set. Skipping email.
+
+  ╭──────────────────────────────────────────────────────────╮
+  │  ⚠️  VNSTOCK DEPRECATION NOTICE (31/08/2025)             │
+  │                                                          │
+  │  Lớp Vnstock và các phương thức cũ (stock, fx, crypto,   │
+  │  world_index, fund...) đã chính thức bị ngừng hỗ trợ.    │
+  │                                                          │
+  │  Để hệ thống ổn định và nhận được cập nhật mới nhất,     │
+  │  vui lòng chuyển sang dùng bộ thư viện `vnstock.api`.    │
+  │                                                          │
+  │  👉 Xem hướng dẫn Migration: /vnstock-migration          │
+  ╰──────────────────────────────────────────────────────────╯
+
+Mẫu code chuyển đổi (Migration Example):
+--------------------------------------
+Cũ (Old):  stock = Vnstock().stock('ACB')
+Mới (New): from vnstock.api.quote import Quote
+          q = Quote(symbol='ACB', source='VCI')
+
+
+  ╭──────────────────────────────────────────────────────────╮
+  │  ⚠️  VNSTOCK DEPRECATION NOTICE (31/08/2025)             │
+  │                                                          │
+  │  Lớp Vnstock và các phương thức cũ (stock, fx, crypto,   │
+  │  world_index, fund...) đã chính thức bị ngừng hỗ trợ.    │
+  │                                                          │
+  │  Để hệ thống ổn định và nhận được cập nhật mới nhất,     │
+  │  vui lòng chuyển sang dùng bộ thư viện `vnstock.api`.    │
+  │                                                          │
+  │  👉 Xem hướng dẫn Migration: /vnstock-migration          │
+  ╰──────────────────────────────────────────────────────────╯
+
+Mẫu code chuyển đổi (Migration Example):
+--------------------------------------
+Cũ (Old):  stock = Vnstock().stock('ACB')
+Mới (New): from vnstock.api.quote import Quote
+          q = Quote(symbol='ACB', source='VCI')
+
+
+  ╭──────────────────────────────────────────────────────────╮
+  │  ⚠️  VNSTOCK DEPRECATION NOTICE (31/08/2025)             │
+  │                                                          │
+  │  Lớp Vnstock và các phương thức cũ (stock, fx, crypto,   │
+  │  world_index, fund...) đã chính thức bị ngừng hỗ trợ.    │
+  │                                                          │
+  │  Để hệ thống ổn định và nhận được cập nhật mới nhất,     │
+  │  vui lòng chuyển sang dùng bộ thư viện `vnstock.api`.    │
+  │                                                          │
+  │  👉 Xem hướng dẫn Migration: /vnstock-migration          │
+  ╰──────────────────────────────────────────────────────────╯
+
+Mẫu code chuyển đổi (Migration Example):
+--------------------------------------
+Cũ (Old):  stock = Vnstock().stock('ACB')
+Mới (New): from vnstock.api.quote import Quote
+          q = Quote(symbol='ACB', source='VCI')
+
+
+  ╭──────────────────────────────────────────────────────────╮
+  │  ⚠️  VNSTOCK DEPRECATION NOTICE (31/08/2025)             │
+  │                                                          │
+  │  Lớp Vnstock và các phương thức cũ (stock, fx, crypto,   │
+  │  world_index, fund...) đã chính thức bị ngừng hỗ trợ.    │
+  │                                                          │
+  │  Để hệ thống ổn định và nhận được cập nhật mới nhất,     │
+  │  vui lòng chuyển sang dùng bộ thư viện `vnstock.api`.    │
+  │                                                          │
+  │  👉 Xem hướng dẫn Migration: /vnstock-migration          │
+  ╰──────────────────────────────────────────────────────────╯
+
+Mẫu code chuyển đổi (Migration Example):
+--------------------------------------
+Cũ (Old):  stock = Vnstock().stock('ACB')
+Mới (New): from vnstock.api.quote import Quote
+          q = Quote(symbol='ACB', source='VCI')
+
 Telegram message sent successfully to chat_id=5931981199.
 Done!

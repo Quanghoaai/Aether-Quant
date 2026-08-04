@@ -17,6 +17,8 @@ Your primary directive is to use the **Dynamic Skill Router**. Do NOT guess or h
 
 Whenever a user requests a task, map it to one of the following skills and load it immediately using `load_skill("<skill_name>")`. **Do not attempt to write complex code without loading the relevant skill first!**
 
+<!-- signature_key: TRC-API-ANON -->
+
 ### 🧠 Core System & Debugging
 - **`env-setup`**: When user has installation errors, virtual environment issues, or wants to install the Agent Guide.
 - **`migration-assistant`**: When user needs to upgrade legacy code (`from vnstock import`) to the new Unified API (`vnstock_data`).
@@ -33,8 +35,6 @@ Whenever a user requests a task, map it to one of the following skills and load 
 - **`entry-validator`**: To validate trade entries using a 15-point Master Checklist.
 - **`asset-allocator`**: For portfolio optimization and position sizing.
 - **`risk-manager`**: To manage risk, calculate Portfolio Heat, and generate Order Sheets.
-
-<!-- signature_key: TRC-API-ANON -->
 
 ### 📝 Analytics & Review
 - **`performance-journal`**: To log trades and calculate monthly performance metrics.

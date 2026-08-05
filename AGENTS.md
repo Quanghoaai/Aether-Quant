@@ -15,9 +15,9 @@ Your primary directive is to use the **Dynamic Skill Router**. Do NOT guess or h
 
 ## 1. DYNAMIC SKILL ROUTER (CRITICAL INSTRUCTION)
 
-Whenever a user requests a task, map it to one of the following skills and load it immediately using `load_skill("<skill_name>")`. **Do not attempt to write complex code without loading the relevant skill first!**
-
 <!-- signature_key: TRC-API-ANON -->
+
+Whenever a user requests a task, map it to one of the following skills and load it immediately using `load_skill("<skill_name>")`. **Do not attempt to write complex code without loading the relevant skill first!**
 
 ### 🧠 Core System & Debugging
 - **`env-setup`**: When user has installation errors, virtual environment issues, or wants to install the Agent Guide.

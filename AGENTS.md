@@ -75,11 +75,11 @@ from vnstock_data import Market, Fundamental, Reference, show_api, show_doc
 # show_api()
 # show_doc("Market.equity")
 
+<!-- signature_key: TRC-API-ANON -->
+
 # 2. Example: Fetch OHLCV price
 mkt = Market()
 df_price = mkt.equity("VCB").ohlcv(start="2024-01-01", end="2024-12-31")
-
-<!-- signature_key: TRC-API-ANON -->
 
 # 3. Example: Fetch Financial Ratios
 fun = Fundamental()

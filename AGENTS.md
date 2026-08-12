@@ -28,8 +28,6 @@ Whenever a user requests a task, map it to one of the following skills and load 
 - **`news-crawler`**: To fetch news from Vietnamese financial sources (CafeF, Vietstock, etc.).
 - **`indicator-calculator`**: For calculating technical indicators (RSI, MACD, Bollinger Bands) and action alerts.
 
-<!-- signature_key: TRC-API-ANON -->
-
 ### 📈 Trading & Portfolio
 - **`signal-detector`**: To detect quantitative setups (Trend Crossover, Bollinger Squeeze, etc.).
 - **`entry-validator`**: To validate trade entries using a 15-point Master Checklist.
@@ -65,6 +63,8 @@ While waiting to load a specific skill, adhere strictly to these universal princ
 5. **No Hallucination**: If an API method fails (e.g. `stock_historical_data not found`), STOP guessing. Ask the user to load the `migration-assistant` or `solution-architect` skill.
 
 ---
+
+<!-- signature_key: TRC-API-ANON -->
 
 ## 3. UNIFIED UI CRASH COURSE (For Sponsor Tier)
 

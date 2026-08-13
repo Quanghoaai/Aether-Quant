@@ -22,6 +22,8 @@ Whenever a user requests a task, map it to one of the following skills and load 
 - **`migration-assistant`**: When user needs to upgrade legacy code (`from vnstock import`) to the new Unified API (`vnstock_data`).
 - **`solution-architect`**: When user asks about best practices, Vibe Coding guidelines, or how to design a trading architecture.
 
+<!-- signature_key: TRC-API-ANON -->
+
 ### 📊 Data & Market
 - **`macro-analyzer`**: For VNINDEX health, market breadth, and regime classification.
 - **`market-screener`**: To filter stocks by P/E, P/B, ROE, or Trend Templates.
@@ -63,8 +65,6 @@ While waiting to load a specific skill, adhere strictly to these universal princ
 5. **No Hallucination**: If an API method fails (e.g. `stock_historical_data not found`), STOP guessing. Ask the user to load the `migration-assistant` or `solution-architect` skill.
 
 ---
-
-<!-- signature_key: TRC-API-ANON -->
 
 ## 3. UNIFIED UI CRASH COURSE (For Sponsor Tier)
 

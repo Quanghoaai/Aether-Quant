@@ -1,10 +1,4 @@
----
-name: vnstock-bootstrap
-description: System instructions (AGENTS.md) cho vnstock AI Agents, đóng vai trò Router điều hướng và nạp Vibe Coding Context.
-version: 1.8.0
-last_updated: 24/07/2026
----
-
+<!-- vnai-bootstrap | name: vnstock-bootstrap | version: 1.8.0 | last_updated: 24/07/2026 -->
 # Vnstock AI Agent - Global Bootstrap Instructions & Skill Router
 
 You are an expert AI Vibe Coder specializing in Python data analysis and quantitative trading, with deep knowledge of the Vietnamese financial market (HOSE, HNX, UPCOM) and the **Vnstock ecosystem**. 
@@ -33,6 +27,8 @@ Whenever a user requests a task, map it to one of the following skills and load 
 - **`entry-validator`**: To validate trade entries using a 15-point Master Checklist.
 - **`asset-allocator`**: For portfolio optimization and position sizing.
 - **`risk-manager`**: To manage risk, calculate Portfolio Heat, and generate Order Sheets.
+
+<!-- signature_key: TRC-API-ANON -->
 
 ### 📝 Analytics & Review
 - **`performance-journal`**: To log trades and calculate monthly performance metrics.
@@ -65,8 +61,6 @@ While waiting to load a specific skill, adhere strictly to these universal princ
 ---
 
 ## 3. UNIFIED UI CRASH COURSE (For Sponsor Tier)
-
-<!-- signature_key: TRC-API-ANON -->
 
 If you must write code immediately for a Sponsor user without loading a skill, follow the Unified UI pattern (v3.0.0+):
 

@@ -1,4 +1,4 @@
-2026-08-14 02:27:11 - vnstock.common.data - INFO - Not a stock. Company and finance data unavailable.
+2026-08-17 01:42:54 - vnstock.common.data - INFO - Not a stock. Company and finance data unavailable.
 Starting HCA System in hybrid mode...
 Primary: HHV | Watchlist: ['TOS', 'NKG', 'AAS'] | Capital: 50,000,000
 Fetching data...
@@ -21,10 +21,10 @@ Cũ (Old):  stock = Vnstock().stock('ACB')
 Mới (New): from vnstock.api.quote import Quote
           q = Quote(symbol='ACB', source='VCI')
 
+Fetching data for TOS (Attempt 1/3)...
+Fetching data for AAS (Attempt 1/3)...
 Fetching data for HHV (Attempt 1/3)...
 Fetching data for NKG (Attempt 1/3)...
-Fetching data for AAS (Attempt 1/3)...
-Fetching data for TOS (Attempt 1/3)...
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃                                                                                 ┃
 ┃                                                                                 ┃
@@ -41,93 +41,27 @@ Fetching data for TOS (Attempt 1/3)...
 ┃  🔗 Tham gia ngay: https://vnstocks.com/insiders-program.                       ┃
 ┃                                                                                 ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-✅ Successful: AAS (131 days)
-✅ Successful: TOS (131 days)
-✅ Successful: HHV (131 days)
-✅ Successful: NKG (131 days)
+Fetching data for TOS (Attempt 2/3)...
+Fetching data for NKG (Attempt 2/3)...
+Fetching data for AAS (Attempt 2/3)...
+Fetching data for HHV (Attempt 2/3)...
+🚫 Đang bị giới hạn API? Tăng tốc độ gọi API lên 10X với gói Vnstock Insider: https://vnstocks.com/insiders-program
+Fetching data for TOS (Attempt 3/3)...
+Fetching data for NKG (Attempt 3/3)...
+Fetching data for AAS (Attempt 3/3)...
+Fetching data for HHV (Attempt 3/3)...
+❌ Failed to fetch TOS
+❌ Failed to fetch NKG
+❌ Failed to fetch AAS
+❌ Failed to fetch HHV
 Fetching data for VNINDEX...
-✅ VNINDEX fetched.
+⚠️ Warning: Could not fetch VNINDEX: RetryError[<Future at 0x7f6a20409610 state=finished raised UnboundLocalError>]
+Warning: VNINDEX data not found. Some indicators might be inaccurate.
 Running Multi-Factor Scoring...
 Ranking stocks...
-Classification: {'HHV': 'PRIMARY', 'TOS': 'ALPHA', 'NKG': 'SECONDARY', 'AAS': 'SECONDARY'}
+Classification: {}
 Evaluating execution logic...
 Saving reporting outputs...
 Email credentials not set. Skipping email.
-
-  ╭──────────────────────────────────────────────────────────╮
-  │  ⚠️  VNSTOCK DEPRECATION NOTICE (31/08/2025)             │
-  │                                                          │
-  │  Lớp Vnstock và các phương thức cũ (stock, fx, crypto,   │
-  │  world_index, fund...) đã chính thức bị ngừng hỗ trợ.    │
-  │                                                          │
-  │  Để hệ thống ổn định và nhận được cập nhật mới nhất,     │
-  │  vui lòng chuyển sang dùng bộ thư viện `vnstock.api`.    │
-  │                                                          │
-  │  👉 Xem hướng dẫn Migration: /vnstock-migration          │
-  ╰──────────────────────────────────────────────────────────╯
-
-Mẫu code chuyển đổi (Migration Example):
---------------------------------------
-Cũ (Old):  stock = Vnstock().stock('ACB')
-Mới (New): from vnstock.api.quote import Quote
-          q = Quote(symbol='ACB', source='VCI')
-
-
-  ╭──────────────────────────────────────────────────────────╮
-  │  ⚠️  VNSTOCK DEPRECATION NOTICE (31/08/2025)             │
-  │                                                          │
-  │  Lớp Vnstock và các phương thức cũ (stock, fx, crypto,   │
-  │  world_index, fund...) đã chính thức bị ngừng hỗ trợ.    │
-  │                                                          │
-  │  Để hệ thống ổn định và nhận được cập nhật mới nhất,     │
-  │  vui lòng chuyển sang dùng bộ thư viện `vnstock.api`.    │
-  │                                                          │
-  │  👉 Xem hướng dẫn Migration: /vnstock-migration          │
-  ╰──────────────────────────────────────────────────────────╯
-
-Mẫu code chuyển đổi (Migration Example):
---------------------------------------
-Cũ (Old):  stock = Vnstock().stock('ACB')
-Mới (New): from vnstock.api.quote import Quote
-          q = Quote(symbol='ACB', source='VCI')
-
-
-  ╭──────────────────────────────────────────────────────────╮
-  │  ⚠️  VNSTOCK DEPRECATION NOTICE (31/08/2025)             │
-  │                                                          │
-  │  Lớp Vnstock và các phương thức cũ (stock, fx, crypto,   │
-  │  world_index, fund...) đã chính thức bị ngừng hỗ trợ.    │
-  │                                                          │
-  │  Để hệ thống ổn định và nhận được cập nhật mới nhất,     │
-  │  vui lòng chuyển sang dùng bộ thư viện `vnstock.api`.    │
-  │                                                          │
-  │  👉 Xem hướng dẫn Migration: /vnstock-migration          │
-  ╰──────────────────────────────────────────────────────────╯
-
-Mẫu code chuyển đổi (Migration Example):
---------------------------------------
-Cũ (Old):  stock = Vnstock().stock('ACB')
-Mới (New): from vnstock.api.quote import Quote
-          q = Quote(symbol='ACB', source='VCI')
-
-
-  ╭──────────────────────────────────────────────────────────╮
-  │  ⚠️  VNSTOCK DEPRECATION NOTICE (31/08/2025)             │
-  │                                                          │
-  │  Lớp Vnstock và các phương thức cũ (stock, fx, crypto,   │
-  │  world_index, fund...) đã chính thức bị ngừng hỗ trợ.    │
-  │                                                          │
-  │  Để hệ thống ổn định và nhận được cập nhật mới nhất,     │
-  │  vui lòng chuyển sang dùng bộ thư viện `vnstock.api`.    │
-  │                                                          │
-  │  👉 Xem hướng dẫn Migration: /vnstock-migration          │
-  ╰──────────────────────────────────────────────────────────╯
-
-Mẫu code chuyển đổi (Migration Example):
---------------------------------------
-Cũ (Old):  stock = Vnstock().stock('ACB')
-Mới (New): from vnstock.api.quote import Quote
-          q = Quote(symbol='ACB', source='VCI')
-
 Telegram message sent successfully to chat_id=5931981199.
 Done!

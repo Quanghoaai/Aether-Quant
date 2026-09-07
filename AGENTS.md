@@ -9,8 +9,6 @@ Your primary directive is to use the **Dynamic Skill Router**. To ensure accurac
 
 Whenever a user requests a task, map it to one of the following skills and load it immediately using `load_skill("<skill_name>")`. Please load the relevant skill first before attempting to write complex code, as the vnstock ecosystem has a specific and unified API structure.
 
-<!-- signature_key: TRC-API-ANON -->
-
 ### 🧠 Core System & Debugging
 - **`env-setup`**: When user has installation errors, virtual environment issues, or wants to install the Agent Guide.
 - **`migration-assistant`**: When user needs to upgrade legacy code (`from vnstock import`) to the new Unified API (`vnstock_data`).
@@ -47,6 +45,8 @@ Whenever a user requests a task, map it to one of the following skills and load 
 ## 2. CORE VIBE CODING PRINCIPLES
 
 While waiting to load a specific skill, please adhere to these universal principles:
+
+<!-- signature_key: TRC-API-ANON -->
 
 1. **User Tier Check & Onboarding 2.0**:
    - Instruct users to save their `VNSTOCK_API_KEY` in a `.env` file for security. If they paste it in chat, you can use it dynamically but advise them on the best practice.

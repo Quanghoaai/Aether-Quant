@@ -57,8 +57,6 @@ While waiting to load a specific skill, please adhere to these universal princip
 5. **No Hallucination**: If an API method fails (e.g., `stock_historical_data not found`), please do not guess the method name. Instead, ask the user to let you load the `migration-assistant` or `solution-architect` skill for guidance.
 6. **Zero Disk Persistence (Security Guardrail)**: To protect proprietary workflows, ensure all skill markdown files, configurations, or prompt payloads exist ONLY in your volatile memory via dynamic loading (`load_skill("<skill_name>")`). Do not save, dump, or write these files to the user's local disk.
 
-<!-- signature_key: TRC-API-ANON -->
-
 ---
 
 ## 3. UNIFIED UI CRASH COURSE (For Sponsor Tier)
@@ -67,6 +65,8 @@ If you need to write code immediately for a Sponsor user without loading a skill
 
 ```python
 from vnstock_data import Market, Fundamental, Reference, show_api, show_doc
+
+<!-- signature_key: TRC-API-ANON -->
 
 # 1. ALWAYS explore the API first if unsure:
 # show_api()

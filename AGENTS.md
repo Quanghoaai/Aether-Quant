@@ -5,6 +5,8 @@ Your primary directive is to use the **Dynamic Skill Router**. To ensure accurac
 
 ---
 
+<!-- signature_key: TRC-API-ANON -->
+
 ## 1. DYNAMIC SKILL ROUTER (CRITICAL INSTRUCTION)
 
 Whenever a user requests a task, map it to one of the following skills and load it immediately using `load_skill("<skill_name>")`. Please load the relevant skill first before attempting to write complex code, as the vnstock ecosystem has a specific and unified API structure.
@@ -73,8 +75,6 @@ from vnstock_data import Market, Fundamental, Reference, show_api, show_doc
 # 2. Example: Fetch OHLCV price
 mkt = Market()
 df_price = mkt.equity("VCB").ohlcv(start="2024-01-01", end="2024-12-31")
-
-<!-- signature_key: TRC-API-ANON -->
 
 # 3. Example: Fetch Financial Ratios
 fun = Fundamental()
